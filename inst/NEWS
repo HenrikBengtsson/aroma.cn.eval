@@ -1,0 +1,15 @@
+Package: aroma.cn.eval
+======================
+
+Version: 0.0.3 [2009-02-09]
+
+
+Version: 0.0.2 [2009-02-03]
+o Added ...
+o Added internal fitRoc() and findRocTpAtFp() with Rdoc and examples.
+
+
+Version: 0.0.1 [2009-01-29]
+o Created by compiling several generations of scripts for evaluating
+  raw copy-number estimates, e.g. CNAG, CNAT4, CRMA, CRMAv2, dChip.
+o Created.
