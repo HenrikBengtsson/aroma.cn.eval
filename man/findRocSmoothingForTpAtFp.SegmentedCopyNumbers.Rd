@@ -1,0 +1,41 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Do not modify this file since it was automatically generated from:
+% 
+%  SegmentedCopyNumbers.ROC.R
+% 
+% by the Rdoc compiler part of the R.oo package.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\name{findRocSmoothingForTpAtFp.SegmentedCopyNumbers}
+\alias{findRocSmoothingForTpAtFp.SegmentedCopyNumbers}
+\alias{SegmentedCopyNumbers.findRocSmoothingForTpAtFp}
+\alias{findRocSmoothingForTpAtFp.SegmentedCopyNumbers}
+\alias{findRocSmoothingForTpAtFp,SegmentedCopyNumbers-method}
+
+
+\title{Finds the abount of binned smoothing required to achieve a true-positive at a given false-positive rate}
+
+\description{
+ Finds the abount of binned smoothing required to achieve a true-positive at a given false-positive rate.
+}
+
+\usage{\method{findRocSmoothingForTpAtFp}{SegmentedCopyNumbers}(this, minTpRate=0.95, fpRate=0.05, states=NULL, recall=states[1], nstepsR=2, accTp=0.001, accR=0.01, ..., verbose=FALSE)}
+
+\arguments{
+  \item{states}{}
+  \item{recall}{}
+  \item{fpRate}{}
+}
+
+\value{
+ Returns a \code{\link[base]{list}}.
+}
+
+\author{Henrik Bengtsson (\url{http://www.braju.com/R/})}
+
+\seealso{
+  \code{\link[aroma.core]{SegmentedCopyNumbers}}
+}
+\keyword{internal}
+\keyword{methods}

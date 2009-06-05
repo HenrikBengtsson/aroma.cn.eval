@@ -1,6 +1,10 @@
 Package: aroma.cn.eval
 ======================
 
+Version: 0.0.4 [2009-06-04]
+o Removed obsolete dependency on the R.basic package.
+
+
 Version: 0.0.3 [2009-02-09]
 
 
