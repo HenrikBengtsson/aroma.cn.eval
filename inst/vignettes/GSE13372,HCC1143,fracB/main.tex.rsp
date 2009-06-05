@@ -1,0 +1,384 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Author: Henrik Bengtsson, hb@stat.berkeley.edu
+% Created on: 2009-02-23
+%
+% Usage:
+%  library("R.rsp");
+%  rsptex("main.tex.rsp");  # => *.tex.rsp => ... => *.dvi
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+<%
+sourceDirectory("R/");
+what <- "ratios";
+addLegend <- FALSE;
+addSdEst <- FALSE;
+addBinTrack <- FALSE;
+
+binWidths <- c(0,1,2,5,10,20)*1e3; rocCols <- 2;
+binWidths <- c(0,5,20,50,100,200)*1e3; rocCols <- 3;
+robust <- c(FALSE, TRUE)[2];
+robustStr <- ifelse(robust, "median", "mean");
+binFcn <- ifelse(robust, "median", "mean"); 
+
+figPath <- "figures/col/";
+figForce <- FALSE;
+figDev <- function(..., force=figForce) { epsDev(..., path=figPath, force=force) }
+getStateColors.SegmentedCopyNumbers <- function(this, ...) {
+  states <- getStates(this)
+  col <- rep("#000000", nbrOfLoci(this));
+#  col[states < 0] <- "blue"
+#  col[states > 0] <- "red"
+  col[is.na(states)] <- "#999999";
+  col
+}
+
+
+title <- sprintf("Single-sample assessment of copy-number preprocessing methods CRMA~v2, Affymetrix~CN5 and dChip based on tumor-normal sample HCC1143 in GEO data set %s", dataSet);
+authors <- "Henrik Bengtsson et al.";
+%>
+
+%\documentclass[a4paper,draft]{article}
+\documentclass[a4paper]{article}
+\usepackage{graphicx}
+\usepackage{fancyvrb}
+\usepackage{a4wide}
+\usepackage{xspace}
+\usepackage{amsmath} 
+\usepackage{natbib}
+
+% The search path (within curly brackets and separated by commas)
+% where to find graphics files
+\graphicspath{{<%=figPath%>}}
+\DeclareGraphicsRule{.eps.gz}{eps}{.eps.bb}{`gunzip -c #1}
+
+\newcommand{\pkg}[1]{\textsl{#1}\xspace}
+
+\title{Supplementary Notes \#3:\\<%=title%>}
+\author{<%=authors%>}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+This report provides a single-sample approach to assess the relative performance of the CRMA~v2, the Affymetrix~CN5, and the dChip method.  The results presented herein are intended to complement the results presented in the main CRMA~v2 manuscript.
+%%  For details on these methods and their implementations, see other Supplementary Note.
+%% (implemented in \pkg{aroma.affymetrix}), the Affymetrix~CN5 (\pkg{Affymetrix Power Tools} and \pkg{Affymetrix Genotype Console}), and the dChip method (\pkg{dChip}).
+
+\section{Method}
+Consider a local genomic region with loci where there exists exactly one copy-number (CN) changepoint (breakpoint) at position $x_0$ and that the true CN level at each side of the changepoint is constant (which is a common assumption in CN studies).
+Assume that we can identify this CN changepoint and with very high confidence locate it to be within $[x_0-\delta, x_0+\delta)$ where we refer to $\delta$ as the safety margin on each side of the changepoint.
+Then we can assess how well we can detect this changepoint given the two sets of data points one each side of changepoint.
+
+\subsection{Receiver Operator Characteristic performance}
+One approach is to use Receiver Operator Characteristic (ROC) analysis analogously to what is done in the (multi-sample) evaluation method presented in \citet{BengtssonH_etal_2008}.
+Given the changepoint and excluding all loci within the safety margin, the remaining $J$ loci are split up in two data sets $\mathcal{J}_A = \{x_j \leq x_0 - \delta; j=1,\ldots,J\}$ and $\mathcal{J}_B = \{x_j > x_0 + \delta; j=1,\ldots,J\}$, where $x_j$ is the position of locus $j$ and $J$ is the total number of loci.  
+Continuing, let $\mathcal{M}_s = \{M_j; j \in \mathcal{J}_s\}$ denote the (full-resolution) raw (<%=if (what == "log2ratios") "$\\log_2$-ratio" else "relative"%>) copy-number estimates of set $s \in \{A,B\}$ obtained by one of the preprocessing methods of interest.
+
+Without loss of generality, assume the loci in $\mathcal{J}_A$ are copy neutral and the ones in $\mathcal{J}_B$ are deletions.
+By using a (global) threshold/cutoff $\tau$ we can then call the CN state for each locus.  We say that locus $j$ belongs to the CN state $B$ if $M_j \leq \tau$. Let $\mathcal{J}_{+} = \{M_j \leq \tau; j=1,\ldots,J\}$ be all such loci.  Let $\mathcal{J}_{-} = \{M_j > \tau; j=1,\ldots,J\}$ be the remaining loci, which are said to belong to CN state $A$. 
+%%  As above, let $J_{+}$ and $J_{-}$ be the number of loci in each of these sets.
+Then $\mathcal{J}_{+|B} = \mathcal{J}_{+} \cap \mathcal{J}_{B}$ represents the set of true positives (true deletions correctly called deletions) and $\mathcal{J}_{+|A} = \mathcal{J}_{+} \cap \mathcal{J}_{A}$ represents the set of false positives (true copy neutral loci incorrectly called deletions).
+Finally, with $|\mathcal{J}|$ denoting the cardinality of the set $\mathcal{J}$, we define $\beta = \beta(\tau) = |\mathcal{J}_{+|B}|/|\mathcal{J}_{B}| \in [0,1]$ and $\alpha = \alpha(\tau) = |\mathcal{J}_{+|A}/\mathcal{J}_{A}| \in [0,1]$ to be the true-positive (TP) rate and the false-positive (FP) rate, respectively.  The Receiver Operator Characteristic (ROC) performance is defined by the ROC curve $R(\tau): \tau \rightarrow (\alpha,\beta) \in [0,1]^2$.
+
+\subsection{Performance at different levels of resolution}
+By smoothing the data points in each set ($s = \{A,B\}$) by binning the loci in non-overlapping bins of width $w$, we can generate a new set of smoothed CN ratios on which we can do ROC analysis.  Since the smoothed CN estimates are less noisy, the TP rate will increase at any given FP rate.  The price for achieving this is that the resolution at which we can detect change points decreases.
+
+\subsection{Comparing preprocessing methods}
+For each preprocessing methods $p \in \{\textnormal{CRMA~v2}, \textnormal{dChip}, \textnormal{CN5}\}$ we will obtain one ROC curve $R_{p}(\cdot)$. 
+With standard ROC analysis we can then compare the relative performance of the different preprocessing methods.
+
+
+%%For the case where there are two changepoints $x_A$ and $x_B$, we assume (where it is visually "obvious") that they divide up the local region into two similar data sets.  The region within the two breakpoints define the $\mathcal{J}_B$ set and the ones outside the $\mathcal{J}_A$ set.  
+
+
+\section{Data set}
+<%
+df <- getFile(dsList[[1]],1);
+tumorName <- getName(df);
+normalName <- sub("ref=","",getTags(df)[1]);
+pairName <- paste(tumorName, normalName, sep=" / ");
+%>
+This report is based on the public GEO data set <%=dataSet%>~\citep{ChiangD_etal_2009}, which among other things contains several replicated tumor-normal pairs for sample HCC1143.  All data is based on the Affymetrix GenomeWideSNP\_6 chip type.  This evaluation will be based on CN estimated from one such pair, more precisely the <%=tumorName%> CEL file (tumor) and the <%=normalName%> CEL file (match normal).
+For CRMA~v2 we processed the two CEL files separately (without any reference arrays) and then calculated the tumor-normal relative CN ratios.  For both dChip and CN5, we calculated the ratios for this single pair but including a total of 68 CEL files from <%=dataSet%> in the preprocessing and at the end extracting the pair of interest.  For further details on the preprocessing, see the other Supplementary Note.
+
+
+\subsection{List of change points}
+For this data set, we have selected a few regions for which one safely can assume there exists a single changepoint and for which the CN ratios look constant.  This selection was done visually.  For each region we chose large enough safety margin such that the risk for the two sets $\mathcal{J}_A$ and $\mathcal{J}_B$ to contain loci from the other set is extremely small.  
+
+\begin{table}[htp]
+\begin{center}
+\begin{tabular}{c|c|c|c|c}
+Tumor-normal pair & Chromosome & Region & Change point & Safety region \\
+\hline
+<% for (region in regions) { %>
+<%
+region <- parseRegion(region);
+str(region);
+sample <- region$name;
+sample <- pairName;
+chr <- region$chromosome;
+regionStr <- sprintf("%.2f", region$region/1e6);
+cp <- region$params$cp[1];
+cpStr <- sprintf("%.2f", cp);
+delta <- region$params$cp[2];
+deltaStr <- sprintf("%.2f", delta);
+%>
+<%=sample%> & <%=chr%> & <%=regionStr[1]%>-<%=regionStr[2]%> & <%=cpStr%> & <%=deltaStr%> \\
+\hline
+<% } # for (region ...) %>
+\end{tabular}
+\end{center}
+\caption{Regions used for the evaluation and that each contain a single changepoint.  All positions and lengths are in units of Mb.}
+\label{tblRegions}
+\end{table}
+
+
+\section{Results}
+
+We compare the CRMA~v2, the Affymetrix~CN5, and the dChip preprocessing methods using the afformentioned ROC analysis at the full resolution as well as smoothed resolution with bin sizes $w=\{<%=paste(sprintf("%.1f", binWidths[-1]/1e3), collapse=", ")%>\}$~kb.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% BEGIN Regions of interest
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+<% # regions <- regions[1]; %>
+<% for (region in regions) { %>
+\clearpage
+\subsection{Region: <%=region%>}
+
+<%
+print(region);
+region <- parseRegion(region);
+print(region);
+cnList <- NULL;
+%>
+
+<%
+what <- c("abs(fracB-1/2)", "fracB")[1];
+if (what == "ratios") {
+  region$label <- sprintf("%s,%s",region$label, what);
+}
+cnList <- getCnList(cnList, what=what);
+print(cnList);
+cn <- cnList[[1]];
+states <- getStates(cn);
+tbl <- table(states, exclude=NULL);
+uniqueStates <- as.integer(names(tbl));
+o <- order(abs(uniqueStates));
+tbl <- tbl[o];
+names <- names(tbl);
+sign <- as.integer(names(tbl));
+names[sign ==  0] <- "'COPY NEUTRAL' (s=0)";
+names[sign == -1] <- "'LOSS' (s=-1)";
+names[sign == +1] <- "'GAIN' (s=+1)";
+names(tbl) <- names;
+%>
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% BEGIN Figure
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+<%
+figName <- sprintf("%s,track", region$label);
+if (fig <- figDev(figName)) {
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+# Plot CN ratios along genome
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+cnList <- getCnList(cnList, what=what);
+print(cnList);
+
+nbrOfSources <- length(cnList);
+subplots(nbrOfSources, ncol=1);
+par(mar=c(2.7,2.6,0.2,1)+0.1, mgp=c(1.4,0.3,0), tcl=-0.3, cex=1.2);
+pch <- 19; cex <- 0.7;
+pch <- "."; cex <- 2;
+pch <- 176; cex <- 0.8;
+xScale <- 1e-6;
+xRange <- range(sapply(cnList, FUN=xRange));
+states <- na.omit(sort(unique(getStates(cnList[[1]]))));
+cp <- region$params$cp;
+s <- region$params$s;
+cnLab <- "CN";
+if (what == "log2ratios") {
+  cnLim <- c(-3,3);
+  cnLab <- expression(M == log[2](theta[T]/theta[N]));
+} else {
+  cnLim <- c(-0.5,6);
+  cnLab <- expression(C == 2*(theta[T]/theta[N]));
+}
+cnLim <- c(-0.1,0.8);
+for (kk in seq(along=cnList)) {
+  cn <- cnList[[kk]];
+  name <- names(cnList)[kk];
+  xlim <- xRange*xScale;
+  plot(cn, pch=pch, cex=0.8*cex, xlim=xlim, ylim=cnLim, xScale=xScale, ylab=cnLab);
+#  abline(v=cp["position"]+c(-1,+1)*cp["delta"]);
+  xs <- cp["position"]+c(-1,+1)*cp["delta"];
+  ys <- par("usr")[3:4];
+  dy <- 0.04*diff(ys);
+  if (s[1] != 0) {
+    rect(xlim[1],ys[1],xs[1],ys[1]+dy, col="#999999");
+  } else {
+    rect(xs[2],ys[1],xlim[2],ys[1]+dy, col="#999999");
+  }
+  rect(xs[1],ys[1], xs[2],ys[2], density=10, col="#999999");
+  stext(side=3, pos=0.02, line=-1, cex=1.0, name);
+  if (kk == 1) {
+    stext(side=3, pos=0.98, line=-1.1, cex=0.8, sprintf("Chr%02d", getChromosome(cn)));
+  }
+  if (addSdEst) {
+    sd <- estimateStandardDeviation(cn);
+    stext(side=4, pos=1, line=0, cex=0.8, sprintf("SD=%.3g", sd));
+  }
+  if (addBinTrack) {
+    binWidth <- 10e3;
+    cn <- extractSubsetByState(cn, states=states);
+    cnS <- binnedSmoothingByState(cn, from=xRange[1], to=xRange[2], by=binWidth, FUN=binFcn);
+    points(cnS, pch=pch, cex=0.8*cex, col="white", xScale=xScale);
+    points(cnS, pch=19, cex=0.6*cex, col="orange", xScale=xScale);
+  }
+} # for (kk ...)
+devDone(figName);
+} # if (figDev(...))
+%>
+\begin{figure}[htb]
+ \begin{center}
+  \resizebox{0.95\textwidth}{!}{\includegraphics{<%=fig$fullname%>}}
+ \end{center}
+ \caption{(<%=region$src%>) 
+  There are <%=tbl[1]%> loci of state <%=names(tbl)[1]%> ("negatives") and
+  <%=tbl[2]%> loci of state <%=names(tbl)[2]%> ("positives"), where the
+  latter are highlighted with a solid bar beneath. 
+  In total <%=tbl[3]%> loci within the safety margin were excluded.
+ }
+ \label{fig<%=figName%>}
+\end{figure}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% END Figure
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% BEGIN Figure
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+<%
+figName <- sprintf("%s,ROC,%s", region$label, robustStr);
+rocRows <- ceiling(length(binWidths)/rocCols);
+aspect <- rocRows/rocCols;
+if (fig <- figDev(figName, width=8, aspect=aspect)) {
+
+cnList <- getCnList(cnList, what=what);
+print(cnList);
+
+xRange <- range(sapply(cnList, FUN=xRange));
+states <- na.omit(sort(unique(getStates(cnList[[1]]))));
+
+layout(matrix(seq(along=binWidths), ncol=rocCols, byrow=TRUE));
+par(mar=c(2.5,2.4,1.3,0.7)+0.1, mgp=c(1.4,0.3,0), tcl=-0.3, cex=1.2);
+fpLim <- c(0,0.40);
+fpLim <- c(0,0.5);
+for (ww in seq(along=binWidths)) {
+  binWidth <- binWidths[ww];
+
+  if (binWidth > 0) {
+    # Smooth CNs using consecutive bins of given width (in kb)
+    cnSList <- lapply(cnList, FUN=function(cn) {
+      cnS <- binnedSmoothingByState(cn, from=xRange[1], to=xRange[2], by=binWidth, FUN=binFcn, verbose=verbose);
+      cnS <- extractSubsetByState(cnS, states=states);
+      cnS;
+    }) 
+    binLabel <- sprintf("Bin width %g kb", binWidth/1e3);
+  } else {
+    cnSList <- cnList;
+    binLabel <- sprintf("Full resolution");
+  }
+  print(cnSList);
+
+  fits <- lapply(cnSList, FUN=function(cnS) {
+    cat("Number of missing values: ", sum(is.na(cnS$cn)), "\n", sep="");
+    fitRoc(cnS, states=states, recall=states[1]);
+  });
+
+  cols <- c("red", "blue", "lightblue", "green");
+  ltys <- c(1,4,1,3);
+  cols <- rep(cols, length.out=length(fits));
+  ltys <- rep(ltys, length.out=length(fits));
+
+  for (kk in seq(along=fits)) {
+    fit <- fits[[kk]];
+    roc <- fit$roc;
+    if (kk == 1) {
+      plot(roc, type="l", lwd=3, col=cols[kk], lty=ltys[kk], xlim=fpLim, ylim=sort(1-fpLim), xlab="False-positive rate", ylab="True-positive rate");
+      abline(a=0, b=1, lty=3);
+      stext(side=3, pos=1, binLabel);
+    } else {
+      lines(roc, lwd=3, col=cols[kk], lty=ltys[kk]);
+    }
+    if (addLegend && kk == 1) {
+      labels <- strsplit(names(cnSList), split="\n");
+      labels <- sapply(labels, FUN=function(s) s[1]);
+      legend("bottomright", col=cols, lwd=2, lty=ltys, labels, cex=0.8, bty="n");
+    }
+  } # for (kk ...)
+} # for (ww ...)
+  devDone(figName);
+} # if (figDev(...))
+%>
+\begin{figure}[htb]
+ \begin{center}
+  \resizebox{0.9\textwidth}{!}{\includegraphics{<%=fig$fullname%>}}
+ \end{center}
+ \caption{(<%=region$src%>) ROC curves for each of the <%=length(dsList)%> preprocessing methods at the full resolution as well as <%=length(binWidths)-1%> different amounts of smoothing.  Legend: CRMA~v2 (solid red), CN5 (dashed blue) and dChip* (solid light blue).}
+ \label{fig<%=figName%>}
+\end{figure}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% END Figure
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+<% } # for (region in regions) %>
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% END Regions of interest
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% References
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\clearpage
+\bibliography{bioinformatics-journals-abbr,hb-at-maths.lth.se}
+%\bibliographystyle{plain}
+\bibliographystyle{natbib}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Session information
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\clearpage
+\appendix
+\section{Data files}
+\begin{Verbatim}[fontfamily=helvetica]
+<%={x <- capture.output(print(dsList));x <- gsub(": .*/(rawCnData/)", ": \\1", x);paste(x, collapse="\n");}%>
+\end{Verbatim}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Session information
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\clearpage
+\section{Session information}
+This report was automatically generated using the R.rsp package.
+<%=toLatex(sessionInfo())%>
+
+
+\end{document}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% HISTORY:
+% 2009-04-09
+% o Language updates after feedback from TS.
+% 2009-02-23
+% o Created.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
