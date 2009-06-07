@@ -1,4 +1,4 @@
- as.character.RocCurve auc auc.RocCurve blockAvg
+as.character.RocCurve auc auc.RocCurve blockAvg
  findRocSmoothingForTpAtFp findRocSmoothingForTpAtFp.default getFpRate
  getFpRate.RocCurve getTpRate getTpRate.RocCurve lines.RocCurve
  plot.RocCurve points.RocCurve scanRocTpAtFp scanRocTpAtFp.default
