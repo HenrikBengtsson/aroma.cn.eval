@@ -2,7 +2,9 @@
 # Known CN aberrant regions
 ############################################################################
 regions <- c(
-  "TCGA-12-0620:Chr17@0.0-55.0,cp=23.5+/-2.0,s=0/+1"
+##              "TCGA-12-0620:Chr17@0.0-55.0,cp=23.5+/-2.0,s=0/+1"
+             "TCGA-23-1027:Chr2@110.0-140.0,cp=125.0+/-2.0,s=0/+1"#,
+##              "TCGA-23-1027:Chr2@126.0-160.0,cp=141.0+/-2.0,s=0/+1"
 );
 
 
@@ -42,9 +44,9 @@ truth <- function(x, chromosome, name, ...) {
 
 
 ############################################################################
-# HISTORY:
-# 2009-04-05
-# o Now changepoint locations and the safety margin(s) are also returned.
-# 2009-02-23
-# o Created.
+## HISTORY:
+## 2009-04-05
+## o Now changepoint locations and the safety margin(s) are also returned.
+## 2009-02-23
+## o Created.
 ############################################################################

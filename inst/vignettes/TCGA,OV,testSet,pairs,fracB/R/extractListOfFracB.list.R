@@ -44,7 +44,7 @@ setMethodS3("extractListOfFracB", "list", function(this, name, chromosome, regio
 
 
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  # Extract FRACBs
+  # Extract FracBs
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # Extract list of files
   dfList <- lapply(this, FUN=function(ds) {
@@ -68,12 +68,12 @@ setMethodS3("extractListOfFracB", "list", function(this, name, chromosome, regio
     }
 
     # Extract copy numbers
-    verbose && enter(verbose, "Extracting FRACBs");
+    verbose && enter(verbose, "Extracting FracBs");
     fracB <- extractRawCopyNumbers(df, chromosome=chromosome, 
                                             region=region, units=units);
     verbose && exit(verbose);
 
-    # Add true FRACB functions?
+    # Add true FracB functions?
     if (!is.null(truth)) {
       fracB <- SegmentedCopyNumbers(fracB, states=truth);
     }

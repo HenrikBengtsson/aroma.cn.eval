@@ -8,7 +8,8 @@ setOption(aromaSettings, "output/path", FALSE);
 setOption(aromaSettings, "output/ram", FALSE);
 
 
-dataSet <- "TCGA,GBM,onePair";
+## dataSet <- "TCGA,GBM,onePair";
+dataSet <- "TCGA,OV,testSet,pairs,Broad";
 chipType <- "GenomeWideSNP_6";
 targetChipType <- chipType;
 
@@ -54,7 +55,7 @@ if (length(dsList) == 0) {
 
 
 if (!exists("gsN")) {
-  gsN <- AromaUnitFracBCnBinarySet$byName(dataSet, tags="Birdseed", chipType="*", paths="totalAndFracBData"); 
+  gsN <- AromaUnitGenotypeCallSet$byName(dataSet, tags="Birdseed", chipType="*"); 
   setFullNamesTranslator(gsN, function(names, ...) {
     pattern <- "^(TCGA-[0-9]{2}-[0-9]{4})-([0-9]{2}[A-Z])[-]*(.*)";
     gsub(pattern, "\\1,\\2,\\3", names);
@@ -64,8 +65,10 @@ if (!exists("gsN")) {
 
 
 ############################################################################
-# HISTORY:
-# 2009-06-08
-# o Created from aroma.aroma.cn.eval/inst/vignettes/GSE13372,2CHCC1143,fracB.
-
+## HISTORY:
+## 2009-06-09
+## o Genotype calls now assumed to be stored in AromaUnitGenotypeCallFile:s.
+## 2009-06-08
+## o Created from aroma.aroma.cn.eval/inst/vignettes/GSE13372,2CHCC1143,fracB.
+##
 ############################################################################

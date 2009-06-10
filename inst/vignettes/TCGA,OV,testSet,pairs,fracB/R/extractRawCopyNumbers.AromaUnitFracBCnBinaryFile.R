@@ -49,7 +49,8 @@ setMethodS3("extractRawCopyNumbers", "AromaUnitFracBCnBinaryFile", function(this
     gf <- getFile(gsN, idx);
     print(gf);
     mu <- gf[units,1,drop=TRUE];
-    keep <- whichVector(mu == 1/2);
+    ## Stratify on heterozygous normal genotypes
+    keep <- whichVector(isHeterozygote(gf, units=units, drop=TRUE));
     
     units <- units[keep];
     verbose && cat(verbose, "Units:");
@@ -84,6 +85,8 @@ setMethodS3("extractRawCopyNumbers", "AromaUnitFracBCnBinaryFile", function(this
 
 ############################################################################
 # HISTORY:
-# 2009-04-30
-# o Created. [AD HOC TEMP!!!]
+## 2009-06-09
+## o Hets now inferred using 'isHeterozygote'.
+## 2009-04-30
+## o Created. [AD HOC TEMP!!!]
 ############################################################################

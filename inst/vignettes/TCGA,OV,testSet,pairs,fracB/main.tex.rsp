@@ -216,13 +216,13 @@ if (what == "fracB") {
 }
  
 if (what == "abs(fracB-1/2)") {
-  fracBLim <- c(-0.1,0.8);
+  fracBLim <- c(-0.3,0.8);
   fracBLab <- expression(rho == abs(beta - 1/2));
 }
 
 for (kk in seq(along=fracBList)) {
-  fracB <- fracBList[[kk]];
   name <- names(fracBList)[kk];
+  fracB <- fracBList[[kk]];
   xlim <- xRange*xScale;
   plot(fracB, pch=pch, cex=0.8*cex, xlim=xlim, ylim=fracBLim, xScale=xScale, ylab=fracBLab);
 #  abline(v=cp["position"]+c(-1,+1)*cp["delta"]);
