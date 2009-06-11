@@ -1,4 +1,4 @@
-setMethodS3("extractRawAlleleBFractions", "AromaUnitFracBCnBinaryFile", function(this, chromosome, range=NULL, units=NULL, ..., verbose=FALSE) {
+setMethodS3("extractRawAlleleBFractions", "AromaUnitFracBCnBinaryFile", function(this, chromosome, range=NULL, units=NULL, keepOnlyHets=TRUE, ..., verbose=FALSE) {
   # Argument 'units':
   if (!is.null(units)) {
     units <- Arguments$getIndices(units, range=c(1, nbrOfUnits(this)));
@@ -43,7 +43,10 @@ setMethodS3("extractRawAlleleBFractions", "AromaUnitFracBCnBinaryFile", function
   rm(units2);
 
   # Identify hets?
-  if (exists("gsN")) {
+  if (keepOnlyHets) {
+    if (!exists("gsN")) {
+      throw("Normal genotypes not known: 'gsN' does not exist")
+    }    
     verbose && enter(verbose, "Keeping only loci for which the normal is heterozygous");
     idx <- indexOf(gsN, getName(this));
     gf <- getFile(gsN, idx);

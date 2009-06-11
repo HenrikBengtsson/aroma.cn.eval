@@ -12,24 +12,26 @@ setOption(aromaSettings, "output/ram", FALSE);
 dataSet <- "TCGA,OV,testSet,pairs,Broad";
 chipType <- "GenomeWideSNP_6";
 targetChipType <- chipType;
+rootPath <- "totalAndFracBData"
 
-
+## for the fullNamesTranslator
+fntFUN <- function(names, ...) {
+  pattern <- "^(TCGA-[0-9]{2}-[0-9]{4})-([0-9]{2}[A-Z])[-]*(.*)";
+  gsub(pattern, "\\1,\\2,\\3", names);
+}; 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-# Setting up data sets
+# Setting up fracB data sets
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 if (!exists("dsList", mode="list")) {
   pattern <- sprintf("^%s(|,TBN.*)$", dataSet)
-  dsList <- loadAllDataSets(dataSet, chipType=chipType, pattern=pattern);
+  dsList <- loadAllDataSets(dataSet, chipType=chipType, pattern=pattern, type="fracB", rootPath=rootPath);
 
-  dsList <- lapply(dsList, FUN=function(ds) {
-    setFullNamesTranslator(ds, function(names, ...) {
-      pattern <- "^(TCGA-[0-9]{2}-[0-9]{4})-([0-9]{2}[A-Z])[-]*(.*)";
-      gsub(pattern, "\\1,\\2,\\3", names);
-    }); 
-  })
+  dsList <- lapply(dsList, setFullNamesTranslator, fntFUN);
 
-
+  tds <- AromaUnitTotalCnBinarySet$byName(dataSet, chipType=chipType, paths=rootPath);
+  setFullNamesTranslator(tds, fntFUN)
+  
   # Keep only tumors
   dsList <- lapply(dsList, function(ds) {
     types <- sapply(ds, function(df) getTags(df)[1]);
@@ -53,6 +55,30 @@ if (length(dsList) == 0) {
   throw("No matching data sets found.");
 }
 
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+# Setting up total CN data set
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+acs <- AromaUnitTotalCnBinarySet$byName(dataSet, chipType=chipType, paths=rootPath, verbose=verbose)
+setFullNamesTranslator(acs, fntFUN)
+
+types <- sapply(acs, function(df) getTags(df)[1]);
+isTumor <- grep("^01[A-Z]$", types);
+isNormal <- grep("^1[01][A-Z]$", types);
+
+acsN <- extract(acs, isNormal)
+acsT <- extract(acs, isTumor)
+
+exportTotalCnRatioSet(acsT, acsN, verbose=verbose)
+
+acs <- AromaUnitTotalCnBinarySet$byName(dataSet, chipType=chipType, paths="rawCnData", verbose=verbose)
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+# Setting up normal genotype data set
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 if (!exists("gsN")) {
   gsN <- AromaUnitGenotypeCallSet$byName(dataSet, tags="Birdseed", chipType="*"); 

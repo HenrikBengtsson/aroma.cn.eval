@@ -1,7 +1,7 @@
 ############################################################################
 #
 ############################################################################
-setMethodS3("extractListOfFracB", "list", function(this, name, chromosome, region=NULL, targetChipType=NULL, truth=NULL, keepOnlyHets=TRUE, ..., force=FALSE, verbose=FALSE) {
+setMethodS3("extractListOfCopyNumbers", "list", function(this, name, chromosome, region=NULL, targetChipType=NULL, truth=NULL, ..., force=FALSE, verbose=FALSE) {
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # Validate arguments
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -25,35 +25,34 @@ setMethodS3("extractListOfFracB", "list", function(this, name, chromosome, regio
   }
 
 
-  verbose && enter(verbose, "extractListOfFracB()");
+  verbose && enter(verbose, "extractListOfCopyNumbers()");
 
 
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # Check for cached results
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  key <- list(dataSets=list(method="extractListOfFracB.list()", fullnames=sapply(dsList, getFullName), chipTypes=sapply(dsList, getChipType), samples=lapply(dsList, getFullNames)), name=name, chromosome=chromosome, region=region, targetChipType=targetChipType, truth=truth, what=what, ...);
+  key <- list(dataSets=list(fullnames=sapply(dsList, getFullName), chipTypes=sapply(dsList, getChipType), samples=lapply(dsList, getFullNames)), name=name, chromosome=chromosome, region=region, targetChipType=targetChipType, truth=truth, what=what, ...);
   dirs <- c("aroma.cn.eval");
   if (!force) {
-    fracBList <- loadCache(key, dirs=dirs);
-    if (!is.null(fracBList)) {
+    cnList <- loadCache(key, dirs=dirs);
+    if (!is.null(cnList)) {
       verbose && cat(verbose, "Found cached results");
       verbose && exit(verbose);
-      return(fracBList);
+      return(cnList);
     }
   }
 
 
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  # Extract FracBs
+  # Extract CNs
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # Extract list of files
-  print(name)
   dfList <- lapply(this, FUN=function(ds) {
     idx <- indexOf(ds, name);
     getFile(ds, idx);
   });
 
-  fracBList <- list();
+  cnList <- list();
   for (kk in seq(dfList)) {
     df <- dfList[[kk]];
 
@@ -69,38 +68,36 @@ setMethodS3("extractListOfFracB", "list", function(this, name, chromosome, regio
     }
 
     # Extract copy numbers
-    verbose && enter(verbose, "Extracting FracBs");
-    fracB <- extractRawAlleleBFractions(df, chromosome=chromosome, 
-                                            region=region, units=units, keepOnlyHets=keepOnlyHets);
+    verbose && enter(verbose, "Extracting CNs");
+    cn <- extractRawCopyNumbers(df, chromosome=chromosome, 
+                                            region=region, units=units);
     verbose && exit(verbose);
 
-    # Add true FracB functions?
+    # Add true CN functions?
     if (!is.null(truth)) {
-      fracB <- SegmentedAlleleBFractions(fracB, states=truth);
+      cn <- SegmentedCopyNumbers(cn, states=truth);
     }
 
-    fracBList[[kk]] <- fracB;
+    cnList[[kk]] <- cn;
   } # for (kk ...)
-  names(fracBList) <- names(dfList);
+  names(cnList) <- names(dfList);
 
   # Sanity check
   if (!is.null(targetChipType)) {
-    nbrOfUnits <- sapply(fracBList, FUN=nbrOfLoci);
+    nbrOfUnits <- sapply(cnList, FUN=nbrOfLoci);
     stopifnot(length(unique(nbrOfUnits)) == 1);
   }
 
   # Save cache
-  saveCache(fracBList, key=key, dirs=dirs);
+  saveCache(cnList, key=key, dirs=dirs);
 
   verbose && exit(verbose);
 
-  fracBList;
+  cnList;
 });
 
 ############################################################################
 # HISTORY:
-# 2009-06-10
-# o Updated to make use of AlleleBFractions classes.
 # 2009-02-23
 # o Created.
 ############################################################################

@@ -1,7 +1,7 @@
 ############################################################################
 #
 ############################################################################
-loadAllDataSets <- function(dataSet, chipType="*", pattern=NULL, ..., rootPath="totalAndFracBData") {
+loadAllDataSets <- function(dataSet, chipType="*", pattern=NULL, ..., rootPath="totalAndFracBData", type=c("fracB", "total")) {
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # Validate arguments
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -20,6 +20,9 @@ loadAllDataSets <- function(dataSet, chipType="*", pattern=NULL, ..., rootPath="
   # Argument 'rootPath':
   rootPath <- Arguments$getReadablePath(rootPath, mustExist=TRUE);
 
+  # Argument 'type':
+  type <- match.arg(type, c("fracB", "total"))
+
 
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # Identify all data sets
@@ -36,7 +39,11 @@ loadAllDataSets <- function(dataSet, chipType="*", pattern=NULL, ..., rootPath="
   dsList <- list();
   for (kk in seq(along=dataSets)) {
     dataSet <- dataSets[kk];
-    ds <- AromaUnitFracBCnBinarySet$byName(dataSet, chipType=chipType, paths=rootPath);
+    if (type=="total") {
+      ds <- AromaUnitTotalCnBinarySet$byName(dataSet, chipType=chipType, paths=rootPath);
+    } else {
+      ds <- AromaUnitFracBCnBinarySet$byName(dataSet, chipType=chipType, paths=rootPath);
+    }
     dsList[[kk]] <- ds;
   }
 
