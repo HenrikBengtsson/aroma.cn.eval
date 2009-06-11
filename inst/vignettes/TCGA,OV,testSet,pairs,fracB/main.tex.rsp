@@ -143,9 +143,7 @@ deltaStr <- sprintf("%.2f", delta);
 \end{table}
 
 
-\section{Results}
-
-We compare the  raw, TBN-NGC, and TBN-Birdseed methods using the afformentioned ROC analysis at the full resolution as well as smoothed resolution with bin sizes $w=\{<%=paste(sprintf("%.1f", binWidths[-1]/1e3), collapse=", ")%>\}$~kb.
+We now compare the  raw, TBN-NGC, and TBN-Birdseed methods using the afformentioned ROC analysis at the full resolution as well as smoothed resolution with bin sizes $w=\{<%=paste(sprintf("%.1f", binWidths[-1]/1e3), collapse=", ")%>\}$~kb.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -154,21 +152,17 @@ We compare the  raw, TBN-NGC, and TBN-Birdseed methods using the afformentioned 
 <% # regions <- regions[1]; %>
 <% for (region in regions) { %>
 \clearpage
-\subsection{Region: <%=region%>}
+\section{Region: <%=region%>}
 
 <%
 print(region);
 region <- parseRegion(region);
 print(region);
-fracBList <- NULL;
 %>
 
 <%
-what <- c("abs(fracB-1/2)", "fracB")[1];
-if (what == "ratios") {
-  region$label <- sprintf("%s,%s",region$label, what);
-}
-fracBList <- getFracBList(fracBList, what=what, force=figForce);
+what <- "abs(fracB-1/2)"
+fracBList <- getFracBList(NULL, what=what, force=TRUE);
 print(fracBList);
 fracB <- fracBList[[1]];
 states <- getStates(fracB);
@@ -184,19 +178,29 @@ names[sign == +1] <- "'GAIN' (s=+1)";
 names(tbl) <- names;
 %>
 
+<%
+whats <- c("fracB", "abs(fracB-1/2)");
+figTags <- c("BAF", "MBAF") 
+for (ww in seq(whats)) {
+what <- whats[ww]
+figTag <- figTags[ww]
+fracBList <- NULL;
+%>
+
+\subsection{<%=what%>}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% BEGIN Figure
+% BEGIN Figure:
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 <%
-figName <- sprintf("%s,track", region$label);
+figName <- sprintf("%s,%s,track", region$label, figTag);
 if (fig <- figDev(figName)) {
 
-
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-# Plot FracB along genome
+# Plot 'what' along genome
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 enter(verbose, "plotting")
-fracBList <- getFracBList(fracBList, what=what);
+fracBList <- getFracBList(NULL, what=what, force=figForce);
 print(fracBList);
 
 nbrOfSources <- length(fracBList);
@@ -216,7 +220,8 @@ if (what == "fracB") {
 }
  
 if (what == "abs(fracB-1/2)") {
-  fracBLim <- c(-0.3,0.8);
+  maxRho <- sapply(fracBList, function(x) max(x$y, na.rm=TRUE))
+  fracBLim <- c(-0.02, max(maxRho));
   fracBLab <- expression(rho == abs(beta - 1/2));
 }
 
@@ -235,9 +240,9 @@ for (kk in seq(along=fracBList)) {
     rect(xs[2],ys[1],xlim[2],ys[1]+dy, col="#999999");
   }
   rect(xs[1],ys[1], xs[2],ys[2], density=10, col="#999999");
-  stext(side=3, pos=0.02, line=-1, cex=1.0, name);
+  stext(side=3, pos=0, line=0, cex=1.0, name);
   if (kk == 1) {
-    stext(side=3, pos=0.98, line=-1.1, cex=0.8, sprintf("Chr%02d", getChromosome(fracB)));
+    stext(side=3, pos=1, line=0, cex=1.0, sprintf("Chr%02d", getChromosome(fracB)));
   }
   if (addSdEst) {
     sd <- estimateStandardDeviation(fracB);
@@ -271,8 +276,13 @@ exit(verbose)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % END Figure
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\clearpage
 
+<%
+} ## for (what ...
+%>
 
+\subsection{Evaluation}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -392,6 +402,8 @@ This report was automatically generated using the R.rsp package.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % HISTORY:
+% 2009-06-10
+% o Added a track for fracB.
 % 2009-06-08
 % o Replaced 'cn' by 'fracB'.
 % o Updated text accordingly.
