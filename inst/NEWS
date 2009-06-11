@@ -1,6 +1,12 @@
 Package: aroma.cn.eval
 ======================
 
+Version: 0.0.5 [2009-06-10]
+o Now all ROC functions are implemented for the 
+  SegmentedGenomicSignalsInterface.
+o Removed ROC functions for SegmentedCopyNumbers.
+
+
 Version: 0.0.4 [2009-06-04]
 o Removed obsolete dependency on the R.basic package.
 

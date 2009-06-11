@@ -69,13 +69,13 @@ setMethodS3("extractListOfFracB", "list", function(this, name, chromosome, regio
 
     # Extract copy numbers
     verbose && enter(verbose, "Extracting FracBs");
-    fracB <- extractRawCopyNumbers(df, chromosome=chromosome, 
+    fracB <- extractRawAlleleBFractions(df, chromosome=chromosome, 
                                             region=region, units=units);
     verbose && exit(verbose);
 
     # Add true FracB functions?
     if (!is.null(truth)) {
-      fracB <- SegmentedCopyNumbers(fracB, states=truth);
+      fracB <- SegmentedAlleleBFractions(fracB, states=truth);
     }
 
     fracBList[[kk]] <- fracB;
@@ -98,6 +98,8 @@ setMethodS3("extractListOfFracB", "list", function(this, name, chromosome, regio
 
 ############################################################################
 # HISTORY:
+# 2009-06-10
+# o Updated to make use of AlleleBFractions classes.
 # 2009-02-23
 # o Created.
 ############################################################################

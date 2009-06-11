@@ -25,7 +25,7 @@ binFFracB <- ifelse(robust, "median", "mean");
 figPath <- "figures/col/";
 figForce <- TRUE;
 figDev <- function(..., force=figForce) { epsDev(..., path=figPath, force=force) }
-getStateColors.SegmentedCopyNumbers <- function(this, ...) {
+getStateColors.SegmentedGenomicSignalsInterface <- function(this, ...) {
   states <- getStates(this)
   col <- rep("#000000", nbrOfLoci(this));
 #  col[states < 0] <- "blue"
@@ -93,7 +93,7 @@ Finally, with $|\mathcal{J}|$ denoting the cardinality of the set $\mathcal{J}$,
 By smoothing the data points in each set ($s = \{A,B\}$) by binning the loci in non-overlapping bins of width $w$, we can generate a new set of smoothed $\rho$ on which we can do ROC analysis.  Since the smoothed estimates are less noisy, the TP rate will increase at any given FP rate.  The price for achieving this is that the resolution at which we can detect change points decreases.
 
 \subsection{Comparing methods}
-For each method $p \in \{\textnormal{raw}, \textnormal{TBN,NGC}, \textnormal{TBN,Birdseed}\}$ we will obtain one ROC curve $R_{p}(\cdot)$. 
+For each method $p \in \{\textnormal{raw}; \textnormal{TBN,NGC}; \textnormal{TBN,Birdseed}\}$ we will obtain one ROC curve $R_{p}(\cdot)$. 
 With standard ROC analysis we can then compare the relative performance of the different preprocessing methods.
 
 

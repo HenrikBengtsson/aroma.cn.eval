@@ -1,26 +1,26 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Do not modify this file since it was automatically generated from:
 % 
-%  SegmentedCopyNumbers.ROC.R
+%  SegmentedGenomicSignals.ROC.R
 % 
 % by the Rdoc compiler part of the R.oo package.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-\name{fitRoc.SegmentedCopyNumbers}
-\alias{fitRoc.SegmentedCopyNumbers}
-\alias{SegmentedCopyNumbers.fitRoc}
-\alias{fitRoc.SegmentedCopyNumbers}
-\alias{fitRoc,SegmentedCopyNumbers-method}
+\name{fitRoc.SegmentedGenomicSignalsInterface}
+\alias{fitRoc.SegmentedGenomicSignalsInterface}
+\alias{SegmentedGenomicSignalsInterface.fitRoc}
+\alias{fitRoc.SegmentedGenomicSignalsInterface}
+\alias{fitRoc,SegmentedGenomicSignalsInterface-method}
 
 
-\title{Estimates the ROC for calling copy numbers of state}
+\title{Estimates the ROC for calling the state of genomic loci}
 
 \description{
- Estimates the ROC for calling copy numbers of state.
+ Estimates the ROC for calling the state of genomic loci.
 }
 
-\usage{\method{fitRoc}{SegmentedCopyNumbers}(this, states=NULL, recall=states[1], ...)}
+\usage{\method{fitRoc}{SegmentedGenomicSignalsInterface}(this, states=NULL, recall=states[1], ...)}
 
 \arguments{
   \item{states}{}
@@ -141,7 +141,7 @@ for (kk in seq(along=fits)) {
 \author{Henrik Bengtsson (\url{http://www.braju.com/R/})}
 
 \seealso{
-  \code{\link[aroma.core]{SegmentedCopyNumbers}}
+  \code{\link[aroma.core]{SegmentedGenomicSignalsInterface}}
 }
 \keyword{internal}
 \keyword{methods}
