@@ -9,7 +9,7 @@ getCnList <- function(cnList, ..., what=c("log2ratios", "ratios"), verbose=TRUE)
 
   truth <- makeTruth(region, verbose=verbose);
   cnList <- extractListOfCopyNumbers(list(acs), region, truth=truth,
-                            targetChipType=targetChipType, verbose=verbose);
+                            targetChipType=targetChipType, ..., verbose=verbose);
 
   # CN ratios
   if (what == "ratios") {

@@ -28,8 +28,8 @@ figDev <- function(..., force=figForce) { epsDev(..., path=figPath, force=force)
 getStateColors.SegmentedGenomicSignalsInterface <- function(this, ...) {
   states <- getStates(this)
   col <- rep("#000000", nbrOfLoci(this));
-#  col[states < 0] <- "blue"
-#  col[states > 0] <- "red"
+  col[states < 0] <- "blue"
+  col[states > 0] <- "red"
   col[is.na(states)] <- "#999999";
   col
 }
@@ -182,14 +182,15 @@ names(tbl) <- names;
 % BEGIN Figure: Total copy number
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 <%
-what <- c("ratios", "log2ratios")[2]
+whatCN <- c("ratios", "log2ratios")[2]
 figName <- sprintf("%s,track", region$label);
 if (fig <- figDev(figName, aspect=0.618)) {
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 # Plot CN ratios along genome
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-cnList <- getCnList(NULL, what=what);
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+what <- whatCN
+cnList <- getCnList(NULL, what=what, force=TRUE);
 print(cnList);
 
 nbrOfSources <- length(cnList);
@@ -200,6 +201,7 @@ pch <- "."; cex <- 2;
 xScale <- 1e-6;
 xRange <- range(sapply(cnList, FUN=xRange));
 states <- na.omit(sort(unique(getStates(cnList[[1]]))));
+
 cp <- region$params$cp;
 s <- region$params$s;
 cnLab <- "CN";
@@ -215,6 +217,7 @@ for (kk in seq(along=cnList)) {
   cn <- cnList[[kk]];
   name <- names(cnList)[kk];
   xlim <- xRange*xScale;
+
   plot(cn, pch=pch, cex=0.8*cex, xlim=xlim, ylim=cnLim, xScale=xScale, ylab=cnLab);
 #  abline(v=cp["position"]+c(-1,+1)*cp["delta"]);
   xs <- cp["position"]+c(-1,+1)*cp["delta"];
@@ -241,6 +244,7 @@ for (kk in seq(along=cnList)) {
     points(cnS, pch=pch, cex=0.8*cex, col="white", xScale=xScale);
     points(cnS, pch=19, cex=0.6*cex, col="orange", xScale=xScale);
   }
+
 } # for (kk ...)
 devDone(figName);
 } # if (figDev(...))
@@ -287,7 +291,6 @@ if (fig <- figDev(figName)) {
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 # Plot 'what' along genome
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-enter(verbose, "plotting")
 fracBList <- getFracBList(NULL, what=what, force=figForce, keepOnlyHets=keepOnlyHets[ww]);
 print(fracBList);
 
@@ -345,7 +348,6 @@ for (kk in seq(along=fracBList)) {
   }
 } # for (kk ...)
 devDone(figName);
-exit(verbose)
 
 } # if (figDev(...))
 %>
@@ -369,6 +371,76 @@ exit(verbose)
 <%
 } ## for (what ...
 %>
+
+
+\subsection{ASCNs}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% BEGIN Figure:
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+<%
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+# Plot ASCNs
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+enter(verbose, "plotting")
+fracBList <- getFracBList(NULL, what="fracB", force=figForce, keepOnlyHets=FALSE);
+cn <- getCnList(NULL, what="ratios")[[1]];
+print(fracBList);
+
+nbrOfSources <- length(fracBList);
+
+figName <- sprintf("%s,ASCN", region$label);
+if (fig <- figDev(figName, aspect=1/nbrOfSources)) {
+
+subplots(nbrOfSources, ncol=nbrOfSources);
+par(mar=c(2.7,2.6,1.2,0)+0.1, mgp=c(1.4,0.3,0), tcl=-0.3, cex=1.2);
+pch <- 19; cex <- 0.7;
+pch <- "."; cex <- 2;
+xScale <- 1e-6;
+states <- na.omit(sort(unique(getStates(fracBList[[1]]))));
+cp <- region$params$cp;
+s <- region$params$s;
+fracBLab <- "FracB";
+
+xlab <- expression(CN[A] == theta[A,T]/theta[N])
+ylab <- expression(CN[B] == theta[B,T]/theta[N])
+lim <- c(-0.5,4.5);
+
+for (kk in seq(along=fracBList)) {
+  name <- names(fracBList)[kk];
+  fracB <- fracBList[[kk]];
+
+  cnA <- (1-getSignals(fracB))*getSignals(cn)
+  cnB <- getSignals(fracB)*getSignals(cn)
+  col <- rep(1, length(cn))
+  col <- getPositions(cn)<
+  plot(cnA, cnB, col=getStateColors(cn), xlim=lim, ylim=lim, pch=pch, cex=0.8*cex, xlab=xlab, ylab=ylab);} # for (kk ...)
+  stext(side=3, pos=0, line=0, cex=1.0, name);
+  if (kk == 1) {
+    stext(side=3, pos=1, line=0, cex=1.0, sprintf("Chr%02d", getChromosome(fracB)));
+  }
+
+devDone(figName);
+exit(verbose)
+
+} # if (figDev(...))
+%>
+\begin{figure}[htb]
+ \begin{center}
+  \resizebox{0.95\textwidth}{!}{\includegraphics{<%=fig$fullname%>}}
+ \end{center}
+ \caption{(<%=region$src%>) 
+  There are <%=tbl[1]%> loci of state <%=names(tbl)[1]%> ("negatives") and
+  <%=tbl[2]%> loci of state <%=names(tbl)[2]%> ("positives"). 
+  In total <%=tbl[3]%> loci within the safety margin were excluded.
+ }
+ \label{fig<%=figName%>}
+\end{figure}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% END Figure
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\clearpage
 
 \subsection{Evaluation}
 
@@ -490,6 +562,10 @@ This report was automatically generated using the R.rsp package.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % HISTORY:
+% 2009-06-13
+% o Added a track for ASCN.
+% 2009-06-11
+% o Added a track for TCN.
 % 2009-06-10
 % o Added a track for fracB.
 % 2009-06-08
