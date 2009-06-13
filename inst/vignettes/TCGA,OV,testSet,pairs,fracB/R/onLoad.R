@@ -14,6 +14,9 @@ chipType <- "GenomeWideSNP_6";
 targetChipType <- chipType;
 rootPath <- "totalAndFracBData"
 
+sampleName <- "TCGA-23-1027";
+
+
 ## for the fullNamesTranslator
 fntFUN <- function(names, ...) {
   pattern <- "^(TCGA-[0-9]{2}-[0-9]{4})-([0-9]{2}[A-Z])[-]*(.*)";
@@ -56,7 +59,6 @@ if (length(dsList) == 0) {
 }
 
 
-
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 # Setting up total CN data set
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -90,11 +92,12 @@ if (!exists("gsN")) {
 }
 
 
+
+
 ############################################################################
-## HISTORY:
-## 2009-06-09
-## o Genotype calls now assumed to be stored in AromaUnitGenotypeCallFile:s.
-## 2009-06-08
-## o Created from aroma.aroma.cn.eval/inst/vignettes/GSE13372,2CHCC1143,fracB.
-##
+# HISTORY:
+# 2009-06-09
+# o Genotype calls now assumed to be stored in AromaUnitGenotypeCallFile:s.
+# 2009-06-08
+# o Created from aroma.aroma.cn.eval/inst/vignettes/GSE13372,2CHCC1143,fracB.
 ############################################################################

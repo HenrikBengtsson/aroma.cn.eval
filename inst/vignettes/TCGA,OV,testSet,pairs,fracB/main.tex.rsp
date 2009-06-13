@@ -34,8 +34,7 @@ getStateColors.SegmentedGenomicSignalsInterface <- function(this, ...) {
   col
 }
 
-sampleName <- getNames(dsList[[1]])
-title <- sprintf("Single sample assessment of the TumorBoost method\ntumor/normal pair: %s\ndata set %s", sampleName, dataSet);
+title <- sprintf("Single sample assessment of the TumorBoost method based on the '%s' data set", dataSet);
 authors <- "HB, PN.";
 exit(verbose)
 %>
@@ -161,7 +160,7 @@ print(region);
 %>
 
 <%
-what <- "abs(fracB-1/2)"
+what <- "abs(fracB-1/2)";
 fracBList <- getFracBList(NULL, what=what, force=TRUE);
 print(fracBList);
 fracB <- fracBList[[1]];
@@ -185,7 +184,7 @@ names(tbl) <- names;
 <%
 what <- c("ratios", "log2ratios")[2]
 figName <- sprintf("%s,track", region$label);
-if (fig <- figDev(figName)) {
+if (fig <- figDev(figName, aspect=0.618)) {
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 # Plot CN ratios along genome

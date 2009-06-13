@@ -7,6 +7,7 @@ getCnList <- function(cnList, ..., what=c("log2ratios", "ratios"), verbose=TRUE)
   # Arguments 'what':
   what <- match.arg(what);
 
+  truth <- makeTruth(region, verbose=verbose);
   cnList <- extractListOfCopyNumbers(list(acs), region, truth=truth,
                             targetChipType=targetChipType, verbose=verbose);
 

@@ -7,6 +7,7 @@ getFracBList <- function(fracBList, ..., what=c("fracB", "abs(fracB-1/2)"), verb
   # Arguments 'what':
   what <- match.arg(what);
 
+  truth <- makeTruth(region, verbose=verbose);
   fracBList <- extractListOfFracB(dsList, region, truth=truth,
                             targetChipType=targetChipType, ..., verbose=verbose);
 
