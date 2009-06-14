@@ -1,3 +1,4 @@
+# "TCGA-23-1027:Chr2@126.0-156.0,cp=141.0+/-2.0,s=0/+1"
 makeTruth <- function(region, ..., verbose=FALSE) {
   # Arguments 'verbose':
   verbose <- Arguments$getVerbose(verbose);

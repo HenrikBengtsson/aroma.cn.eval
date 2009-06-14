@@ -68,10 +68,32 @@ setMethodS3("extractListOfFracB", "list", function(this, name, chromosome, regio
       verbose && exit(verbose);
     }
 
+    # Extract only loci called heterozygote in the normal?
+    if (keepOnlyHets) {
+      if (!exists("gsN")) {
+        throw("Normal genotypes not known: 'gsN' does not exist")
+      }    
+      verbose && enter(verbose, "Keeping only loci for which the normal is heterozygous");
+      idx <- indexOf(gsN, name);
+      gf <- getFile(gsN, idx);
+      verbose && print(verbose, gf);
+
+      ## Identify heterozygous loci
+      isHet <- isHeterozygous(gf, units=units, drop=TRUE);
+      if (is.null(units)) {
+        units <- whichVector(isHet);
+      } else {
+        units <- units[isHet];
+      }
+      verbose && cat(verbose, "Remaining units:");
+      verbose && str(verbose, units);
+      verbose && exit(verbose);
+    }
+
     # Extract copy numbers
     verbose && enter(verbose, "Extracting FracBs");
     fracB <- extractRawAlleleBFractions(df, chromosome=chromosome, 
-                                            region=region, units=units, keepOnlyHets=keepOnlyHets);
+                                            region=region, units=units);
     verbose && exit(verbose);
 
     # Add true FracB functions?
@@ -99,6 +121,8 @@ setMethodS3("extractListOfFracB", "list", function(this, name, chromosome, regio
 
 ############################################################################
 # HISTORY:
+# 2009-06-13
+# o CLEAN UP: Now making use of extractRawAlleleBFractions() in aroma.core.
 # 2009-06-10
 # o Updated to make use of AlleleBFractions classes.
 # 2009-02-23
