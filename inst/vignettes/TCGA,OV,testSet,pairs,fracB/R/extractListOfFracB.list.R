@@ -1,7 +1,7 @@
 ############################################################################
 #
 ############################################################################
-setMethodS3("extractListOfFracB", "list", function(this, name, chromosome, region=NULL, targetChipType=NULL, truth=NULL, keepOnlyHets=TRUE, ..., force=FALSE, verbose=FALSE) {
+setMethodS3("extractListOfFracB", "list", function(this, name, chromosome, region=NULL, targetChipType=NULL, truth=NULL, ..., force=FALSE, verbose=FALSE) {
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # Validate arguments
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -68,38 +68,18 @@ setMethodS3("extractListOfFracB", "list", function(this, name, chromosome, regio
       verbose && exit(verbose);
     }
 
-    # Extract only loci called heterozygote in the normal?
-    if (keepOnlyHets) {
-      if (!exists("gsN")) {
-        throw("Normal genotypes not known: 'gsN' does not exist")
-      }    
-      verbose && enter(verbose, "Keeping only loci for which the normal is heterozygous");
-      idx <- indexOf(gsN, name);
-      gf <- getFile(gsN, idx);
-      verbose && print(verbose, gf);
-
-      ## Identify heterozygous loci
-      isHet <- isHeterozygous(gf, units=units, drop=TRUE);
-      if (is.null(units)) {
-        units <- whichVector(isHet);
-      } else {
-        units <- units[isHet];
-      }
-      verbose && cat(verbose, "Remaining units:");
-      verbose && str(verbose, units);
-      verbose && exit(verbose);
-    }
-
     # Extract copy numbers
     verbose && enter(verbose, "Extracting FracBs");
     fracB <- extractRawAlleleBFractions(df, chromosome=chromosome, 
-                                            region=region, units=units);
-    verbose && exit(verbose);
+                           region=region, units=units, keepUnits=TRUE);
+    verbose && print(verbose, fracB);
 
     # Add true FracB functions?
     if (!is.null(truth)) {
       fracB <- SegmentedAlleleBFractions(fracB, states=truth);
     }
+    verbose && print(verbose, fracB);
+    verbose && exit(verbose);
 
     fracBList[[kk]] <- fracB;
   } # for (kk ...)

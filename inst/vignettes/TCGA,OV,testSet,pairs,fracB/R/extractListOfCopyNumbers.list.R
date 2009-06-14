@@ -5,15 +5,12 @@ setMethodS3("extractListOfCopyNumbers", "list", function(this, name, chromosome,
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # Validate arguments
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#str(region)
   # Argument 'name':
   if (is.list(name)) {
     chromosome <- name$chromosome;
     region <- name$region;
     name <- name$name;
   }
-#str(region)
-#stop()
  
   # Argument 'targetChipType':
   if (!is.null(targetChipType)) {
