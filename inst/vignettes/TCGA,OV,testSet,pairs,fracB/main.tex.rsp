@@ -2,7 +2,7 @@
 % Authors: Henrik Bengtsson, hb@stat.berkeley.edu
 %          Pierre Neuvial, pierre@stat.berkeley.edu
 % Created on: 2009-02-23
-% Modified on: 2009-06-08
+% Modified on: 2009-06-13
 %
 % Usage:
 %  library("R.rsp");
@@ -24,14 +24,19 @@ robustStr <- ifelse(robust, "median", "mean");
 binFFracB <- ifelse(robust, "median", "mean"); 
 
 figPath <- "figures/col/";
-figForce <- TRUE;
-figDev <- function(..., force=figForce) { epsDev(..., path=figPath, force=force) }
-getStateColors.SegmentedGenomicSignalsInterface <- function(this, ...) {
-  states <- getStates(this)
+figForce <- 1;
+figDev <- function(..., force=(figForce > 0)) { epsDev(..., path=figPath, force=force) }
+getStateColors.SegmentedGenomicSignalsInterface <- function(this, ..., na.rm=FALSE) {
+  states <- getStates(this);
   col <- rep("#000000", nbrOfLoci(this));
-  col[states < 0] <- "blue"
-  col[states > 0] <- "red"
-  col[is.na(states)] <- "#999999";
+  col[states == -1] <- "blue";
+  col[states == +1] <- "purple";
+  col[states == +2] <- "red";
+  if (na.rm) {
+    col[is.na(states)] <- NA;
+  } else {
+    col[is.na(states)] <- "#999999";
+  }
   col
 }
 
@@ -150,7 +155,6 @@ We now compare the  raw, TBN-NGC, and TBN-Birdseed methods using the afformentio
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % BEGIN Regions of interest
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-<% # regions <- regions[1]; %>
 <% for (region in regions) { %>
 \clearpage
 \section{Region: <%=region%>}
@@ -195,14 +199,14 @@ rm(sign);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Total copy number}
 <%
-what <- "ratios";
 cnList <- NULL;
+what <- "ratios";
 figName <- sprintf("%s,%s,track", region$label, what);
 if (fig <- figDev(figName, aspect=0.618)) {
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
   # Plot CN ratios along genome
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  cnList <- getCnList(cnList, what=what, force=TRUE);
+  cnList <- getCnList(cnList, what=what, force=(figForce > 2));
   print(cnList);
   
   nbrOfSources <- length(cnList);
@@ -303,8 +307,10 @@ if (fig <- figDev(figName)) {
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 # Plot 'what' along genome
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-fracBList <- getFracBList(NULL, what=what, force=figForce, 
-                                      keepOnlyHets=keepOnlyHets[ww]);
+fracBList <- getFracBList(NULL, what=what, force=(figForce > 2));
+if (keepOnlyHets[ww]) {
+  fracBList <- extractHeterozygous(fracBList);
+}
 print(fracBList);
 
 nbrOfSources <- length(fracBList);
@@ -394,13 +400,12 @@ devDone(figName);
 # Plot ASCNs
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 verbose && enter(verbose, "Plotting (C_A,C_B)")
-fracBList <- getFracBList(NULL, what="fracB", force=figForce, 
-                                                  keepOnlyHets=FALSE);
+fracBList <- getFracBList(NULL, what="fracB", force=(figForce > 2));
 print(fracBList);
 nbrOfSources <- length(fracBList);
 
 what <- "ratios";
-cnList <- getCnList(cnList, what=what);
+cnList <- getCnList(cnList, what=what, force=(figForce > 2));
 cn <- cnList[[1]];
 print(cn);
  
@@ -418,17 +423,17 @@ if (fig <- figDev(figName, aspect=1.12*(1/nbrOfSources))) {
  
   xlab <- expression(C[A] == theta[A,T]/theta[N]);
   ylab <- expression(C[B] == theta[B,T]/theta[N]);
-  xlab <- expression(C[T][","][A] == theta[T][","][A]/theta[N]);
-  ylab <- expression(C[T][","][B] == theta[T][","][B]/theta[N]);
-  xlab <- expression(C[T][","][A] == (1-beta[T])*C);
-  ylab <- expression(C[T][","][B] == beta[T]*C);
+  xlab <- expression(C["T,A"] == theta["T,A"]/theta[N]);
+  ylab <- expression(C["T,B"] == theta["T,B"]/theta[N]);
+  xlab <- expression(C["T,A"] == (1-beta[T])*C);
+  ylab <- expression(C["T,B"] == beta[T]*C);
   xlab <- expression(C["T,A"]);
   ylab <- expression(C["T,B"]);
   lim <- c(-0.5,4.5);
 
   # Extract total CNs 
   C <- getSignals(cn);
-  col <- getStateColors(cn);
+  col <- getStateColors(cn, na.rm=TRUE);
 
   for (kk in seq(along=fracBList)) {
     name <- names(fracBList)[kk];
@@ -436,8 +441,10 @@ if (fig <- figDev(figName, aspect=1.12*(1/nbrOfSources))) {
     beta <- getSignals(fracB);
     CA <- (1-beta) * C;
     CB <- beta * C;
-    plot(CA, CB, col=col, xlim=lim, ylim=lim, pch=pch, cex=0.8*cex, xlab=xlab, ylab=ylab);
+    plot(NA, col=col, xlim=lim, ylim=lim, xlab=xlab, ylab=ylab);
+    for (c in 2) lines(x=c(0,c), y=c(c,0), lty=1, lwd=2, col="#999999");
     stext(side=3, pos=0, line=0, cex=1.0, name);
+    points(CA, CB, col=col, pch=pch, cex=0.8*cex);
   } # for (kk ...)
  
   devDone(figName);
@@ -473,6 +480,7 @@ aspect <- rocRows/rocCols;
 if (fig <- figDev(figName, width=8, aspect=aspect)) {
 what <- whats[ww];
 fracBList <- getFracBList(NULL, what=what);
+fracBList <- extractHeterozygous(fracBList);
 print(fracBList);
 
 fracB <- fracBList[[1]];
