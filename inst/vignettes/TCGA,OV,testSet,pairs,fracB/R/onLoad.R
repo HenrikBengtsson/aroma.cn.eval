@@ -14,9 +14,6 @@ chipType <- "GenomeWideSNP_6";
 targetChipType <- chipType;
 rootPath <- "totalAndFracBData"
 
-sampleName <- "TCGA-23-1027";
-
-
 ## for the fullNamesTranslator
 fntFUN <- function(names, ...) {
   pattern <- "^(TCGA-[0-9]{2}-[0-9]{4})-([0-9]{2}[A-Z])[-]*(.*)";
