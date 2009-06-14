@@ -75,7 +75,7 @@ Without loss of generality, assume the loci in $\mathcal{J}_A$ are copy neutral 
 By using a (global) threshold/cutoff $\tau$ we can then call the CN state for each locus.  We say that locus $j$ belongs to the CN state $B$ if $M_j \leq \tau$. Let $\mathcal{J}_{+} = \{M_j \leq \tau; j=1,\ldots,J\}$ be all such loci.  Let $\mathcal{J}_{-} = \{M_j > \tau; j=1,\ldots,J\}$ be the remaining loci, which are said to belong to CN state $A$. 
 %%  As above, let $J_{+}$ and $J_{-}$ be the number of loci in each of these sets.
 Then $\mathcal{J}_{+|B} = \mathcal{J}_{+} \cap \mathcal{J}_{B}$ represents the set of true positives (true deletions correctly called deletions) and $\mathcal{J}_{+|A} = \mathcal{J}_{+} \cap \mathcal{J}_{A}$ represents the set of false positives (true copy neutral loci incorrectly called deletions).
-Finally, with $|\mathcal{J}|$ denoting the cardinality of the set $\mathcal{J}$, we define $\beta = \beta(\tau) = |\mathcal{J}_{+|B}|/|\mathcal{J}_{B}| \in [0,1]$ and $\alpha = \alpha(\tau) = |\mathcal{J}_{+|A}/\mathcal{J}_{A}| \in [0,1]$ to be the true-positive (TP) rate and the false-positive (FP) rate, respectively.  The Receiver Operator Characteristic (ROC) performance is defined by the ROC curve $R(\tau): \tau \rightarrow (\alpha,\beta) \in [0,1]^2$.
+Finally, with $|\mathcal{J}|$ denoting the cardinality of the set $\mathcal{J}$, we define $\beta = \beta(\tau) = |\mathcal{J}_{+|B}| / |\mathcal{J}_{B}| \in [0,1]$ and $\alpha = \alpha(\tau) = |\mathcal{J}_{+|A}| / |\mathcal{J}_{A}| \in [0,1]$ to be the true-positive (TP) rate and the false-positive (FP) rate, respectively.  The Receiver Operator Characteristic (ROC) performance is defined by the ROC curve $R(\tau): \tau \rightarrow (\alpha,\beta) \in [0,1]^2$.
 
 \subsection{Performance at different levels of resolution}
 By smoothing the data points in each set ($s = \{A,B\}$) by binning the loci in non-overlapping bins of width $w$, we can generate a new set of smoothed CN ratios on which we can do ROC analysis.  Since the smoothed CN estimates are less noisy, the TP rate will increase at any given FP rate.  The price for achieving this is that the resolution at which we can detect change points decreases.
@@ -372,6 +372,8 @@ This report was automatically generated using the R.rsp package.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % HISTORY:
+% 2009-06-13
+% o Typo: Fixed |x/y| to |x| / |y|.
 % 2009-04-09
 % o Language updates after feedback from TS.
 % 2009-02-23

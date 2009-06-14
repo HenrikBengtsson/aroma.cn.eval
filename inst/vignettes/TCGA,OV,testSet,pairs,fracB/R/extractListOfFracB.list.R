@@ -47,7 +47,7 @@ setMethodS3("extractListOfFracB", "list", function(this, name, chromosome, regio
   # Extract FracBs
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # Extract list of files
-  print(name)
+  print(name);
   dfList <- lapply(this, FUN=function(ds) {
     idx <- indexOf(ds, name);
     getFile(ds, idx);
