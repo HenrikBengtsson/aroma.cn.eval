@@ -301,77 +301,79 @@ keepOnlyHets <- c(FALSE, TRUE, TRUE);
 % BEGIN Figure:
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 <%
-figName <- sprintf("%s,%s,track", region$label, figTag);
-if (fig <- figDev(figName)) {
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-# Plot 'what' along genome
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 fracBList <- getFracBList(dsList, what=what, force=(figForce > 2));
 if (keepOnlyHets[ww]) {
   fracBList <- extractHeterozygous(fracBList);
 }
 print(fracBList);
-
 nbrOfSources <- length(fracBList);
-subplots(nbrOfSources, ncol=1);
-par(mar=c(2.7,2.6,1.0,1)+0.1, mgp=c(1.4,0.3,0), tcl=-0.3, cex=1.2);
-pch <- 19; cex <- 0.7;
-pch <- "."; cex <- 2;
-xScale <- 1e-6;
-xRange <- range(sapply(fracBList, FUN=xRange));
-states <- na.omit(getUniqueStates(fracBList[[1]]));
-cp <- region$params$cp;
-s <- region$params$s;
+
 fracBLab <- "FracB";
 if (what == "fracB") {
   fracBLim <- c(-0.1,1.1);
   fracBLab <- expression(beta == theta[B]/(theta[A]+theta[B]));
-}
- 
-if (what == "abs(fracB-1/2)") {
+} else if (what == "abs(fracB-1/2)") {
   maxRho <- sapply(fracBList, function(x) max(x$y, na.rm=TRUE))
   fracBLim <- c(-0.02, max(maxRho));
   fracBLab <- expression(rho == abs(beta - 1/2));
 }
 
+pch <- 19; cex <- 0.7;
+pch <- "."; cex <- 2;
+xScale <- 1e-6;
+xRange <- range(sapply(fracBList, FUN=xRange));
+states <- na.omit(getUniqueStates(fracBList[[1]]));
+xlim <- xRange*xScale;
+cp <- region$params$cp;
+s <- region$params$s;
+xs <- cp["position"]+c(-1,+1)*cp["delta"];
+figList <- list();
 for (kk in seq(along=fracBList)) {
   name <- names(fracBList)[kk];
   fracB <- fracBList[[kk]];
-  xlim <- xRange*xScale;
-  plot(fracB, pch=pch, cex=0.8*cex, xlim=xlim, ylim=fracBLim, xScale=xScale, ylab=fracBLab);
-  xs <- cp["position"]+c(-1,+1)*cp["delta"];
-  ys <- par("usr")[3:4];
-  dy <- 0.04*diff(ys);
-  if (s[1] != 0) {
-    rect(xlim[1],ys[1],xs[1],ys[1]+dy, col="#999999");
-  } else {
-    rect(xs[2],ys[1],xlim[2],ys[1]+dy, col="#999999");
-  }
-  rect(xs[1],ys[1], xs[2],ys[2], density=10, col="#999999");
-  stext(side=3, pos=0, line=0, cex=1.0, name);
-  if (kk == 1) {
-    stext(side=3, pos=1, line=0, cex=1.0, sprintf("Chr%02d", getChromosome(fracB)));
-  }
-  if (addSdEst) {
-    sd <- estimateStandardDeviation(fracB);
-    stext(side=4, pos=1, line=0, cex=0.8, sprintf("SD=%.3g", sd));
-  }
-  if (addBinTrack) {
-    binWidth <- 10e3;
-    fracB <- extractSubsetByState(fracB, states=states);
-    fracBS <- binnedSmoothingByState(fracB, from=xRange[1], to=xRange[2], by=binWidth, FUN=binFFracB);
-    points(fracBS, pch=pch, cex=0.8*cex, col="white", xScale=xScale);
-    points(fracBS, pch=19, cex=0.6*cex, col="orange", xScale=xScale);
-  }
-} # for (kk ...)
-devDone(figName);
 
-} # if (figDev(...))
+  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+  # Plot 'what' along genome
+  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  figName <- sprintf("%s,%s,track,%s", region$label, figTag, name);
+  if (fig <- figDev(figName, aspect=0.38)) {
+    # subplots(nbrOfSources, ncol=1);
+    par(mar=c(3.0,2.8,0.2,0.2)+0.1, mgp=c(1.9,0.4,0), tcl=-0.3, cex=1.2, las=1);
+
+    plot(fracB, pch=pch, cex=0.8*cex, xlim=xlim, ylim=fracBLim, xScale=xScale, ylab=fracBLab);
+    ys <- par("usr")[3:4];
+    dy <- 0.04*diff(ys);
+    if (s[1] != 0) {
+      rect(xlim[1],ys[1],xs[1],ys[1]+dy, col="#999999");
+    } else {
+      rect(xs[2],ys[1],xlim[2],ys[1]+dy, col="#999999");
+    }
+    rect(xs[1],ys[1], xs[2],ys[2], density=10, col="#999999");
+    stext(side=3, pos=0, line=0, cex=1.0, name);
+    if (kk == 1) {
+      stext(side=3, pos=1, line=0, cex=1.0, sprintf("Chr%02d", getChromosome(fracB)));
+    }
+    if (addSdEst) {
+      sd <- estimateStandardDeviation(fracB);
+      stext(side=4, pos=1, line=0, cex=0.8, sprintf("SD=%.3g", sd));
+    }
+    if (addBinTrack) {
+      binWidth <- 10e3;
+      fracB <- extractSubsetByState(fracB, states=states);
+      fracBS <- binnedSmoothingByState(fracB, from=xRange[1], to=xRange[2], by=binWidth, FUN=binFFracB);
+      points(fracBS, pch=pch, cex=0.8*cex, col="white", xScale=xScale);
+      points(fracBS, pch=19, cex=0.6*cex, col="orange", xScale=xScale);
+    }
+    devDone(figName);
+  } # if (figDev(...))
+  figList[[kk]] <- fig;
+} # for (kk ...)
 %>
 \begin{figure}[htb]
  \begin{center}
+  <% for (fig in figList) { %>
   \resizebox{0.95\textwidth}{!}{\includegraphics{<%=fig$fullname%>}}
+  <% } %>
  \end{center}
  \caption{(<%=region$src%>) 
   There are <%=tbl[1]%> loci of state <%=names(tbl)[1]%> ("negatives") and
@@ -498,6 +500,8 @@ if (fig <- figDev(figName, aspect=1.12*(1/nbrOfSources))) {
  
   xlab <- expression(beta[N] == theta[B,N]/theta[N]);
   ylab <- expression(beta[T] == theta[B,T]/theta[T]);
+  xlab <- expression(beta[N]);
+  ylab <- expression(beta[T]);
   lim <- c(-0.2,1.2);
 
 
@@ -506,7 +510,9 @@ if (fig <- figDev(figName, aspect=1.12*(1/nbrOfSources))) {
     fracB <- fracBList[[kk]];
     col <- getStateColors(fracB);
     betaT <- getSignals(fracB);
-    plot(betaN, betaT, col=col, xlim=lim, ylim=lim, xlab=xlab, ylab=ylab, pch=pch);
+    plot(NA, xlim=lim, ylim=lim, xlab=xlab, ylab=ylab);
+    abline(a=0, b=1, lty=2, lwd=1, col="#999999");
+    points(betaN, betaT, pch=pch, col=col);
     stext(side=3, pos=0, line=0, cex=1.0, name);
   } # for (kk ...)
   devDone(figName);
