@@ -1,4 +1,4 @@
-getCnList <- function(cnList, ..., what=c("log2ratios", "ratios"), verbose=TRUE) {
+getCnList <- function(cnList=NULL, ..., what=c("log2ratios", "ratios"), verbose=TRUE) {
   # Nothing todo?
   if (!is.null(cnList)) {
     return(cnList);

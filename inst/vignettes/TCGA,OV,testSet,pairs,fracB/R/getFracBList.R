@@ -1,4 +1,4 @@
-getFracBList <- function(dsList, ..., what=c("fracB", "abs(fracB-1/2)"), verbose=TRUE) {
+getFracBList <- function(dsList, fracBList=NULL, ..., what=c("fracB", "abs(fracB-1/2)"), verbose=TRUE) {
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # Validate arguments
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -9,10 +9,10 @@ getFracBList <- function(dsList, ..., what=c("fracB", "abs(fracB-1/2)"), verbose
     on.exit(popState(verbose));
   }
 
-##   # Nothing todo?
-##   if (!is.null(fracBList)) {
-##     return(fracBList);
-##   }
+  # Nothing todo?
+  if (!is.null(fracBList)) {
+    return(fracBList);
+  }
 
   # Arguments 'what':
   what <- match.arg(what);
