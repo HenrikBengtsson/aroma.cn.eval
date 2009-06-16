@@ -6,6 +6,7 @@ dataSet <- "TCGA,OV,testSet,pairs,Broad";
 chipType <- "GenomeWideSNP_6";
 targetChipType <- chipType;
 
+genTag <- c("Birdseed", "NGC")[2]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Change-points of interest

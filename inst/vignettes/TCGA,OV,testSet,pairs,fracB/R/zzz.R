@@ -19,7 +19,13 @@ if (!exists("dsList", mode="list")) {
   tds <- AromaUnitTotalCnBinarySet$byName(dataSet, chipType=chipType, paths=rootPath);
   setFullNamesTranslator(tds, fntFUN)
   
-  # Keep only tumors
+  ## normals
+  dsN0 <- dsList[[dataSet]]
+  types <- sapply(dsN0, function(df) getTags(df)[1]);
+  keep <- grep("^1[01][A-Z]$", types);
+  dsN <- extract(dsN0, keep);
+
+  ## Keep only tumors
   dsList <- lapply(dsList, function(ds) {
     types <- sapply(ds, function(df) getTags(df)[1]);
     keep <- grep("^01[A-Z]$", types);
@@ -68,14 +74,13 @@ if (!exists("acs") || !inherits(acs, "AromaUnitTotalCnBinarySet")) {
 # Setting up normal genotype data set
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 if (!exists("gsN")) {
-  gsN <- AromaUnitGenotypeCallSet$byName(dataSet, tags="Birdseed", chipType="*"); 
+  gsN <- AromaUnitGenotypeCallSet$byName(dataSet, tags=genTag, chipType="*"); 
   setFullNamesTranslator(gsN, function(names, ...) {
     pattern <- "^(TCGA-[0-9]{2}-[0-9]{4})-([0-9]{2}[A-Z])[-]*(.*)";
     gsub(pattern, "\\1,\\2,\\3", names);
   }); 
   print(gsN);
 }
-
 
 
 ############################################################################
