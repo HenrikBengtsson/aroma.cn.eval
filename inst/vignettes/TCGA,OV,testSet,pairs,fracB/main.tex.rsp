@@ -171,7 +171,7 @@ print(region);
 # Count the number of loci with each state
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 what <- "abs(fracB-1/2)";
-fracBList <- getFracBList(NULL, what=what, force=TRUE);
+fracBList <- getFracBList(dsList, what=what, force=TRUE);
 print(fracBList);
 fracB <- fracBList[[1]];
 rm(fracBList);
@@ -307,7 +307,7 @@ if (fig <- figDev(figName)) {
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 # Plot 'what' along genome
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-fracBList <- getFracBList(NULL, what=what, force=(figForce > 2));
+fracBList <- getFracBList(dsList, what=what, force=(figForce > 2));
 if (keepOnlyHets[ww]) {
   fracBList <- extractHeterozygous(fracBList);
 }
@@ -400,7 +400,7 @@ devDone(figName);
 # Plot ASCNs
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 verbose && enter(verbose, "Plotting (C_A,C_B)")
-fracBList <- getFracBList(NULL, what="fracB", force=(figForce > 2));
+fracBList <- getFracBList(dsList, what="fracB", force=(figForce > 2));
 print(fracBList);
 nbrOfSources <- length(fracBList);
 
@@ -467,6 +467,68 @@ verbose && exit(verbose);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \clearpage
 
+\subsection{$(\beta_N, \beta_T)$ plots}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% BEGIN Figure:
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+<%
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+# Plot $(\beta_N, \beta_T)$
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+what <- "fracB"
+
+verbose && enter(verbose, "Plotting (beta_N, beta_T")
+fracBList <- getFracBList(dsList, what=what, force=(figForce > 2));
+fracBN <- getFracBList(list(dsN), what=what, force=(figForce > 2))[[1]];
+betaN <- getSignals(fracBN)
+
+print(fracBList);
+nbrOfSources <- length(fracBList);
+
+figName <- sprintf("%s,betaNvsBetaT,%s", region$label, what);
+if (fig <- figDev(figName, aspect=1.12*(1/nbrOfSources))) {
+  subplots(nbrOfSources, ncol=nbrOfSources);
+  par(mar=c(2.7,2.6,1.2,0)+0.1, mgp=c(1.4,0.3,0), tcl=-0.3, cex=1.2);
+  pch <- 19; cex <- 0.7;
+  pch <- "."; cex <- 2;
+  xScale <- 1e-6;
+  states <- na.omit(sort(getUniqueStates(fracBList[[1]])));
+  cp <- region$params$cp;
+  s <- region$params$s;
+ 
+  xlab <- expression(beta[N] == theta[B,N]/theta[N]);
+  ylab <- expression(beta[T] == theta[B,T]/theta[T]);
+  lim <- c(-0.2,1.2);
+
+
+  for (kk in seq(along=fracBList)) {
+    name <- names(fracBList)[kk];
+    fracB <- fracBList[[kk]];
+    col <- getStateColors(fracB);
+    betaT <- getSignals(fracB);
+    plot(betaN, betaT, col=col, xlim=lim, ylim=lim, xlab=xlab, ylab=ylab, pch=pch);
+    stext(side=3, pos=0, line=0, cex=1.0, name);
+  } # for (kk ...)
+  devDone(figName);
+} # if (figDev(...))
+verbose && exit(verbose);
+%>
+\begin{figure}[htb]
+ \begin{center}
+  \resizebox{0.95\textwidth}{!}{\includegraphics{<%=fig$fullname%>}}
+ \end{center}
+ \caption{(<%=region$src%>) 
+  There are <%=tbl[1]%> loci of state <%=names(tbl)[1]%> ("negatives") and
+  <%=tbl[2]%> loci of state <%=names(tbl)[2]%> ("positives"). 
+  In total <%=tbl[3]%> loci within the safety margin were excluded.
+ }
+ \label{fig<%=figName%>}
+\end{figure}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% END Figure
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\clearpage
+
 \subsection{Evaluation}
 
 
@@ -479,7 +541,7 @@ rocRows <- ceiling(length(binWidths)/rocCols);
 aspect <- rocRows/rocCols;
 if (fig <- figDev(figName, width=8, aspect=aspect)) {
 what <- whats[ww];
-fracBList <- getFracBList(NULL, what=what);
+fracBList <- getFracBList(dsList, what=what);
 fracBList <- extractHeterozygous(fracBList);
 print(fracBList);
 
@@ -592,6 +654,8 @@ This report was automatically generated using the R.rsp package.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % HISTORY:
+% 2009-06-15
+% o Added (betaN, betaT) plots.
 % 2009-06-13
 % o Added a track for ASCN.
 % 2009-06-11
