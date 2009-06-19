@@ -6,7 +6,8 @@ dataSet <- "TCGA,OV,testSet,pairs,Broad";
 chipType <- "GenomeWideSNP_6";
 targetChipType <- chipType;
 
-genTag <- c("Birdseed", "NGC")[2]
+genTags <- c("Birdseed", "NGC")
+genTag <- genTags[1]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Change-points of interest
@@ -18,4 +19,4 @@ regions <- c(
   "TCGA-23-1027:Chr2@126.0-156.0,cp=141.0+/-2.0,s=1/2"
 );
 
-# regions <- regions[1]
+regions <- regions[4]

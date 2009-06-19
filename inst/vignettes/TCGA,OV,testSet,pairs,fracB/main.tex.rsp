@@ -12,14 +12,14 @@
 verbose && enter(verbose, "Setup");
 sourceDirectory("R/");
 what <- "fracB";
-addLegend <- FALSE;
+addLegend <- TRUE;
 addSdEst <- FALSE;
 addBinTrack <- FALSE;
 
 binWidths <- c(0,1,2,5,10,20)*1e3; rocCols <- 2;
 binWidths <- c(0,5,20,50,100,200)*1e3; rocCols <- 3;
 binWidths <- c(0,20,50,100,200,400)*1e3; rocCols <- 3;
-robust <- c(FALSE, TRUE)[2];
+robust <- c(FALSE, TRUE)[1		 ];
 robustStr <- ifelse(robust, "median", "mean");
 binFFracB <- ifelse(robust, "median", "mean"); 
 
@@ -77,8 +77,8 @@ Consider a local genomic region with loci where there exists exactly one change 
 Assume that we can identify this changepoint and with very high confidence locate it to be within $[x_0-\delta, x_0+\delta)$ where we refer to $\delta$ as the safety margin on each side of the changepoint.
 Then we can assess how well we can detect this changepoint given the two sets of data points one each side of changepoint with the safety margin excluded.
 
-Allele~B fractions cannot be easily segmented along the genome "as is", because their distribution in any given region has several modes.  However, if we assume normal genotypes are known and focus on loci that are heterozygote, then $\rho = \vert \beta - 1/2 \vert$ has only one mode and can be segmented easily.
-Here we will use normal genotype calls to identify a set of loci that are heterozygote.
+Allele~B fractions cannot be easily segmented along the genome "as is", because their distribution in any given region has several modes.  However, if we assume normal genotypes are known and focus on loci that are heterozygous, then $\rho = \vert \beta - 1/2 \vert$ has only one mode and can be segmented easily.
+Here we will use normal genotype calls to identify a set of loci that are heterozygous.
 
 
 \subsection{Receiver Operator Characteristic performance}
@@ -199,14 +199,14 @@ rm(sign);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Total copy number}
 <%
-cnList <- NULL;
 what <- "ratios";
+cnList <- NULL
 figName <- sprintf("%s,%s,track", region$label, what);
 if (fig <- figDev(figName, aspect=0.618)) {
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
   # Plot CN ratios along genome
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  cnList <- getCnList(cnList, what=what, force=(figForce > 2));
+  cnList <- getCnList(list(acs), cnList=cnList, what=what, force=(figForce > 2));
   print(cnList);
   
   nbrOfSources <- length(cnList);
@@ -291,11 +291,15 @@ keepOnlyHets <- c(FALSE, TRUE, TRUE);
   what <- whats[ww];
   figTag <- figTags[ww];
   fracBList <- NULL;
+  hetsMsg <- ""
+  if (keepOnlyHets[ww]) {
+     hetsMsg <- sprintf("(plotting only Het SNPs according to %s)", genTag)
+  }    
 %>
 
 \clearpage
 
-\subsection{<%=what%>}
+\subsection{<%=what%> <%=hetsMsg%>}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % BEGIN Figure:
@@ -349,9 +353,9 @@ for (kk in seq(along=fracBList)) {
       rect(xs[2],ys[1],xlim[2],ys[1]+dy, col="#999999");
     }
     rect(xs[1],ys[1], xs[2],ys[2], density=10, col="#999999");
-    stext(side=3, pos=0, line=0, cex=1.0, name);
+    stext(side=3, pos=0, line=-0.7, cex=1.0, name);
     if (kk == 1) {
-      stext(side=3, pos=1, line=0, cex=1.0, sprintf("Chr%02d", getChromosome(fracB)));
+      stext(side=3, pos=1, line=-0.7, cex=1.0, sprintf("Chr%02d", getChromosome(fracB)));
     }
     if (addSdEst) {
       sd <- estimateStandardDeviation(fracB);
@@ -372,7 +376,7 @@ for (kk in seq(along=fracBList)) {
 \begin{figure}[htb]
  \begin{center}
   <% for (fig in figList) { %>
-  \resizebox{0.95\textwidth}{!}{\includegraphics{<%=fig$fullname%>}}
+  \resizebox{0.9\textwidth}{!}{\includegraphics{<%=fig$fullname%>}}
   <% } %>
  \end{center}
  \caption{(<%=region$src%>) 
@@ -407,7 +411,7 @@ print(fracBList);
 nbrOfSources <- length(fracBList);
 
 what <- "ratios";
-cnList <- getCnList(cnList, what=what, force=(figForce > 2));
+cnList <- getCnList(list(acs), cnList=cnList, what=what, force=(figForce > 2));
 cn <- cnList[[1]];
 print(cn);
  
@@ -537,6 +541,8 @@ verbose && exit(verbose);
 
 \subsection{Evaluation}
 
+We focus on heterozygous SNP as called by <%=genTag%>. Smoothing is done using the <%=binFFracB%> function.
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % BEGIN Figure
@@ -589,6 +595,15 @@ for (ww in seq(along=binWidths)) {
   cols <- rep(cols, length.out=length(fits));
   ltys <- rep(ltys, length.out=length(fits));
 
+  ltyLgds <- rep("solid", length(ltys))
+  ltyLgds[ltys==2] <- "dashed"
+  ltyLgds[ltys==3] <- "dotted"
+  ltyLgds[ltys==4] <- "dash-dotted"
+
+  lgd <- cbind(names(fracBList), cols, ltyLgds)
+  lgd <- apply(lgd, 1, function(x) sprintf("%s (%s %s)", x[1], x[3], x[2]))
+
+
   for (kk in seq(along=fits)) {
     fit <- fits[[kk]];
     roc <- fit$roc;
@@ -599,7 +614,7 @@ for (ww in seq(along=binWidths)) {
     } else {
       lines(roc, lwd=3, col=cols[kk], lty=ltys[kk]);
     }
-    if (addLegend && kk == 1) {
+    if (addLegend && (kk == 1)) {
       labels <- strsplit(names(fracBSList), split="\n");
       labels <- sapply(labels, FUN=function(s) s[1]);
       legend("bottomright", col=cols, lwd=2, lty=ltys, labels, cex=0.8, bty="n");
@@ -613,7 +628,7 @@ for (ww in seq(along=binWidths)) {
  \begin{center}
   \resizebox{0.9\textwidth}{!}{\includegraphics{<%=fig$fullname%>}}
  \end{center}
- \caption{(<%=region$src%>) ROC curves for each of the <%=length(dsList)%> preprocessing methods at the full resolution as well as <%=length(binWidths)-1%> different amounts of smoothing.  Legend: raw (solid red), TBN-NGC (dashed blue) and TBN-Birdseed (solid light blue).}
+ \caption{(<%=region$src%>) ROC curves for each of the <%=length(dsList)%> preprocessing methods at the full resolution as well as <%=length(binWidths)-1%> different amounts of smoothing (using the <%=binFFracB%> function).  Legend: raw (solid red), TBN-Birdseed (dashed blue) and TBN-NGC (solid light blue).}
  \label{fig<%=figName%>}
 \end{figure}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -21,7 +21,7 @@ getFracBList <- function(dsList, fracBList=NULL, ..., what=c("fracB", "abs(fracB
 
   truth <- makeTruth(region, verbose=verbose);
   fracBList <- extractListOfFracB(dsList, region, truth=truth,
-                       targetChipType=targetChipType, ..., verbose=verbose);
+                       targetChipType=targetChipType, what=what, ..., verbose=verbose);
   verbose && print(verbose, fracBList);
 
   ## Rho

@@ -1,4 +1,4 @@
-getCnList <- function(cnList=NULL, ..., what=c("log2ratios", "ratios"), verbose=TRUE) {
+getCnList <- function(dsList, cnList=NULL, ..., what=c("log2ratios", "ratios"), verbose=TRUE) {
   # Nothing todo?
   if (!is.null(cnList)) {
     return(cnList);
@@ -8,8 +8,8 @@ getCnList <- function(cnList=NULL, ..., what=c("log2ratios", "ratios"), verbose=
   what <- match.arg(what);
 
   truth <- makeTruth(region, verbose=verbose);
-  cnList <- extractListOfCopyNumbers(list(acs), region, truth=truth,
-                            targetChipType=targetChipType, ..., verbose=verbose);
+  cnList <- extractListOfCopyNumbers(dsList, region, truth=truth,
+                            targetChipType=targetChipType, what=what, ..., verbose=verbose);
 
   # CN ratios
   if (what == "ratios") {

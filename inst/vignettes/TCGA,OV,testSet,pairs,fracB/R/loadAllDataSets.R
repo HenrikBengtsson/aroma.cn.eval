@@ -1,7 +1,7 @@
 ############################################################################
 #
 ############################################################################
-loadAllDataSets <- function(dataSet, chipType="*", pattern=NULL, ..., rootPath="totalAndFracBData", type=c("fracB", "total")) {
+loadAllDataSets <- function(dataSet, chipType="*", pattern=NULL, ..., rootPath="totalAndFracBData", type=c("fracB", "total", "genotypes")) {
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # Validate arguments
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -21,7 +21,7 @@ loadAllDataSets <- function(dataSet, chipType="*", pattern=NULL, ..., rootPath="
   rootPath <- Arguments$getReadablePath(rootPath, mustExist=TRUE);
 
   # Argument 'type':
-  type <- match.arg(type, c("fracB", "total"))
+  type <- match.arg(type, c("fracB", "total", "genotypes"))
 
 
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
