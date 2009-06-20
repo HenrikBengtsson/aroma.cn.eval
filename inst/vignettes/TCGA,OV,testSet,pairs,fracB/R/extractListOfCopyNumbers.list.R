@@ -31,7 +31,7 @@ setMethodS3("extractListOfCopyNumbers", "list", function(this, name, chromosome,
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # Check for cached results
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  key <- list(dataSets=list(fullnames=sapply(dsList, getFullName), chipTypes=sapply(dsList, getChipType), samples=lapply(dsList, getFullNames)), name=name, chromosome=chromosome, region=region, targetChipType=targetChipType, truth=truth, what=what, ...);
+  key <- list(dataSets=list(fullnames=sapply(this, getFullName), chipTypes=sapply(this, getChipType), samples=lapply(this, getFullNames)), name=name, chromosome=chromosome, region=region, targetChipType=targetChipType, truth=truth, what=what, ...);
   dirs <- c("aroma.cn.eval");
   if (!force) {
     cnList <- loadCache(key, dirs=dirs);

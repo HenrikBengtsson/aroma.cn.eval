@@ -1,7 +1,7 @@
 ############################################################################
 #
 ############################################################################
-loadAllDataSets <- function(dataSet, chipType="*", pattern=NULL, ..., rootPath="totalAndFracBData", type=c("fracB", "total", "genotypes")) {
+loadAllDataSets <- function(dataSet, chipType="*", pattern=NULL, ..., rootPath="totalAndFracBData", type=c("fracB", "total", "genotypes", "confidenceScores")) {
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # Validate arguments
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -21,7 +21,7 @@ loadAllDataSets <- function(dataSet, chipType="*", pattern=NULL, ..., rootPath="
   rootPath <- Arguments$getReadablePath(rootPath, mustExist=TRUE);
 
   # Argument 'type':
-  type <- match.arg(type, c("fracB", "total", "genotypes"))
+  type <- match.arg(type, c("fracB", "total", "genotypes", "confidenceScores"))
 
 
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -41,10 +41,16 @@ loadAllDataSets <- function(dataSet, chipType="*", pattern=NULL, ..., rootPath="
     dataSet <- dataSets[kk];
     if (type=="total") {
       ds <- AromaUnitTotalCnBinarySet$byName(dataSet, chipType=chipType, paths=rootPath);
-    } else {
+    } else if (type=="fracB") {
       ds <- AromaUnitFracBCnBinarySet$byName(dataSet, chipType=chipType, paths=rootPath);
+    } else if (type=="genotypes") {
+      ds <- AromaUnitGenotypeCallSet$byName(dataSet, chipType=chipType); 
+    } else if (type=="confidenceScores") {
+      ds <- AromaUnitSignalBinarySet$byName(dataSet, chipType=chipType, pattern="confidenceScores", paths=rootPath);
     }
-    dsList[[kk]] <- ds;
+    if (length(ds)) {
+      dsList[[kk]] <- ds;
+    }
   }
 
   # Set the names

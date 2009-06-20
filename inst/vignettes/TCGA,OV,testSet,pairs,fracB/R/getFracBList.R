@@ -41,7 +41,7 @@ getFracBList <- function(dsList, fracBList=NULL, ..., what=c("fracB", "abs(fracB
 
 
 
-extractHeterozygous <- function(fracBList, ..., verbose=TRUE) {
+extractHeterozygous <- function(fracBList, genotypeCalls, confidenceScores=NULL, ..., verbose=TRUE) {
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # Validate arguments
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -54,17 +54,19 @@ extractHeterozygous <- function(fracBList, ..., verbose=TRUE) {
 
   verbose && enter(verbose, "Extracting heterozygous subset");
 
-  if (!exists("gsN")) {
-    throw("Normal genotypes not known: 'gsN' does not exist")
-  }
   fracB <- fracBList[[1]];
   name <- gsub(",.*", "", fracB$name);
-  idx <- indexOf(gsN, name);
-  gf <- getFile(gsN, idx);
+  idx <- indexOf(genotypeCalls, name);
+  gf <- getFile(genotypeCalls, idx);
   verbose && print(verbose, gf);
 
+  if (!is.null(confidenceScores)) {
+    idx <- indexOf(confidenceScores, name);
+    csf <- getFile(confidenceScores, idx);
+    verbose && print(verbose, csf);
+  }
+
   fracBList <- lapply(fracBList, FUN=function(fracB) {
-    # Keep only  heterozygous loci?
     verbose && enter(verbose, "Extracting heterozygous subset");
 
     # Identify heterozygous loci

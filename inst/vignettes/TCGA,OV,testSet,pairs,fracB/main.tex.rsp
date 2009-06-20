@@ -18,8 +18,8 @@ addBinTrack <- FALSE;
 
 binWidths <- c(0,1,2,5,10,20)*1e3; rocCols <- 2;
 binWidths <- c(0,5,20,50,100,200)*1e3; rocCols <- 3;
-binWidths <- c(0,20,50,100,200,400)*1e3; rocCols <- 3;
-robust <- c(FALSE, TRUE)[1		 ];
+binWidths <- c(0,20,50,100,200,400)*1e3; rocCols <- 2;
+robust <- c(FALSE, TRUE)[1];
 robustStr <- ifelse(robust, "median", "mean");
 binFFracB <- ifelse(robust, "median", "mean"); 
 
@@ -68,6 +68,8 @@ verbose && exit(verbose);
 
 \maketitle
 
+{\Large Note: Confidence scores for NGC have not been generated yet; right now the ones called 'NGC' are actually copies of  those from Birdseed}
+
 \section{Introduction}
 This report provides a single-sample approach to assess the performance of the TumorBoost method.  The results presented herein are intended to complement the results presented in the main manuscript.
 
@@ -109,7 +111,7 @@ With standard ROC analysis we can then compare the relative performance of the d
 \section{Data set}
 
 <%
-df <- getFile(dsList[[1]],1);
+df <- getFile(fracBDsList[[1]],1);
 tumorName <- getName(df);
 normalName <- sub("ref=","",getTags(df)[1]);
 pairName <- paste(tumorName, normalName, sep=" / ");
@@ -171,7 +173,7 @@ print(region);
 # Count the number of loci with each state
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 what <- "abs(fracB-1/2)";
-fracBList <- getFracBList(dsList, what=what, force=TRUE);
+fracBList <- getFracBList(fracBDsList, what=what, force=TRUE);
 print(fracBList);
 fracB <- fracBList[[1]];
 rm(fracBList);
@@ -206,7 +208,7 @@ if (fig <- figDev(figName, aspect=0.618)) {
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
   # Plot CN ratios along genome
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  cnList <- getCnList(list(acs), cnList=cnList, what=what, force=(figForce > 2));
+  cnList <- getCnList(cnDsList, cnList=cnList, what=what, force=(figForce > 2));
   print(cnList);
   
   nbrOfSources <- length(cnList);
@@ -282,33 +284,20 @@ if (fig <- figDev(figName, aspect=0.618)) {
 
 
 <%
-whats <- c("fracB", "fracB", "abs(fracB-1/2)");
-figTags <- c("BAF", "BAF,hets", "MBAF,hets");
-keepOnlyHets <- c(FALSE, TRUE, TRUE);
+what <- "fracB";
+figTag <- "BAF";
 %>
 
-<% for (ww in seq(along=whats)) {
-  what <- whats[ww];
-  figTag <- figTags[ww];
-  fracBList <- NULL;
-  hetsMsg <- ""
-  if (keepOnlyHets[ww]) {
-     hetsMsg <- sprintf("(plotting only Het SNPs according to %s)", genTag)
-  }    
-%>
 
 \clearpage
 
-\subsection{<%=what%> <%=hetsMsg%>}
+\subsection{<%=what%>}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % BEGIN Figure:
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 <%
-fracBList <- getFracBList(dsList, what=what, force=(figForce > 2));
-if (keepOnlyHets[ww]) {
-  fracBList <- extractHeterozygous(fracBList);
-}
+fracBList <- getFracBList(fracBDsList, what=what, force=(figForce > 2));
 print(fracBList);
 nbrOfSources <- length(fracBList);
 
@@ -392,9 +381,115 @@ for (kk in seq(along=fracBList)) {
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \clearpage
 
+<%
+whats <- c("fracB", "abs(fracB-1/2)");
+figTags <- c("BAF,hets", "MBAF,hets");
+%>
+
+<% 
+  for (ww in seq(along=whats)) {
+  what <- whats[ww];
+  figTag <- figTags[ww];
+  fracBList <- NULL;
+  
+  for (gg in seq(along=genTags)) {
+    hetsMsg <- sprintf("(plotting only Het SNPs according to %s)", genTags[gg])
+    gcN <- gcDsList[[genTags[gg]]]
+%>
+
+\subsection{<%=what%> <%=hetsMsg%>}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% BEGIN Figure:
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+<%
+fracBList <- getFracBList(fracBDsList, what=what, force=(figForce > 2));
+fracBList <- extractHeterozygous(fracBList, gcN);
+print(fracBList);
+nbrOfSources <- length(fracBList);
+
+fracBLab <- "FracB";
+if (what == "fracB") {
+  fracBLim <- c(-0.1,1.1);
+  fracBLab <- expression(beta);
+} else if (what == "abs(fracB-1/2)") {
+  maxRho <- sapply(fracBList, function(x) max(x$y, na.rm=TRUE))
+  fracBLim <- c(-0.02, max(maxRho));
+  fracBLab <- expression(rho);
+}
+
+pch <- 19; cex <- 0.7;
+pch <- "."; cex <- 2;
+xScale <- 1e-6;
+xRange <- range(sapply(fracBList, FUN=xRange));
+states <- na.omit(getUniqueStates(fracBList[[1]]));
+xlim <- xRange*xScale;
+cp <- region$params$cp;
+s <- region$params$s;
+xs <- cp["position"]+c(-1,+1)*cp["delta"];
+figList <- list();
+for (kk in seq(along=fracBList)) {
+  name <- names(fracBList)[kk];
+  fracB <- fracBList[[kk]];
+
+  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+  # Plot 'what' along genome
+  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  figName <- sprintf("%s,%s,track,%s,%s", region$label, figTag, name, genTags[gg]);
+  if (fig <- figDev(figName, aspect=0.38)) {
+    # subplots(nbrOfSources, ncol=1);
+    par(mar=c(3.0,2.8,0.2,0.2)+0.1, mgp=c(1.9,0.4,0), tcl=-0.3, cex=1.2, las=1);
+
+    plot(fracB, pch=pch, cex=0.8*cex, xlim=xlim, ylim=fracBLim, xScale=xScale, ylab=fracBLab);
+    ys <- par("usr")[3:4];
+    dy <- 0.04*diff(ys);
+    if (s[1] != 0) {
+      rect(xlim[1],ys[1],xs[1],ys[1]+dy, col="#999999");
+    } else {
+      rect(xs[2],ys[1],xlim[2],ys[1]+dy, col="#999999");
+    }
+    rect(xs[1],ys[1], xs[2],ys[2], density=10, col="#999999");
+    stext(side=3, pos=0, line=-0.7, cex=1.0, name);
+    if (kk == 1) {
+      stext(side=3, pos=1, line=-0.7, cex=1.0, sprintf("Chr%02d", getChromosome(fracB)));
+    }
+    if (addSdEst) {
+      sd <- estimateStandardDeviation(fracB);
+      stext(side=4, pos=1, line=0, cex=0.8, sprintf("SD=%.3g", sd));
+    }
+    if (addBinTrack) {
+      binWidth <- 10e3;
+      fracB <- extractSubsetByState(fracB, states=states);
+      fracBS <- binnedSmoothingByState(fracB, from=xRange[1], to=xRange[2], by=binWidth, FUN=binFFracB);
+      points(fracBS, pch=pch, cex=0.8*cex, col="white", xScale=xScale);
+      points(fracBS, pch=19, cex=0.6*cex, col="orange", xScale=xScale);
+    }
+    devDone(figName);
+  } # if (figDev(...))
+  figList[[kk]] <- fig;
+} # for (kk ...)
+%>
+\begin{figure}[htb]
+ \begin{center}
+  <% for (fig in figList) { %>
+  \resizebox{0.85\textwidth}{!}{\includegraphics{<%=fig$fullname%>}}
+  <% } %>
+ \end{center}
+ \caption{<%=what%> for region <%=region$src%>. Only heterozygous SNPs according to <%=genTags[gg]%> are plotted. There are <%=tbl[1]%> loci of state <%=names(tbl)[1]%> ("negatives") and
+  <%=tbl[2]%> loci of state <%=names(tbl)[2]%> ("positives"), where the
+  latter are highlighted with a solid bar beneath. 
+  In total <%=tbl[3]%> loci within the safety margin were excluded.
+ }
+ \label{fig<%=figName%>}
+\end{figure}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% END Figure
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\clearpage
+
+<% } # for (gg in ...) %>
+
 <% } # for (ww in ...) %>
-
-
 
 
 \subsection{Allele-specific copy number estimates}
@@ -406,12 +501,12 @@ for (kk in seq(along=fracBList)) {
 # Plot ASCNs
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 verbose && enter(verbose, "Plotting (C_A,C_B)")
-fracBList <- getFracBList(dsList, what="fracB", force=(figForce > 2));
+fracBList <- getFracBList(fracBDsList, what="fracB", force=(figForce > 2));
 print(fracBList);
 nbrOfSources <- length(fracBList);
 
 what <- "ratios";
-cnList <- getCnList(list(acs), cnList=cnList, what=what, force=(figForce > 2));
+cnList <- getCnList(cnDsList, cnList=cnList, what=what, force=(figForce > 2));
 cn <- cnList[[1]];
 print(cn);
  
@@ -484,7 +579,7 @@ verbose && exit(verbose);
 what <- "fracB"
 
 verbose && enter(verbose, "Plotting (beta_N, beta_T")
-fracBList <- getFracBList(dsList, what=what, force=(figForce > 2));
+fracBList <- getFracBList(fracBDsList, what=what, force=(figForce > 2));
 fracBN <- getFracBList(list(dsN), what=what, force=(figForce > 2))[[1]];
 betaN <- getSignals(fracBN)
 
@@ -541,7 +636,8 @@ verbose && exit(verbose);
 
 \subsection{Evaluation}
 
-We focus on heterozygous SNP as called by <%=genTag%>. Smoothing is done using the <%=binFFracB%> function.
+% We focus on heterozygous SNP as called by <%=genTag%>. 
+Smoothing is done using the <%=binFFracB%> function.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -552,75 +648,105 @@ figName <- sprintf("%s,ROC,%s", region$label, robustStr);
 rocRows <- ceiling(length(binWidths)/rocCols);
 aspect <- rocRows/rocCols;
 if (fig <- figDev(figName, width=8, aspect=aspect)) {
-what <- whats[ww];
-fracBList <- getFracBList(dsList, what=what);
-fracBList <- extractHeterozygous(fracBList);
-print(fracBList);
+  what <- "abs(fracB-1/2)";
+  fracBList <- getFracBList(fracBDsList, what=what);
+  ## fracBList <- extractHeterozygous(fracBList, gcN);
 
-fracB <- fracBList[[1]];
-nbrOfLoci <- sum(is.finite(fracB$y), na.rm=TRUE);
-fullRes <- (diff(xRange(fracB))+1) / (nbrOfLoci-1);
+##   dims <- c(length(gcDsList), length(fracBList))
+##   dimnames <- list(genotypes=names(gcDsList), method=names(fracBList))
+##   fbl <- as.list(rep(NA, length=prod(dims)))
+##   dim(fbl) <- dims
+##   dimnames(fbl) <- dimnames
+##   fracBList <- lapply(gcDsList, function(ds) extractHeterozygous(fracBList, ds));
+##   for (gg in seq(fracBList)) {
+##     fbl[gg, ] <- fracBList[[gg]]
+##   }
+##   fracBList <- fbl
 
-xRange <- range(sapply(fracBList, FUN=xRange));
-states <- na.omit(getUniqueStates(fracB));
+  fracBList <- sapply(gcDsList, function(ds) extractHeterozygous(fracBList, ds));
+  str(fracBList);
 
-layout(matrix(seq(along=binWidths), ncol=rocCols, byrow=TRUE));
-par(mar=c(2.5,2.4,1.3,0.7)+0.1, mgp=c(1.4,0.3,0), tcl=-0.3, cex=1.2);
-fpLim <- c(0,0.40);
-fpLim <- c(0,0.5);
-for (ww in seq(along=binWidths)) {
-  binWidth <- binWidths[ww];
+  ## TODO: get rid of "TBN,NGC,Birdseed" and "TBN,Birdseed,NGC" ?
 
-  if (binWidth > 0) {
-    # Smooth FracBs using consecutive bins of given width (in kb)
-    fracBSList <- lapply(fracBList, FUN=function(fracB) {
-      fracBS <- binnedSmoothingByState(fracB, from=xRange[1], to=xRange[2], by=binWidth, FUN=binFFracB, verbose=verbose);
-      fracBS <- extractSubsetByState(fracBS, states=states);
-      fracBS;
-    }) 
-    binLabel <- sprintf("Bin width %g kb", binWidth/1e3);
-  } else {
-    fracBSList <- fracBList;
-    binLabel <- sprintf("Full resolution (%.1f kb)", fullRes/1e3);
-  }
-  print(fracBSList);
+  fracB <- fracBList[[1]];
+  nbrOfLoci <- sum(is.finite(fracB$y), na.rm=TRUE);
+  fullRes <- (diff(xRange(fracB))+1) / (nbrOfLoci-1);
+  
+   xRange <- range(sapply(fracBList, FUN=xRange));
+   states <- na.omit(getUniqueStates(fracB));
+  
+   cols <- c("red", "blue", "lightblue");
+   ltys <- c(1,4)
+   cols <- rep(cols, times=dim(fracBList)[2]);
+   ltys <- rep(ltys, each=dim(fracBList)[1]);
 
-  fits <- lapply(fracBSList, FUN=function(fracBS) {
-    cat("Number of missing values: ", sum(is.na(fracBS$fracB)), "\n", sep="");
-    fitRoc(fracBS, states=states, recall=states[1]);
-  });
+   ltyLgds <- rep("solid", length(ltys))
+   ltyLgds[ltys==2] <- "dashed"
+   ltyLgds[ltys==3] <- "dotted"
+   ltyLgds[ltys==4] <- "dash-dotted"
+   
+   dn <- dimnames(fracBList)
+   nms <- sapply(dn[[2]], function(nm) sprintf("%s,%s", dn[[1]], nm))
+   nms <- as.character(nms)
 
-  cols <- c("red", "blue", "lightblue", "green");
-  ltys <- c(1,4,1,3);
-  cols <- rep(cols, length.out=length(fits));
-  ltys <- rep(ltys, length.out=length(fits));
+   lgd <- cbind(nms, paste(ltyLgds, cols))
+   lgd <- cbind(nms, ltyLgds, cols)
+   lgd <- apply(lgd, 1, function(x) sprintf("%s (%s %s)", x[1], x[2], x[3]))
+   
+   labels <- strsplit(nms, split="\n");
+   labels <- sapply(labels, FUN=function(s) s[1]);
+  
+   patts <- c("raw", sprintf("%s,%s", dn[[2]], dn[[2]]))
+   keep <- unlist(sapply(patts, grep, nms))
+   keep <- 1:6
 
-  ltyLgds <- rep("solid", length(ltys))
-  ltyLgds[ltys==2] <- "dashed"
-  ltyLgds[ltys==3] <- "dotted"
-  ltyLgds[ltys==4] <- "dash-dotted"
+   layout(matrix(seq(along=binWidths), ncol=rocCols, byrow=TRUE));
+   par(mar=c(2.5,2.4,1.3,0.7)+0.1, mgp=c(1.4,0.3,0), tcl=-0.3, cex=1.2);
+   fpLim <- c(0,0.40);
+   fpLim <- c(0,0.5);
+   
+   for (ww in seq(along=binWidths)) {
+     binWidth <- binWidths[ww];
+    
+     if (binWidth > 0) {
+       # Smooth FracBs using consecutive bins of given width (in kb)
+       fracBSList <- lapply(fracBList, FUN=function(fracB) {
+         fracBS <- binnedSmoothingByState(fracB, from=xRange[1], to=xRange[2], by=binWidth, FUN=binFFracB, verbose=verbose);
+         fracBS <- extractSubsetByState(fracBS, states=states);
+         fracBS;
+       }) 
+       dim(fracBSList) <- dim(fracBList)
+       dimnames(fracBSList) <- dimnames(fracBList)
 
-  lgd <- cbind(names(fracBList), cols, ltyLgds)
-  lgd <- apply(lgd, 1, function(x) sprintf("%s (%s %s)", x[1], x[3], x[2]))
-
-
-  for (kk in seq(along=fits)) {
-    fit <- fits[[kk]];
-    roc <- fit$roc;
-    if (kk == 1) {
-      plot(roc, type="l", lwd=3, col=cols[kk], lty=ltys[kk], xlim=fpLim, ylim=sort(1-fpLim), xlab="False-positive rate", ylab="True-positive rate");
-      abline(a=0, b=1, lty=3);
-      stext(side=3, pos=1, binLabel);
+      binLabel <- sprintf("Bin width %g kb", binWidth/1e3);
     } else {
-      lines(roc, lwd=3, col=cols[kk], lty=ltys[kk]);
+      fracBSList <- fracBList;
+      binLabel <- sprintf("Full resolution (%.1f kb)", fullRes/1e3);
     }
-    if (addLegend && (kk == 1)) {
-      labels <- strsplit(names(fracBSList), split="\n");
-      labels <- sapply(labels, FUN=function(s) s[1]);
-      legend("bottomright", col=cols, lwd=2, lty=ltys, labels, cex=0.8, bty="n");
-    }
-  } # for (kk ...)
-} # for (ww ...)
+    print(fracBSList);
+    
+  fits <- lapply(fracBSList, FUN=function(fracBS) {
+##   fits <- lapply(fracBSList, lapply, function(fracBS) {
+      cat("Number of missing values: ", sum(is.na(fracBS$fracB)), "\n", sep="");
+      fitRoc(fracBS, states=states, recall=states[1]);
+    });
+  
+   for (kk in keep) {
+     first <- (kk==keep[1])
+     fit <- fits[[kk]]
+     roc <- fit$roc;
+     if (first) {
+       plot(roc, type="l", lwd=3, col=cols[kk], lty=ltys[kk], xlim=fpLim, ylim=sort(1-fpLim), xlab="False-positive rate", ylab="True-positive rate");
+       abline(a=0, b=1, lty=3);
+       stext(side=3, pos=1, binLabel);
+     } else {
+       lines(roc, lwd=3, col=cols[kk], lty=ltys[kk]);
+     }
+     if (addLegend && first) {
+       legend("bottomright", col=cols, lwd=2, lty=ltys, labels, cex=0.8, bty="n");
+     }
+   } # for (kk ...)
+ } # for (ww ...)
   devDone(figName);
 } # if (figDev(...))
 %>
@@ -628,9 +754,24 @@ for (ww in seq(along=binWidths)) {
  \begin{center}
   \resizebox{0.9\textwidth}{!}{\includegraphics{<%=fig$fullname%>}}
  \end{center}
- \caption{(<%=region$src%>) ROC curves for each of the <%=length(dsList)%> preprocessing methods at the full resolution as well as <%=length(binWidths)-1%> different amounts of smoothing (using the <%=binFFracB%> function).  Legend: raw (solid red), TBN-Birdseed (dashed blue) and TBN-NGC (solid light blue).}
+ \caption{(<%=region$src%>) ROC curves for each of the <%=length(fracBDsList)%> preprocessing methods at the full resolution as well as <%=length(binWidths)-1%> different amounts of smoothing (using the <%=binFFracB%> function).  Legend: raw (solid red), TBN-Birdseed (dashed blue) and TBN-NGC (solid light blue).}
  \label{fig<%=figName%>}
 \end{figure}
+
+
+\begin{tabular}{c|c|c}
+line type & color & legend \\
+\hline
+<%
+ lgd <- cbind(nms, ltyLgds, cols)
+ lgd <- apply(lgd, 1, paste, collapse=" & ")
+ for (kk in keep) {
+%>
+
+<%=lgd[kk]%>\\
+
+<%} # for (kk...) %>
+\end{tabular}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % END Figure
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -658,7 +799,7 @@ for (ww in seq(along=binWidths)) {
 \appendix
 \section{Data files}
 \begin{Verbatim}[fontfamily=helvetica]
-<%={x <- capture.output(print(dsList));x <- gsub(": .*/(totalAndFracBData/)", ": \\1", x);paste(x, collapse="\n");}%>
+<%={x <- capture.output(print(fracBDsList));x <- gsub(": .*/(totalAndFracBData/)", ": \\1", x);paste(x, collapse="\n");}%>
 \end{Verbatim}
 
 
