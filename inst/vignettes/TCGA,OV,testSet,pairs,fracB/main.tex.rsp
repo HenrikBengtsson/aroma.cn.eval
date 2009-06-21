@@ -22,6 +22,7 @@ binWidths <- c(0,20,50,100,200,400)*1e3; rocCols <- 2;
 robust <- c(FALSE, TRUE)[1];
 robustStr <- ifelse(robust, "median", "mean");
 binFFracB <- ifelse(robust, "median", "mean"); 
+confQuantile=0.9
 
 figPath <- "figures/col/";
 figForce <- 1;
@@ -68,7 +69,13 @@ verbose && exit(verbose);
 
 \maketitle
 
-{\Large Note: Confidence scores for NGC have not been generated yet; right now the ones called 'NGC' are actually copies of  those from Birdseed}
+{\Large FIXME: 
+  \begin{itemize}
+  \item Confidence scores for NGC have not been generated yet; right now the ones called 'NGC' are actually copies of  those from Birdseed
+  \item number of loci displayed in figure caption always include homs and hets 
+ \end{itemize}
+}
+
 
 \section{Introduction}
 This report provides a single-sample approach to assess the performance of the TumorBoost method.  The results presented herein are intended to complement the results presented in the main manuscript.
@@ -395,6 +402,7 @@ figTags <- c("BAF,hets", "MBAF,hets");
   for (gg in seq(along=genTags)) {
     hetsMsg <- sprintf("(plotting only Het SNPs according to %s)", genTags[gg])
     gcN <- gcDsList[[genTags[gg]]]
+    gcsN <- gcsDsList[[genTags[gg]]]
 %>
 
 \subsection{<%=what%> <%=hetsMsg%>}
@@ -404,7 +412,7 @@ figTags <- c("BAF,hets", "MBAF,hets");
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 <%
 fracBList <- getFracBList(fracBDsList, what=what, force=(figForce > 2));
-fracBList <- extractHeterozygous(fracBList, gcN);
+fracBList <- extractHeterozygous(fracBList, gcN, gcsN, confQuantile=confQuantile);
 print(fracBList);
 nbrOfSources <- length(fracBList);
 
@@ -663,8 +671,12 @@ if (fig <- figDev(figName, width=8, aspect=aspect)) {
 ##   }
 ##   fracBList <- fbl
 
-  fracBList <- sapply(gcDsList, function(ds) extractHeterozygous(fracBList, ds));
+##  fracBList <- sapply(gcDsList, function(ds) extractHeterozygous(fracBList, ds));
+
+  fracBList <- sapply(genTags, function(genTag) 
+     extractHeterozygous(fracBList, gcDsList[[genTag]], gcsDsList[[genTag]], confQuantile=confQuantile));
   str(fracBList);
+
 
   ## TODO: get rid of "TBN,NGC,Birdseed" and "TBN,Birdseed,NGC" ?
 

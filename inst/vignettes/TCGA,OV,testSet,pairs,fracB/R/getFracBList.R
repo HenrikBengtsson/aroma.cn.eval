@@ -41,7 +41,7 @@ getFracBList <- function(dsList, fracBList=NULL, ..., what=c("fracB", "abs(fracB
 
 
 
-extractHeterozygous <- function(fracBList, genotypeCalls, confidenceScores=NULL, ..., verbose=TRUE) {
+extractHeterozygous <- function(fracBList, genotypeCalls, confidenceScores=NULL, confQuantile=0.95, ..., verbose=TRUE) {
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # Validate arguments
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -74,7 +74,16 @@ extractHeterozygous <- function(fracBList, genotypeCalls, confidenceScores=NULL,
     verbose && cat(verbose, "Heterozygous loci:");
     verbose && summary(verbose, isHet);
 
-    fracB <- extractSubset(fracB, whichVector(isHet));
+    isHet <- whichVector(isHet)
+
+    if (!is.null(confidenceScores)) {
+      ## keep the ones with highest confidence
+      cs <- csf[fracB$unit[isHet], drop=TRUE]
+      q <- quantile(cs, 1-confQuantile)
+      isHet <- isHet[(cs >= q)]
+    }
+    
+    fracB <- extractSubset(fracB, isHet);
     verbose && exit(verbose);
     fracB;
   });

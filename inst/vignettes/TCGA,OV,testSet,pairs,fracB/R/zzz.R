@@ -128,6 +128,12 @@ if (!exists("gcsDsList", mode="list")) {
   gcsDsList <- gcsDsList[genTags]
 }
 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Coerce genotype calls and confidence scores into a list
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+
 ############################################################################
 # HISTORY:
 # 2009-06-18
