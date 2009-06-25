@@ -45,9 +45,10 @@ figDev <- function(..., force=(figForce > 0)) { epsDev(..., path=figPath, force=
 getStateColors.SegmentedGenomicSignalsInterface <- function(this, ..., na.rm=FALSE) {
   states <- getStates(this);
   col <- rep("#000000", nbrOfLoci(this));
-  col[states == -1] <- "blue";
-  col[states == +1] <- "purple";
-  col[states == +2] <- "red";
+  col[states == 1] <- "red";
+  col[states == 2] <- "orange";
+  col[states == 3] <- "blue";
+  col[states == 4] <- "purple";
   if (na.rm) {
     col[is.na(states)] <- NA;
   } else {
@@ -197,10 +198,10 @@ getNbLociPerState <- function(object) {
   tbl <- tbl[o];
   names <- names(tbl);
   sign <- as.integer(names);
-  names[sign==-1] <- "DELETION' (0,1)";
   names[sign==0] <- "'NORMAL' (1,1)";
-  names[sign==2] <- "'COPY NEUTRAL LOH' (0,2)";
   names[sign==1] <- "'GAIN' (1,2)";
+  names[sign==2] <- "'DELETION' (0,1)";
+  names[sign==3] <- "'COPY NEUTRAL LOH' (0,1)";
   names(tbl) <- names;
   tbl
 }
@@ -698,6 +699,7 @@ if (fig <- figDev(figName)) {
 <%
 what <- "fracB";
 fracBList <- getFracBList(fracBDsList, what=what);
+fracBList[["TCN"]] <- cn ## Add TCN
 caption <- sprintf("Test of the null hypothesis of equal distribution of %s before and after the breakpoint: Kolmogorov-Smirnov test statistic. The larger value, the more different the distributions are.", what)
 testStat <- as.matrix(sapply(fracBList, test, ks.test))
 rownames(testStat) <- names(fracBList)
@@ -745,6 +747,15 @@ cols <- cols[keep]
 ltys <- ltys[keep]
 labels <- labels[keep]
 nms <- nms[keep]
+%>
+
+<% 
+## Add TCN
+fracBList[["TCN"]] <- cn
+cols <- c(cols,  "green")
+ltys <- c(ltys,  2)
+nms <- c(nms,"Total copy number")
+labels <- c(labels, "Total copy number")
 %>
 
 \subsubsection{Test statistics: <%=what%>}
@@ -822,7 +833,7 @@ Smoothing is done using the <%=binFFracB%> function.
        # Smooth FracBs using consecutive bins of given width (in kb)
        fracBSList <- lapply(fracBList, FUN=smtFUN) 
        dim(fracBSList) <- dim(fracBList)
-##        dimnames(fracBSList) <- dimnames(fracBList)
+        names(fracBSList) <- names(fracBList)
 
        if (smoothBy == "length.out") {
          length.out <- fracNbPoints[ww]*length(fracB$unit)
@@ -835,12 +846,16 @@ Smoothing is done using the <%=binFFracB%> function.
       binLabel <- sprintf("Full resolution (%.1f kb, %s points)", fullRes/1e3, length(fracB$unit));
     }
     print(fracBSList);
-    
-  fits <- lapply(fracBSList, FUN=function(fracBS) {
-##   fits <- lapply(fracBSList, lapply, function(fracBS) {
-      cat("Number of missing values: ", sum(is.na(fracBS$fracB)), "\n", sep="");
+  
+    fits <- lapply(fracBSList, FUN=function(fracBS) {
+      cat("Number of missing values: ", sum(is.na(getSignals(fracBS))), "\n", sep="");
       fitRoc(fracBS, states=states, recall=states[1]);
     });
+    if ((states[1]<2) && (states[2]>1)) { ## ie TCN(state[2]) <= TCNstate[1])
+      fits[["TCN"]]$roc <- 1-fits[["TCN"]]$roc
+    }
+    
+
   
    for (kk in seq(fits)) {
      first <- ((kk==1) && (ww==1))
