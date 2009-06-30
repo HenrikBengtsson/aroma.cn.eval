@@ -9,6 +9,8 @@ targetChipType <- chipType;
 genTags <- c("Birdseed", "NGC")
 genTag <- genTags[1]
 
+methodPattern <- "^(raw|TBN,v2)"
+
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Change-points of interest
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -23,4 +25,4 @@ regions <- c(
 );
 
 ## regions <- regions[1:5]
-regions <- regions[4]
+regions <- regions[3:4]

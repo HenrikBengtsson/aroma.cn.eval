@@ -32,34 +32,26 @@ byCount <- c(TRUE, FALSE)[2]
 if (byCount) binWidths <- binWidths/1e3;
 
 fpLim <- c(0,0.5);
-fpLim <- c(0,1);
+## fpLim <- c(0,1);
 
 robust <- c(FALSE, TRUE)[1];
 robustStr <- ifelse(robust, "median", "mean");
 binFFracB <- ifelse(robust, "median", "mean"); 
-confQuantile=1
+## confQuantile <- 0.9
 
 figPath <- "figures/col/";
 figForce <- 1;
 figDev <- function(..., force=(figForce > 0)) { epsDev(..., path=figPath, force=force) }
-getStateColors.SegmentedGenomicSignalsInterface <- function(this, ..., na.rm=FALSE) {
-  states <- getStates(this);
-  col <- rep("#000000", nbrOfLoci(this));
-  col[states == 1] <- "red";
-  col[states == 2] <- "orange";
-  col[states == 3] <- "blue";
-  col[states == 4] <- "purple";
-  if (na.rm) {
-    col[is.na(states)] <- NA;
-  } else {
-    col[is.na(states)] <- "#999999";
-  }
-  col
-}
 
 title <- sprintf("Single sample assessment of the TumorBoost method based on the '%s' data set", dataSet);
 authors <- "HB, PN.";
 verbose && exit(verbose);
+%>
+
+<%
+pch <- 19; cex <- 0.5;
+## pch <- "."; cex <- 2;
+smoothedColorMap <-  c("*"  = "#000000", "NA" = "#999999");
 %>
 
 %\documentclass[a4paper,draft]{article}
@@ -228,10 +220,10 @@ if (fig <- figDev(figName, aspect=0.618)) {
   nbrOfSources <- length(cnList);
   subplots(nbrOfSources, ncol=1);
   par(mar=c(2.7,2.6,0.2,2)+0.1, mgp=c(1.4,0.3,0), tcl=-0.3, cex=1.2);
-  pch <- "."; cex <- 2;
   xScale <- 1e-6;
   xRange <- range(sapply(cnList, FUN=xRange));
-  states <- na.omit(getUniqueStates(cnList[[1]]));
+##   states <- na.omit(getUniqueStates(cnList[[1]]));
+  states <- getUniqueStates(cnList[[1]]);
   
   cp <- region$params$cp;
   s <- region$params$s;
@@ -276,8 +268,9 @@ if (fig <- figDev(figName, aspect=0.618)) {
         binWidth <- 50e3;
        cnS <- binnedSmoothingByState(cn, from=xRange[1], to=xRange[2], by=binWidth, FUN=binFFracB, byCount=byCount);
       }
-      lines(cnS, pch=pch, cex=0.8*cex, col="white", xScale=xScale);
-      lines(cnS, pch=pch, cex=0.3*cex, col="orange", xScale=xScale);
+      setStateColorMap(cnS, smoothedColorMap);
+      points(cnS, pch=pch, cex=0.6*cex, col="white", xScale=xScale);
+      points(cnS, pch=pch, cex=0.4*cex, xScale=xScale);
     }
   
   } # for (kk ...)
@@ -332,6 +325,8 @@ figTag <- "BAF";
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 <%
 fracBList <- getFracBList(fracBDsList, what=what, force=(figForce > 2));
+keep <- grep(methodPattern, names(fracBList));
+fracBList <- fracBList[keep];
 print(fracBList);
 nbrOfSources <- length(fracBList);
 
@@ -347,8 +342,6 @@ if (what == "fracB") {
   fracBLab <- expression(rho);
 }
 
-pch <- 19; cex <- 0.7;
-pch <- "."; cex <- 2;
 xScale <- 1e-6;
 xRange <- range(sapply(fracBList, FUN=xRange));
 states <- na.omit(getUniqueStates(fracBList[[1]]));
@@ -436,6 +429,9 @@ figTags <- c("BAF,hets", "MBAF,hets");
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 <%
 fracBList <- getFracBList(fracBDsList, what=what, force=(figForce > 2));
+keep <- grep(methodPattern, names(fracBList));
+fracBList <- fracBList[keep];
+
 fracBList <- extractHeterozygous(fracBList, gcN, gcsN, confQuantile=confQuantile);
 print(fracBList);
 nbrOfSources <- length(fracBList);
@@ -450,8 +446,6 @@ if (what == "fracB") {
   fracBLab <- expression(rho);
 }
 
-pch <- 19; cex <- 0.7;
-pch <- "."; cex <- 2;
 xScale <- 1e-6;
 xRange <- range(sapply(fracBList, FUN=xRange));
 states <- na.omit(getUniqueStates(fracBList[[1]]));
@@ -495,8 +489,9 @@ for (kk in seq(along=fracBList)) {
         binWidth <- 50e3;
        fracBS <- binnedSmoothingByState(fracB, from=xRange[1], to=xRange[2], by=binWidth, FUN=binFFracB, byCount=byCount);
       }
-      lines(fracBS, pch=pch, cex=0.8*cex, col="white", xScale=xScale);
-      lines(fracBS, pch=pch, cex=0.3*cex, col="orange", xScale=xScale);
+      setStateColorMap(fracBS, smoothedColorMap);
+      points(fracBS, pch=pch, cex=0.6*cex, col="white", xScale=xScale);
+      points(fracBS, pch=pch, cex=0.4*cex, xScale=xScale);
     }
     ts <- signif(test(fracB, testFUN=ks.test), digits=2)
     stext(side=4, pos=0, line=-0.7, cex=0.8, sprintf("KS = %s",ts), las=3)
@@ -553,8 +548,6 @@ what <- "ratios";
   ylab <- expression(C["T,B"]);
   lim <- c(-0.5,4.5);
 
-  pch <- 19; cex <- 0.7;
-  pch <- "."; cex <- 2;
   xScale <- 1e-6;
   states <- na.omit(sort(getUniqueStates(fracBList[[1]])));
   cp <- region$params$cp;
@@ -568,6 +561,9 @@ what <- "ratios";
  col <- getStateColors(cn, na.rm=TRUE);
 
 fracBList <- getFracBList(fracBDsList, what="fracB", force=(figForce > 2));
+keep <- grep(methodPattern, names(fracBList));
+fracBList <- fracBList[keep];
+
 print(fracBList);
 nbrOfSources <- length(fracBList);
 %>
@@ -622,6 +618,9 @@ tbl <- tbl[, 1]
 verbose && enter(verbose, "Plotting (beta_N, beta_T")
 what <- "fracB"
 fracBList <- getFracBList(fracBDsList, what=what, force=(figForce > 2));
+keep <- grep(methodPattern, names(fracBList));
+fracBList <- fracBList[keep];
+
 fracBN <- getFracBList(list(dsN), what=what, force=(figForce > 2))[[1]];
 betaN <- getSignals(fracBN)
 
@@ -630,9 +629,7 @@ nbrOfSources <- length(fracBList);
 %>
 
 <%
-  pch <- 19; cex <- 0.7;
-  pch <- "."; cex <- 2;
-  xScale <- 1e-6;
+ xScale <- 1e-6;
  cp <- region$params$cp;
   s <- region$params$s;
  
@@ -703,6 +700,9 @@ if (fig <- figDev(figName)) {
 <%
 what <- "fracB";
 fracBList <- getFracBList(fracBDsList, what=what);
+keep <- grep(methodPattern, names(fracBList));
+fracBList <- fracBList[keep];
+
 fracBList[["TCN"]] <- cn ## Add TCN
 caption <- sprintf("Test of the null hypothesis of equal distribution of %s before and after the breakpoint: Kolmogorov-Smirnov test statistic. The larger value, the more different the distributions are.", what)
 testStat <- as.matrix(sapply(fracBList, FUN=test, testFUN=ks.test))
@@ -724,6 +724,12 @@ display <- c("s", rep("fg", ncol(testStat)))
 <% ## setup
 what <- "abs(fracB-1/2)";
 fracBList <- getFracBList(fracBDsList, what=what);
+keep <- grep(methodPattern, names(fracBList));
+fracBList <- fracBList[keep];
+fracB <- fracBList[[1]];
+fracBList[["TCN"]] <- cn;
+fracBList[["TCN"]]$unit <- fracBList[[1]]$unit;
+
 fracBList <- sapply(genTags, function(genTag) {
   extractHeterozygous(fracBList, gcDsList[[genTag]], gcsDsList[[genTag]], confQuantile=confQuantile)
 });
@@ -733,7 +739,7 @@ dn <- dimnames(fracBList)
 nms <- sapply(dn[[2]], function(nm) sprintf("%s,%s", dn[[1]], nm))
 nms <- as.character(nms)
 
-cols <- c("black", "blue", "lightblue", "red", "orange");
+cols <- c("black", "blue", "red", "green");
 ltys <- c(4,1)
 cols <- rep(cols[1:(dim(fracBList)[1])], times=dim(fracBList)[2]);
 ltys <- rep(ltys, each=dim(fracBList)[1]);
@@ -741,7 +747,7 @@ ltys <- rep(ltys, each=dim(fracBList)[1]);
 labels <- strsplit(nms, split="\n");
 labels <- sapply(labels, FUN=function(s) s[1]);
  
-patts <- c("raw", sprintf("%s,%s", dn[[2]], dn[[2]]))
+patts <- c("raw", sprintf("%s,%s", dn[[2]], dn[[2]]), "TCN")
 keep <- unlist(sapply(patts, grep, nms))
 ##    keep <- seq(nms)
 fracBList <- fracBList[keep]
@@ -756,10 +762,23 @@ nms <- nms[keep]
 <% 
 ## Add TCN
 fracBList[["TCN"]] <- cn
-cols <- c(cols,  "green")
-ltys <- c(ltys,  2)
-nms <- c(nms,"Total copy number")
-labels <- c(labels, "Total copy number")
+snps <- whichVector(!is.na(fracB$y))
+fracBList[["TCN,SNPs"]] <- extractSubset(cn, snps)
+
+cols <- c(cols,  rep("darkgreen", 2))
+ltys <- c(ltys,  2, 3)
+nms <- names(fracBList)
+labels <- c(labels, "TCN,SNP+CN", "TCN,SNP")
+
+## fracBList[["TCN,SNPs"]] <- extractSubset(cn, snps)
+## for (genTag in genTags) {
+##   fracBList[[sprintf("TCN,%s", genTag)]] <- cn[hetSnps[[genTag]],]
+## }
+
+## cols <- c(cols,  rep("green", 2), rep("darkgreen", 2))
+## ltys <- c(ltys,  c(2, 3, 4, 1))
+## nms <- names(fracBList)
+## labels <- c(labels, rep("Total copy number", 4))
 %>
 
 \subsubsection{Test statistics: <%=what%>}
@@ -780,11 +799,16 @@ display <- c("s", rep("fg", nrow(testStat)))
 
 <%=print(xtable(t(testStat), caption=caption, display=display)) %>
 
-<% } %>
-
 Note that the number of loci in each state is not necessarily the same for both genotyping algorithms:
 
+<%
+df <- data.frame(sapply(fracBList, function(ds) length(ds$y)));
+names(df) <- "nbP (full res)";
+row.names(df) <- labels;
+%>
+<%=print(xtable(df)) %>
 
+<% } %>
 
 \subsubsection{ROC curves}
 % We focus on heterozygous SNP as called by <%=genTag%>. 
@@ -855,8 +879,10 @@ Smoothing is done using the <%=binFFracB%> function.
       cat("Number of missing values: ", sum(is.na(getSignals(fracBS))), "\n", sep="");
       fitRoc(fracBS, states=states, recall=states[1]);
     });
-    if ((states[1]<2) && (states[2]>1)) { ## ie TCN(state[2]) <= TCNstate[1])
-      fits[["TCN"]]$roc <- 1-fits[["TCN"]]$roc
+    for (gg in grep("TCN", names(fracBList))) {
+      if ((states[1]<2) && (states[2]>1)) { ## ie TCN(state[2]) <= TCNstate[1])
+        fits[[gg]]$roc <- 1-fits[[gg]]$roc
+      }
     }
     
 
@@ -946,6 +972,9 @@ This report was automatically generated using the R.rsp package.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % HISTORY:
+% 2009-06-29
+% o Removed TBN (v1) tracks and ROC curves.
+% o Added several flavors of ROC curves for total copy numbers.
 % 2009-06-23
 % o Fixed number of loci and state legends in figure captions.
 % o Added tables with results of 'ks.test' and 't.test' to the evaluation.
