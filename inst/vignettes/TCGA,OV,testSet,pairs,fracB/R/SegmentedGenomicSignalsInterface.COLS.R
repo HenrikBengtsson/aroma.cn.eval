@@ -15,7 +15,9 @@ setMethodS3("getStateColorMap", "SegmentedGenomicSignalsInterface", function(thi
 
 setMethodS3("setStateColorMap", "SegmentedGenomicSignalsInterface", function(this, colorMap, ...) {
   # Argument 'colorMap':
+  names <- names(colorMap);
   colorMap <- Arguments$getCharacters(colorMap);
+  names(colorMap) <- names;
   if (is.null(names(colorMap))) {
     throw("Argument 'colorMap' must be a named vector.");
   }
