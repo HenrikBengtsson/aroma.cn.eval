@@ -309,6 +309,10 @@ tbl <- tbl[, 1]
 \clearpage
 
 <%
+test <- function(fracB, ...) {
+  testSeparation(fracB, test="ks.test")$statistic;
+} 
+
 test <- function(fracB, testFUN, output=c("statistic")) {
   states <- getStates(fracB)
   us <- na.omit(getUniqueStates(fracB))
@@ -375,7 +379,7 @@ for (kk in seq(along=fracBList)) {
     }
     rect(xs[1],ys[1], xs[2],ys[2], density=10, col="#999999");
     stext(side=4, pos=-0.1, line=0, cex=0.8, name, las=3);
-    ts <- signif(test(fracB, ks.test), 2)
+    ts <- signif(test(fracB, testFUN=ks.test), digits=2)
     stext(side=4, pos=0, line=-0.7, cex=0.8, sprintf("KS = %s",ts), las=3)
    devDone(figName);
   } # if (figDev(...))
@@ -494,7 +498,7 @@ for (kk in seq(along=fracBList)) {
       lines(fracBS, pch=pch, cex=0.8*cex, col="white", xScale=xScale);
       lines(fracBS, pch=pch, cex=0.3*cex, col="orange", xScale=xScale);
     }
-    ts <- signif(test(fracB, ks.test), 2)
+    ts <- signif(test(fracB, testFUN=ks.test), digits=2)
     stext(side=4, pos=0, line=-0.7, cex=0.8, sprintf("KS = %s",ts), las=3)
 
    devDone(figName);
@@ -701,7 +705,7 @@ what <- "fracB";
 fracBList <- getFracBList(fracBDsList, what=what);
 fracBList[["TCN"]] <- cn ## Add TCN
 caption <- sprintf("Test of the null hypothesis of equal distribution of %s before and after the breakpoint: Kolmogorov-Smirnov test statistic. The larger value, the more different the distributions are.", what)
-testStat <- as.matrix(sapply(fracBList, test, ks.test))
+testStat <- as.matrix(sapply(fracBList, FUN=test, testFUN=ks.test))
 rownames(testStat) <- names(fracBList)
 colnames(testStat) <- "ks"
 display <- c("s", rep("fg", ncol(testStat)))
@@ -764,8 +768,8 @@ labels <- c(labels, "Total copy number")
 testNames <- c("t", "ks")
 testStat <- NULL
 for (testName in testNames) {
-  testFUN <- eval(as.name(sprintf("%s.test", testName)))
-  testStat <- rbind(testStat, sapply(fracBList, test, testFUN))
+  testFUN <- get(sprintf("%s.test", testName), mode="function");
+  testStat <- rbind(testStat, sapply(fracBList, FUN=test, testFUN=testFUN))
 }
 colnames(testStat) <- names(fracBList)
 rownames(testStat) <- testNames
