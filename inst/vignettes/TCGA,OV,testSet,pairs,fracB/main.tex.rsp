@@ -19,12 +19,12 @@ addBinTrack <- TRUE;
 trackAspect <- 0.22;
 trackWidth <- 0.9;
 
-binWidths <- c(1, 1.25, 1.5, 2, 3, 4); rocCols <- 2;
-binWidths <- binWidths[c(1, 4)]
+binCounts <- c(1, 1.25, 1.5, 2, 3, 4); rocCols <- 2;
+binCounts <- binCounts[c(1, 4)]
 
 fracNbPoints <- c(1,1/2,1/3,1/5,1/10,1/20); rocCols <- 2;
 
-byCount <- c(TRUE, FALSE)[2]
+byCount <- c(TRUE, FALSE)[1]
 
 fpLim <- c(0,0.5);
 ## fpLim <- c(0,1);
@@ -157,7 +157,7 @@ deltaStr <- sprintf("%.2f", delta);
 \end{table}
 
 
-We now compare the  raw, TBN-NGC, and TBN-Birdseed methods using the afformentioned ROC analysis at the full resolution as well as smoothed resolution with bin sizes $h=\{<%=paste(sprintf("%.1f", binWidths, collapse=", "))%>\}$~kb.
+We now compare the  raw, TBN-NGC, and TBN-Birdseed methods using the afformentioned ROC analysis at the full resolution as well as smoothed resolution with bin sizes $h=\{<%=paste(sprintf("%.1f", binCounts, collapse=", "))%>\}$.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -258,6 +258,7 @@ if (fig <- figDev(figName, aspect=0.618)) {
     if (addBinTrack) {
      cn <- extractSubsetByState(cn, states=states);
      
+     binWidths <- binCounts
      binWidth <- binWidths[length(binWidths)]
      if (!byCount) {
        binWidth <- round(diff(xRange(cn))/(nbrOfLoci(cn, na.rm=TRUE)-1)*binWidth)
@@ -488,11 +489,11 @@ for (kk in seq(along=fracBList)) {
       stext(side=4, pos=1, line=0, cex=0.8, sprintf("SD=%.3g", sd));
     }
     if (addBinTrack && (what=="abs(fracB-1/2)")) {
-
-     binWidth <- binWidths[length(binWidths)]
-     if (!byCount) {
-       binWidth <- round(diff(xRange(fracB))/(nbrOfLoci(fracB, na.rm=TRUE)-1)*binWidth)
-     }
+      binWidths <- binCounts;
+      binWidth <- binWidths[length(binWidths)];
+      if (!byCount) {
+        binWidth <- round(diff(xRange(fracB))/(nbrOfLoci(fracB, na.rm=TRUE)-1)*binWidth)
+      }
     fracBS <- binnedSmoothingByState(fracB, from=xRange[1], to=xRange[2], by=binWidth, FUN=binFFracB, byCount=byCount);
      setStateColorMap(fracBS, smoothedColorMap);
       points(fracBS, pch=pch, cex=0.6*cex, col="white", xScale=xScale);
@@ -837,6 +838,7 @@ Smoothing is done using the <%=binFFracB%> function.
 
 <%
 if (!byCount) {
+  binWidths <- binCounts;
   binWidths <- round(diff(xRange(fracBList[[1]]))/(nbrOfLoci(fracBList[[1]], na.rm=TRUE)-1)*binWidths)
 }
 %>
