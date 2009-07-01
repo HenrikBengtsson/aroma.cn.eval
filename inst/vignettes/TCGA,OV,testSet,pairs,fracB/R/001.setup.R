@@ -24,5 +24,5 @@ regions <- c(
   "TCGA-23-1027:Chr1@190-210.0,cp=201.0+/-2.0,s=0/1"
 );
 
-## regions <- regions[1:5]
-regions <- regions[3]
+regions <- regions[1:5]
+## regions <- regions[3]
