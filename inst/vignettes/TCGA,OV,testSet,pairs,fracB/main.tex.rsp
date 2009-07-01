@@ -6,7 +6,6 @@
 %
 % Usage:
 %  library("R.rsp");
-%  confQuantile <- 0.9
 %  rsptex("main.tex.rsp");  # => *.tex.rsp => ... => *.dvi
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 <%
@@ -20,12 +19,12 @@ addBinTrack <- TRUE;
 trackAspect <- 0.22;
 trackWidth <- 0.9;
 
-binCounts <- c(1, 2, 3, 5, 10, 20); rocCols <- 2;
-binWidths <- binCounts;
+binWidths <- c(1, 1.25, 1.5, 2, 3, 4); rocCols <- 2;
+binWidths <- binWidths[c(1, 4)]
 
 fracNbPoints <- c(1,1/2,1/3,1/5,1/10,1/20); rocCols <- 2;
 
-byCount <- c(TRUE, FALSE)[1]
+byCount <- c(TRUE, FALSE)[2]
 
 fpLim <- c(0,0.5);
 ## fpLim <- c(0,1);
@@ -33,7 +32,7 @@ fpLim <- c(0,0.5);
 robust <- c(FALSE, TRUE)[1];
 robustStr <- ifelse(robust, "median", "mean");
 binFFracB <- ifelse(robust, "median", "mean"); 
-## confQuantile <- 0.9
+confQuantile <- 1
 
 figPath <- "figures/col/";
 figForce <- 1;
@@ -88,6 +87,7 @@ Then we can assess how well we can detect this changepoint given the two sets of
 Allele~B fractions cannot be easily segmented along the genome "as is", because their distribution in any given region has several modes.  However, if we assume normal genotypes are known and focus on loci that are heterozygous, then $\rho = \vert \beta - 1/2 \vert$ has only one mode and can be segmented easily.
 Here we will use normal genotype calls to identify a set of loci that are heterozygous. We focus on the SNPs in which we are the most confident that they are heterozygous: the evaluation will involve the <%=100*confQuantile%>\% SNPs with highest genotype confidence scores.
 
+Whenever we compare different sets of data we constrain the number of data points to be the same for all data sets by sampling without replacement the minimum number of data points from each data set. Thus we know that we are actually comparing things at the same resolution.
 
 \subsection{Receiver Operator Characteristic performance}
 One approach is to use Receiver Operator Characteristic (ROC) analysis analogously to what is done in the (single-sample) evaluation method presented in \citet{BengtssonH_etal_2009b}.
@@ -157,7 +157,7 @@ deltaStr <- sprintf("%.2f", delta);
 \end{table}
 
 
-We now compare the  raw, TBN-NGC, and TBN-Birdseed methods using the afformentioned ROC analysis at the full resolution as well as smoothed resolution with bin sizes $h=\{<%=paste(sprintf("%.1f", binWidths[-1]/1e3), collapse=", ")%>\}$~kb.
+We now compare the  raw, TBN-NGC, and TBN-Birdseed methods using the afformentioned ROC analysis at the full resolution as well as smoothed resolution with bin sizes $h=\{<%=paste(sprintf("%.1f", binWidths, collapse=", "))%>\}$~kb.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -257,8 +257,12 @@ if (fig <- figDev(figName, aspect=0.618)) {
     }
     if (addBinTrack) {
      cn <- extractSubsetByState(cn, states=states);
-        binWidth <- binWidths[3];
-       cnS <- binnedSmoothingByState(cn, from=xRange[1], to=xRange[2], by=binWidth, FUN=binFFracB, byCount=byCount);
+     
+     binWidth <- binWidths[length(binWidths)]
+     if (!byCount) {
+       binWidth <- round(diff(xRange(cn))/(nbrOfLoci(cn, na.rm=TRUE)-1)*binWidth)
+     }
+     cnS <- binnedSmoothingByState(cn, from=xRange[1], to=xRange[2], by=binWidth, FUN=binFFracB, byCount=byCount);
       setStateColorMap(cnS, smoothedColorMap);
       points(cnS, pch=pch, cex=0.6*cex, col="white", xScale=xScale);
       points(cnS, pch=pch, cex=0.4*cex, xScale=xScale);
@@ -408,6 +412,16 @@ figTags <- c("BAF,hets", "MBAF,hets");
   figTag <- figTags[ww];
   fracBList <- NULL;
   
+
+  ## get the min number of points (across available genotype calls)
+  fracBList <- getFracBList(fracBDsList, what=what, force=(figForce > 2));
+  fracBList <- fracBList[1];
+
+  fracBList <- sapply(genTags, function(genTag) {
+    extractHeterozygous(fracBList, gcDsList[[genTag]], gcsDsList[[genTag]], confQuantile=confQuantile)
+  });
+  minNbPoints <- min(sapply(fracBList, function(fracB) table(getStates(fracB))))
+
   for (gg in seq(along=genTags)) {
     hetsMsg <- sprintf("(plotting only Het SNPs according to %s)", genTags[gg])
     gcN <- gcDsList[[genTags[gg]]]
@@ -424,6 +438,8 @@ keep <- grep(methodPattern, names(fracBList));
 fracBList <- fracBList[keep];
 
 fracBList <- extractHeterozygous(fracBList, gcN, gcsN, confQuantile=confQuantile);
+fracBList <- lapply(fracBList, getBalancedRegions, minNbPoints)
+
 print(fracBList);
 nbrOfSources <- length(fracBList);
 
@@ -473,9 +489,12 @@ for (kk in seq(along=fracBList)) {
     }
     if (addBinTrack && (what=="abs(fracB-1/2)")) {
 
-       binWidth <- binWidths[3];
-       fracBS <- binnedSmoothingByState(fracB, from=xRange[1], to=xRange[2], by=binWidth, FUN=binFFracB, byCount=byCount);
-      setStateColorMap(fracBS, smoothedColorMap);
+     binWidth <- binWidths[length(binWidths)]
+     if (!byCount) {
+       binWidth <- round(diff(xRange(fracB))/(nbrOfLoci(fracB, na.rm=TRUE)-1)*binWidth)
+     }
+    fracBS <- binnedSmoothingByState(fracB, from=xRange[1], to=xRange[2], by=binWidth, FUN=binFFracB, byCount=byCount);
+     setStateColorMap(fracBS, smoothedColorMap);
       points(fracBS, pch=pch, cex=0.6*cex, col="white", xScale=xScale);
       points(fracBS, pch=pch, cex=0.4*cex, xScale=xScale);
     }
@@ -689,7 +708,19 @@ fracBList <- getFracBList(fracBDsList, what=what);
 keep <- grep(methodPattern, names(fracBList));
 fracBList <- fracBList[keep];
 
+## remove NAs
+fracBList <- lapply(fracBList, function(fracB) {
+  isNA <- is.na(getSignals(fracB))
+  fracB <- extractSubset(fracB, whichVector(!isNA))
+})
+
 fracBList[["TCN"]] <- cn ## Add TCN
+
+minNbPoints <- min(sapply(fracBList, function(fracB) table(getStates(fracB))))
+fracBList <- lapply(fracBList, getBalancedRegions, minNbPoints)
+%>
+
+<%
 caption <- sprintf("Test of the null hypothesis of equal distribution of %s before and after the breakpoint: Kolmogorov-Smirnov test statistic. The larger value, the more different the distributions are.", what)
 testStat <- as.matrix(sapply(fracBList, FUN=test, testFUN=ks.test))
 rownames(testStat) <- names(fracBList)
@@ -697,10 +728,19 @@ colnames(testStat) <- "ks"
 display <- c("s", rep("fg", ncol(testStat)))
 %>
 
-
 \subsubsection{Test statistics: <%=what%>}
 
 <%=print(xtable(testStat, caption=caption, display=display)) %>
+
+Note that the number of loci in each state is constrained to be the same for all methods:
+
+<%
+caption <- "Number of loci in each state"
+df <- t(sapply(fracBList, function(fracB) table(getStates(fracB), exclude=NULL)));
+colnames(df) <- names(tbl);
+colnames(df)[is.na(colnames(df))] <- "Safety Margin"
+%>
+<%=print(xtable(df, caption=caption)) %>
 
 %%%%%%%%%%%%
 % abs(fracB-1/2)
@@ -747,24 +787,17 @@ nms <- nms[keep]
 
 <% 
 ## Add TCN
-fracBList[["TCN"]] <- cn
+fracBList[["TCN,SNP+CN"]] <- cn
 snps <- whichVector(!is.na(fracB$y))
-fracBList[["TCN,SNPs"]] <- extractSubset(cn, snps)
+fracBList[["TCN,SNP"]] <- extractSubset(cn, snps)
+
+minNbPoints <- min(sapply(fracBList, function(fracB) table(getStates(fracB))))
+fracBList <- lapply(fracBList, getBalancedRegions, minNbPoints)
 
 cols <- c(cols,  rep("darkgreen", 2))
 ltys <- c(ltys,  2, 3)
 nms <- names(fracBList)
 labels <- c(labels, "TCN,SNP+CN", "TCN,SNP")
-
-## fracBList[["TCN,SNPs"]] <- extractSubset(cn, snps)
-## for (genTag in genTags) {
-##   fracBList[[sprintf("TCN,%s", genTag)]] <- cn[hetSnps[[genTag]],]
-## }
-
-## cols <- c(cols,  rep("green", 2), rep("darkgreen", 2))
-## ltys <- c(ltys,  c(2, 3, 4, 1))
-## nms <- names(fracBList)
-## labels <- c(labels, rep("Total copy number", 4))
 %>
 
 \subsubsection{Test statistics: <%=what%>}
@@ -785,14 +818,16 @@ display <- c("s", rep("fg", nrow(testStat)))
 
 <%=print(xtable(t(testStat), caption=caption, display=display)) %>
 
-Note that the number of loci in each state is not necessarily the same for both genotyping algorithms:
+Note that the number of loci in each state is constrained to be the same for all methods:
 
 <%
-df <- data.frame(sapply(fracBList, function(ds) length(ds$y)));
-names(df) <- "nbP (full res)";
+caption <- "Number of loci in each state"
+df <- t(sapply(fracBList, function(fracB) table(getStates(fracB), exclude=NULL)));
+colnames(df) <- names(tbl);
+colnames(df)[is.na(colnames(df))] <- "Safety Margin"
 row.names(df) <- labels;
 %>
-<%=print(xtable(df)) %>
+<%=print(xtable(df, caption=caption)) %>
 
 <% } %>
 
@@ -800,6 +835,11 @@ row.names(df) <- labels;
 % We focus on heterozygous SNP as called by <%=genTag%>. 
 Smoothing is done using the <%=binFFracB%> function.
 
+<%
+if (!byCount) {
+  binWidths <- round(diff(xRange(fracBList[[1]]))/(nbrOfLoci(fracBList[[1]], na.rm=TRUE)-1)*binWidths)
+}
+%>
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % BEGIN Figure
@@ -948,6 +988,9 @@ This report was automatically generated using the R.rsp package.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % HISTORY:
+% 2009-06-30
+% o Fixed byCount=FALSE.
+% o Constrained the number of points to be the same for comparisons at a given resolution.
 % 2009-06-29
 % o Removed TBN (v1) tracks and ROC curves.
 % o Added several flavors of ROC curves for total copy numbers.

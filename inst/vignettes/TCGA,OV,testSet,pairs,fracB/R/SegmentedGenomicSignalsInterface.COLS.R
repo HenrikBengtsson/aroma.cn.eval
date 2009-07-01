@@ -4,10 +4,10 @@ setMethodS3("getStateColorMap", "SegmentedGenomicSignalsInterface", function(thi
     colorMap <- c(
       "*"  = "#000000",
       "NA" = "#999999",
+      "0" = "purple",
       "1" = "red",
       "2" = "orange",
-      "3" = "blue",
-      "4" = "purple"
+      "3" = "blue"
     );
   }
   colorMap;

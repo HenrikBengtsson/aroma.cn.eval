@@ -25,4 +25,4 @@ regions <- c(
 );
 
 ## regions <- regions[1:5]
-regions <- regions[3:4]
+regions <- regions[3]
