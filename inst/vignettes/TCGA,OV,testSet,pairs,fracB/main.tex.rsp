@@ -20,16 +20,12 @@ addBinTrack <- TRUE;
 trackAspect <- 0.22;
 trackWidth <- 0.9;
 
-binWidths <- c(0,1,2,5,10,20)*1e3; rocCols <- 2;
-binWidths <- c(0,5,20,50,100,200)*1e3; rocCols <- 3;
-binWidths <- c(0,20,50,100,200,400)*1e3; rocCols <- 2;
-##  binWidths <- binWidths[1:2];
+binCounts <- c(1, 2, 3, 5, 10, 20); rocCols <- 2;
+binWidths <- binCounts;
 
 fracNbPoints <- c(1,1/2,1/3,1/5,1/10,1/20); rocCols <- 2;
 
-smoothBy <- c("by", "length.out")[1]
-byCount <- c(TRUE, FALSE)[2]
-if (byCount) binWidths <- binWidths/1e3;
+byCount <- c(TRUE, FALSE)[1]
 
 fpLim <- c(0,0.5);
 ## fpLim <- c(0,1);
@@ -90,7 +86,7 @@ Assume that we can identify this changepoint and with very high confidence locat
 Then we can assess how well we can detect this changepoint given the two sets of data points one each side of changepoint with the safety margin excluded.
 
 Allele~B fractions cannot be easily segmented along the genome "as is", because their distribution in any given region has several modes.  However, if we assume normal genotypes are known and focus on loci that are heterozygous, then $\rho = \vert \beta - 1/2 \vert$ has only one mode and can be segmented easily.
-Here we will use normal genotype calls to identify a set of loci that are heterozygous.
+Here we will use normal genotype calls to identify a set of loci that are heterozygous. We focus on the SNPs in which we are the most confident that they are heterozygous: the evaluation will involve the <%=100*confQuantile%>\% SNPs with highest genotype confidence scores.
 
 
 \subsection{Receiver Operator Characteristic performance}
@@ -261,13 +257,8 @@ if (fig <- figDev(figName, aspect=0.618)) {
     }
     if (addBinTrack) {
      cn <- extractSubsetByState(cn, states=states);
-      if (smoothBy == "length.out") {
-        length.out <- 1000
-       cnS <- binnedSmoothingByState(cn, from=xRange[1], to=xRange[2], length.out=length.out, FUN=binFFracB, byCount=byCount);
-      } else {
-        binWidth <- 50e3;
+        binWidth <- binWidths[3];
        cnS <- binnedSmoothingByState(cn, from=xRange[1], to=xRange[2], by=binWidth, FUN=binFFracB, byCount=byCount);
-      }
       setStateColorMap(cnS, smoothedColorMap);
       points(cnS, pch=pch, cex=0.6*cex, col="white", xScale=xScale);
       points(cnS, pch=pch, cex=0.4*cex, xScale=xScale);
@@ -482,13 +473,8 @@ for (kk in seq(along=fracBList)) {
     }
     if (addBinTrack && (what=="abs(fracB-1/2)")) {
 
-      if (smoothBy == "length.out") {
-        length.out <- 1/4*length(fracB$unit)
-       fracBS <- binnedSmoothingByState(fracB, from=xRange[1], to=xRange[2], length.out=length.out, FUN=binFFracB, byCount=byCount);
-      } else {
-        binWidth <- 50e3;
+       binWidth <- binWidths[3];
        fracBS <- binnedSmoothingByState(fracB, from=xRange[1], to=xRange[2], by=binWidth, FUN=binFFracB, byCount=byCount);
-      }
       setStateColorMap(fracBS, smoothedColorMap);
       points(fracBS, pch=pch, cex=0.6*cex, col="white", xScale=xScale);
       points(fracBS, pch=pch, cex=0.4*cex, xScale=xScale);
@@ -838,21 +824,12 @@ Smoothing is done using the <%=binFFracB%> function.
        binWidth <- binWidths[ww];
       
        smtFUN <- function(fracB) {
-         if (smoothBy == "length.out") {
-           length.out <- fracNbPoints[ww]*length(fracB$unit)
-           fracBS <- binnedSmoothingByState(fracB, from=xRange[1], to=xRange[2], length.out=length.out, FUN=binFFracB, byCount=byCount);
-         } else {
            fracBS <- binnedSmoothingByState(fracB, from=xRange[1], to=xRange[2], by=binWidth, FUN=binFFracB, byCount=byCount);
-         }
          fracBS <- extractSubsetByState(fracBS, states=states);
          fracBS;
        }
 
-      if (smoothBy == "length.out") {
-         figName <- sprintf("%s,ROC,%s,fracNbPoints=%s", region$label, robustStr,round(fracNbPoints[ww],2));
-       } else {
          figName <- sprintf("%s,ROC,%s,binWidth=%s", region$label, robustStr,binWidth);
-       }
        if (fig <- figDev(figName, width=8, aspect=1)) {
          ##   layout(matrix(seq(along=binWidths), ncol=rocCols, byrow=TRUE));
          par(mar=c(2.5,2.4,1.3,0.7)+0.1, mgp=c(1.4,0.3,0), tcl=-0.3, cex=2);
@@ -863,9 +840,8 @@ Smoothing is done using the <%=binFFracB%> function.
        dim(fracBSList) <- dim(fracBList)
         names(fracBSList) <- names(fracBList)
 
-       if (smoothBy == "length.out") {
-         length.out <- fracNbPoints[ww]*length(fracB$unit)
-         binLabel <- sprintf("Resolution: %s (%s points)", round(fracNbPoints[ww], 2), round(length.out));
+       if (byCount) {
+         binLabel <- sprintf("Bin size: %g", binWidth);
        } else {
          binLabel <- sprintf("Bin width %g kb", binWidth/1e3);
       }
