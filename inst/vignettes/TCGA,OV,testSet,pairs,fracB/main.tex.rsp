@@ -14,7 +14,7 @@ sourceDirectory("R/");
 what <- "fracB";
 addLegend <- TRUE;
 addSdEst <- FALSE;
-addBinTrack <- TRUE;
+addBinTrack <- FALSE;
 
 trackAspect <- 0.22;
 trackWidth <- 0.9;
@@ -189,7 +189,7 @@ getNbLociPerState <- function(object) {
   names[sign==0] <- "'NORMAL' (1,1)";
   names[sign==1] <- "'GAIN' (1,2)";
   names[sign==2] <- "'DELETION' (0,1)";
-  names[sign==3] <- "'COPY NEUTRAL LOH' (0,1)";
+  names[sign==3] <- "'COPY NEUTRAL LOH' (0,2)";
   names(tbl) <- names;
   tbl
 }
@@ -643,7 +643,7 @@ nbrOfSources <- length(fracBList);
   ylab <- expression(beta[T] == theta[B,T]/theta[T]);
   xlab <- expression(beta[N]);
   ylab <- expression(beta[T]);
-  lim <- c(-0.2,1.2);
+  lim <- c(-0.1,1.1);
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 # Plot $(\beta_N, \beta_T)$
@@ -652,7 +652,7 @@ nbrOfSources <- length(fracBList);
 %>
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% BEGIN Figure:
+% BEGIN Figure: (betaN, betaT) for both regions
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 <%
 tbl <- sapply(fracBList, getNbLociPerState)
@@ -672,7 +672,11 @@ tbl <- tbl[, 1]
 ##   subplots(nbrOfSources, ncol=nbrOfSources);
 if (fig <- figDev(figName)) {
   par(mar=c(2.7,2.6,1.2,0)+0.1, mgp=c(1.4,0.3,0), tcl=-0.3, cex=2);
-  plot(NA, xlim=lim, ylim=lim, xlab=xlab, ylab=ylab);
+  plot(NA, xlim=lim, ylim=lim, xlab=xlab, ylab=ylab, axes=FALSE);
+  axis(side=1, at=c(0,1/2,1));
+  axis(side=2, at=c(0,1/2,1));
+  box();  # optional?
+
   abline(a=0, b=1, lty=2, lwd=1, col="#999999");
   points(betaN, betaT, pch=pch, col=col);
   stext(side=3, pos=0, line=-0.3, cex=2.0, name);
@@ -690,6 +694,101 @@ if (fig <- figDev(figName)) {
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % END Figure
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% BEGIN Figure: (betaN, betaT) for each state separately
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+<%
+tbl <- sapply(fracBList, getNbLociPerState)
+stopifnot(all(rowSds(tbl)==0))
+tbl <- tbl[, 1]
+%>
+
+<%  for (kk in seq(along=fracBList)) { %>
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+% BEGIN Figure: (betaN, betaT) for each state separately: <%=names(fracBList)[kk]%>
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+\begin{figure}[htb]
+  \begin{center}
+<%
+    name <- names(fracBList)[kk];
+    fracB <- fracBList[[kk]];
+    ustates <- na.omit(getUniqueStates(fracB));
+    for (ss in seq(along=ustates)) {
+      fracBState <- extractSubsetByState(fracB, state=ustates[ss]);
+      fracBNState <- extractSubsetByState(fracBN, state=ustates[ss]);
+      betaN <- getSignals(fracBNState)
+
+      betaT <- getSignals(fracBState);
+
+      ## genotype calls
+      genName <- unlist(strsplit(name, ","))
+      genName <- genName[length(genName)]
+      genTag <- ifelse(genName=="raw", "NGC", genName);
+      gcN <- gcDsList[[genTag]]
+      idx <- indexOf(gcN, region$name);
+      gf <- getFile(gcN, idx);
+      isHet <- isHeterozygous(gf, units=fracBNState$unit, drop=TRUE);
+      
+      if (name =="raw") {
+        ## slope: exploiting symmetries...
+        slopeDatAbove <- betaT/betaN;
+        slopeDatBelow <- (1-betaT)/(1-betaN);
+        slopeDat <- slopeDatAbove;
+        slopeDat[which(slopeDat>1)] <- slopeDatBelow[which(slopeDat>1)];
+        
+        hetSlope <- mean(slopeDat[isHet], na.rm=TRUE);
+        homSlope <- mean(slopeDat[!isHet], na.rm=TRUE);
+        slopeList <- list(hom=homSlope, het=hetSlope);
+      } else {
+        slopeList <- NULL;
+      }
+      
+      col <- 1+isHet;
+
+      figName <- sprintf("%s,betaNvsBetaT,%s,%s,%s,state=%s", region$label, what, name, genTag, ustates[ss]);
+      if (fig <- figDev(figName)) {
+        par(mar=c(2.7,2.6,1.2,0)+0.1, mgp=c(1.4,0.3,0), tcl=-0.3, cex=2);
+        plot(NA, xlim=lim, ylim=lim, xlab=xlab, ylab=ylab, axes=FALSE);
+        axis(side=1, at=c(0,1/2,1));
+        axis(side=2, at=c(0,1/2,1));
+##        box();  # optional?
+
+        ## box
+        a <- rep(0,3);
+        b <- rep(1,3);
+        c <- 0:2/2;
+        segments(a, c, b, c, col="#999999");
+        segments(c, a, c, b, col="#999999");
+
+        points(betaN, betaT, pch=pch, col=col);
+        abline(a=0, b=1, lty=2, lwd=1, col="#999999");
+        for (ll in seq(along=slopeList)) {
+          slp <- slopeList[[ll]];
+          x0 <- rep(0, 2);
+          x1 <- rep(1, 2);
+          y0 <- c(0, 1-slp);
+          y1 <- c(slp, 1);
+          segments(x0, y0, x1, y1, lty=1, lwd=2, col="white");
+          segments(x0, y0, x1, y1, lty=1, lwd=1, col=ll);
+        }
+        stext(side=4, pos=0, line=-0.8, cex=2.0, sprintf("%s,%s", name, genTag));
+        stext(side=3, pos=0, line=-0.3, cex=2.0, names(tbl)[ss]);
+        devDone(figName);
+      } # if (figDev(...)) %>\resizebox{0.49\textwidth}{!}{\includegraphics{<%=fig$fullname%>}}
+      <%  } # for (ss ...) %>
+    \end{center}
+    \caption{(<%=region$src%>) 
+      There are <%=tbl[1]%> loci of state <%=names(tbl)[1]%> ("negatives") and
+      <%=tbl[2]%> loci of state <%=names(tbl)[2]%> ("positives"). 
+      In total <%=tbl[3]%> loci within the safety margin were excluded.
+    }
+    \label{fig<%=figName%>}
+    \end{figure}
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+    % END Figure
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+ <%  } # for (kk ...) %>
 
 <% verbose && exit(verbose); %>
 
@@ -837,8 +936,8 @@ row.names(df) <- labels;
 Smoothing is done using the <%=binFFracB%> function.
 
 <%
+binWidths <- binCounts;
 if (!byCount) {
-  binWidths <- binCounts;
   binWidths <- round(diff(xRange(fracBList[[1]]))/(nbrOfLoci(fracBList[[1]], na.rm=TRUE)-1)*binWidths)
 }
 %>
@@ -848,7 +947,7 @@ if (!byCount) {
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 <%
-  rocRows <- ceiling(length(binWidths)/rocCols); 
+  rocRows <- ceiling(length(binCounts)/rocCols); 
   aspect <- rocRows/rocCols;
 
   fracB <- fracBList[[1]];
@@ -940,7 +1039,7 @@ if (require(xtable)) {
   rownames(lgd) <- nms
   colnames(lgd) <- c("line type", "color")
   
-  caption <- sprintf("Legend of Figure \ref{fig%s}.", figName)
+  caption <- sprintf("Legend of Figure \\ref{fig%s}.", figName)
 %>
 <%=print(xtable(lgd, caption=caption)) %>
 <% } %>
@@ -990,6 +1089,9 @@ This report was automatically generated using the R.rsp package.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % HISTORY:
+% 2009-07-01
+% o Added (betaN, betaT) plots stratified by state showing lines that
+% motivate the correction factor in TBN,v2.
 % 2009-06-30
 % o Fixed byCount=FALSE.
 % o Constrained the number of points to be the same for comparisons at a given resolution.
