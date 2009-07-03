@@ -1,0 +1,413 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Authors: Henrik Bengtsson, hb@stat.berkeley.edu
+%          Pierre Neuvial, pierre@stat.berkeley.edu
+% Created on: 2009-07-02
+%
+% Usage:
+%  library("R.rsp");
+%  rsptex("plotsByState.tex.rsp");  # => *.tex.rsp => ... => *.dvi
+%  rsptex("plotsByState.tex.rsp", pdf=TRUE);  # => *.tex.rsp => ... => *.pdf
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+<%
+verbose && enter(verbose, "Setup");
+sourceDirectory("R/");
+what <- "fracB";
+
+addLegend <- TRUE;
+addSdEst <- FALSE;
+
+cnList <- NULL
+
+figPath <- "figures/col/";
+figForce <- 1;
+figDev <- function(..., force=(figForce > 0)) { epsDev(..., path=figPath, force=force) }
+figDev <- function(..., force=(figForce > 0)) { pngDev(..., device=png, path=figPath, force=force) }
+
+title <- sprintf("Plots before and after TumorBoost in regions with no ASCN change");
+authors <- "HB, PN.";
+verbose && exit(verbose);
+%>
+
+<%
+pch <- 19; cex <- 0.5;
+pch <- "."; cex <- 3;
+colorMap <- c("*"="#000000", "NA"="#999999", "1"="red", "2"="orange", "3"="blue", "4"="purple");
+smoothedColorMap <-  c("*" = "#000000", "NA" = "#999999");
+%>
+
+%\documentclass[a4paper,draft]{article}
+\documentclass[a4paper]{article}
+\usepackage{graphicx}
+\usepackage{fancyvrb}
+\usepackage{a4wide}
+\usepackage{xspace}
+\usepackage{amsmath} 
+\usepackage{natbib}
+
+% The search path (within curly brackets and separated by commas)
+% where to find graphics files
+\graphicspath{{<%=figPath%>}}
+\DeclareGraphicsRule{.eps.gz}{eps}{.eps.bb}{`gunzip -c #1}
+
+\newcommand{\pkg}[1]{\textsl{#1}\xspace}
+
+\newcommand{\trackWidth}{<%=trackWidth%>\textwidth}
+
+
+\title{<%=title%>}
+\author{<%=authors%>}
+
+\begin{document}
+
+\maketitle
+
+\section{Data set}
+
+<%
+df <- getFile(fracBDsList[[1]],1);
+tumorName <- getName(df);
+normalName <- sub("ref=","",getTags(df)[1]);
+pairName <- paste(tumorName, normalName, sep=" / ");
+%>
+This report is based on the data set <%=dataSet%>. All data is based on the Affymetrix GenomeWideSNP\_6 chip type.  This evaluation will be based on $\rho$ estimated from one such pair, more precisely the <%=tumorName%> CEL file (tumor) and the <%=normalName%> CEL file (matched normal).
+
+The two CEL files were preprocessed separately using CRMAv2 (without any reference arrays)
+
+\subsection{List of change points}
+For this data set, we have selected a few regions for which one safely can assume there exists a single changepoint and for which the fracB distribution looks constant.  This selection was done visually.  For each region we chose large enough safety margin such that the risk for the two sets $\mathcal{J}_A$ and $\mathcal{J}_B$ to contain loci from the other set is extremely small.  
+
+\begin{table}[htp]
+\begin{center}
+\begin{tabular}{c|c|c|c|c}
+Tumor-normal pair & Chromosome & Region & Change point & Safety region \\
+\hline
+<% for (region in regions) { %>
+<%
+region <- parseRegion(region);
+str(region);
+sample <- region$name;
+sample <- pairName;
+chr <- region$chromosome;
+regionStr <- sprintf("%.2f", region$region/1e6);
+cp <- region$params$cp[1];
+cpStr <- sprintf("%.2f", cp);
+delta <- region$params$cp[2];
+deltaStr <- sprintf("%.2f", delta);
+%>
+<%=sample%> & <%=chr%> & <%=regionStr[1]%>-<%=regionStr[2]%> & <%=cpStr%> & <%=deltaStr%> \\
+\hline
+<% } # for (region ...) %>
+\end{tabular}
+\end{center}
+\caption{Regions used for the evaluation and that each contain a single changepoint.  All positions and lengths are in units of Mb.}
+\label{tblRegions}
+\end{table}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% BEGIN Regions of interest
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+<% for (region in regions) { %>
+\clearpage
+\section{Region: <%=region%>}
+
+<%
+print(region);
+region <- parseRegion(region);
+print(region);
+%>
+
+
+<%
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Count the number of loci with each state
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+getNbLociPerState <- function(object) {
+  states <- getStates(object);
+  tbl <- table(states, exclude=NULL);
+  uniqueStates <- as.integer(names(tbl));
+  o <- order(abs(uniqueStates));
+  tbl <- tbl[o];
+  names <- names(tbl);
+  sign <- as.integer(names);
+  names[sign==0] <- "'NORMAL' (1,1)";
+  names[sign==1] <- "'GAIN' (1,2)";
+  names[sign==2] <- "'DELETION' (0,1)";
+  names[sign==3] <- "'COPY NEUTRAL LOH' (0,2)";
+  names(tbl) <- names;
+  tbl
+}
+%>
+
+
+
+
+\subsection{$(\beta_N, \beta_T)$ plots}
+<%
+verbose && enter(verbose, "Plotting (beta_N, beta_T")
+what <- "fracB"
+fracBList <- getFracBList(fracBDsList, what=what, force=(figForce > 2));
+keep <- grep(methodPattern, names(fracBList));
+fracBList <- fracBList[keep];
+
+fracBN <- getFracBList(list(dsN), what=what, force=(figForce > 2))[[1]];
+betaN <- getSignals(fracBN)
+
+print(fracBList);
+nbrOfSources <- length(fracBList);
+%>
+
+<%
+ xScale <- 1e-6;
+ cp <- region$params$cp;
+  s <- region$params$s;
+ 
+  xlab <- expression(beta[N] == theta[B,N]/theta[N]);
+  ylab <- expression(beta[T] == theta[B,T]/theta[T]);
+  xlab <- expression(beta[N]);
+  ylab <- expression(beta[T]);
+  lim <- c(-0.1,1.1);
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+# Plot $(\beta_N, \beta_T)$
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+%>
+
+<%
+tbl <- sapply(fracBList, getNbLociPerState)
+stopifnot(all(rowSds(tbl)==0))
+tbl <- tbl[, 1]
+%>
+
+<%  for (kk in seq(along=fracBList)) { %>
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+% BEGIN Figure: (betaN, betaT) for each state separately: <%=names(fracBList)[kk]%>
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+\begin{figure}[htb]
+  \begin{center}
+<%
+    name <- names(fracBList)[kk];
+    fracB <- fracBList[[kk]];
+    ustates <- na.omit(getUniqueStates(fracB));
+    for (ss in seq(along=ustates)) {
+      fracBState <- extractSubsetByState(fracB, state=ustates[ss]);
+      fracBNState <- extractSubsetByState(fracBN, state=ustates[ss]);
+      betaN <- getSignals(fracBNState)
+
+      betaT <- getSignals(fracBState);
+
+      ## genotype calls
+      genName <- unlist(strsplit(name, ","))
+      genName <- genName[length(genName)]
+      genTag <- ifelse(genName=="raw", "NGC", genName);
+      gcN <- gcDsList[[genTag]]
+      idx <- indexOf(gcN, region$name);
+      gf <- getFile(gcN, idx);
+      isHet <- isHeterozygous(gf, units=fracBNState$unit, drop=TRUE);
+      
+      if (name =="raw") {
+        ## slope: exploiting symmetries...
+        slopeDatAbove <- betaT/betaN;
+        slopeDatBelow <- (1-betaT)/(1-betaN);
+        slopeDat <- slopeDatAbove;
+        slopeDat[which(slopeDat>1)] <- slopeDatBelow[which(slopeDat>1)];
+        
+        hetSlope <- median(slopeDat[isHet], na.rm=TRUE);
+      } else {
+        hetSlope <- NULL;
+      }
+      
+      col <- 1+isHet;
+
+      figName <- sprintf("%s,betaNvsBetaT,%s,%s,%s,state=%s", region$label, what, name, genTag, ustates[ss]);
+      if (fig <- figDev(figName)) {
+        par(mar=c(2.7,2.6,1.2,0)+0.1, mgp=c(1.4,0.3,0), tcl=-0.3, cex=cex);
+        plot(NA, xlim=lim, ylim=lim, xlab=xlab, ylab=ylab, axes=FALSE);
+        axis(side=1, at=c(0,1/2,1));
+        axis(side=2, at=c(0,1/2,1));
+##        box();  # optional?
+
+        ## boxes
+        z <- 0:2/2;
+        a <- rep(min(z), length(z));
+        b <- rep(max(z), length(z));
+        segments(a, z, b, z, col="#999999", lty=2);
+        segments(z, a, z, b, col="#999999", lty=2);
+
+        points(betaN, betaT, pch=pch, col=col, cex=cex);
+        abline(a=0, b=1, lty=2, lwd=1, col="#999999");
+        x0 <- rep(0, 2);
+        x1 <- rep(1, 2);
+        y0 <- c(0, 1-hetSlope);
+        y1 <- c(hetSlope, 1);
+        segments(x0, y0, x1, y1, lty=1, lwd=2, col="white");
+        segments(x0, y0, x1, y1, lty=1, lwd=1, col=2);
+        
+        txt <- sprintf("%s,%s", name, genTag);
+        stext(side=4, pos=0, line=-0.8, cex=cex, txt);
+        stext(side=3, pos=0, line=-0.3, cex=cex, names(tbl)[ss]);
+        devDone(figName);
+      } # if (figDev(...)) %>\resizebox{0.49\textwidth}{!}{\includegraphics{<%=fig$fullname%>}}
+      <%  } # for (ss ...) %>
+    \end{center}
+    \caption{<%=txt%>.}
+   \label{fig<%=figName%>}
+    \end{figure}
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+    % END Figure
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+ <%  } # for (kk ...) %>
+
+<% verbose && exit(verbose); %>
+
+
+
+\subsection{Allele-specific copy number estimates}
+<%
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+# Plot ASCNs
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+verbose && enter(verbose, "Plotting (C_A,C_B)")
+what <- "ratios";
+
+  xlab <- expression(C[A] == theta[A,T]/theta[N]);
+  ylab <- expression(C[B] == theta[B,T]/theta[N]);
+  xlab <- expression(C["T,A"] == theta["T,A"]/theta[N]);
+  ylab <- expression(C["T,B"] == theta["T,B"]/theta[N]);
+  xlab <- expression(C["T,A"] == (1-beta[T])*C);
+  ylab <- expression(C["T,B"] == beta[T]*C);
+  xlab <- expression(C["T,A"]);
+  ylab <- expression(C["T,B"]);
+  lim <- c(-0.5,4.5);
+
+ # Extract total CNs 
+ cnList <- getCnList(cnDsList, cnList=cnList, what=what, force=(figForce > 2));
+ cn <- cnList[[1]];
+ print(cn);
+ C <- getSignals(cn);
+ col <- getStateColors(cn, na.rm=TRUE);
+
+fracBList <- getFracBList(fracBDsList, what="fracB", force=(figForce > 2));
+keep <- grep(methodPattern, names(fracBList));
+fracBList <- fracBList[keep];
+
+print(fracBList);
+nbrOfSources <- length(fracBList);
+
+  xScale <- 1e-6;
+  states <- na.omit(sort(getUniqueStates(fracBList[[1]])));
+  cp <- region$params$cp;
+  s <- region$params$s;
+%>
+
+<%
+tbl <- sapply(fracBList, getNbLociPerState)
+stopifnot(all(rowSds(tbl)==0))
+tbl <- tbl[, 1]
+%>
+
+<%  for (kk in seq(along=fracBList)) { %>
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+% BEGIN Figure: (C_A, C_B) for each state separately: <%=names(fracBList)[kk]%>
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+\begin{figure}[htb]
+  \begin{center}
+<%
+    name <- names(fracBList)[kk];
+    fracB <- fracBList[[kk]];
+    ustates <- na.omit(getUniqueStates(fracB));
+    for (ss in seq(along=ustates)) {
+      fracBState <- extractSubsetByState(fracB, state=ustates[ss]);
+      fracBNState <- extractSubsetByState(fracBN, state=ustates[ss]);
+      beta <- getSignals(fracBState);
+      CA <- (1-beta) * C;
+      CB <- beta * C;
+ 
+      ## genotype calls
+      genName <- unlist(strsplit(name, ","))
+      genName <- genName[length(genName)]
+      genTag <- ifelse(genName=="raw", "NGC", genName);
+      gcN <- gcDsList[[genTag]]
+      idx <- indexOf(gcN, region$name);
+      gf <- getFile(gcN, idx);
+      isHet <- isHeterozygous(gf, units=fracBNState$unit, drop=TRUE);
+      
+      col <- 1+isHet;
+
+      figName <- sprintf("%s,ASCN,%s,%s,%s,state=%s", region$label, what, name, genTag, ustates[ss]);
+      if (fig <- figDev(figName)) {
+        par(mar=c(2.7,2.6,1.2,0)+0.1, mgp=c(1.4,0.3,0), tcl=-0.3, cex=cex);
+        plot(NA, col=col, xlim=lim, ylim=lim, xlab=xlab, ylab=ylab);
+        for (c in 2) lines(x=c(0,c), y=c(c,0), lty=1, lwd=2, col="#999999");
+        ## boxes
+        rLim <- c(floor(lim[1]), ceiling(lim[2]));
+        z <- seq(from=rLim[1], to=rLim[2]);
+        a <- rep(min(z), length(z));
+        b <- rep(max(z), length(z));
+        segments(a, z, b, z, col="#999999", lty=2);
+        segments(z, a, z, b, col="#999999", lty=2);
+
+        txt <- sprintf("%s,%s", name, genTag);
+        stext(side=4, pos=0, line=-0.8, cex=cex, txt);
+        stext(side=3, pos=1, line=-0.3, cex=cex, names(tbl)[ss]);
+        points(CA, CB, col=col, pch=pch, cex=cex);
+        devDone(figName);
+      } # if (figDev(...)) %>\resizebox{0.49\textwidth}{!}{\includegraphics{<%=fig$fullname%>}}
+ <% } # for (ss ...) %>
+    \end{center}
+    \caption{<%=txt%>.}
+      \label{fig<%=figName%>}
+    \end{figure}
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+    % END Figure
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+ <%  } # for (kk ...) %>
+
+<% verbose && exit(verbose); %>
+
+
+<% } # for (region in regions) %>
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% END Regions of interest
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% References
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\clearpage
+\bibliography{bioinformatics-journals-abbr,hb-at-maths.lth.se}
+%\bibliographystyle{plain}
+\bibliographystyle{natbib}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Session information
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\clearpage
+\appendix
+\section{Data files}
+\begin{Verbatim}[fontfamily=helvetica]
+<%={x <- capture.output(print(fracBDsList));x <- gsub(": .*/(totalAndFracBData/)", ": \\1", x);paste(x, collapse="\n");}%>
+\end{Verbatim}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Session information
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\clearpage
+\section{Session information}
+This report was automatically generated using the R.rsp package.
+<%=toLatex(sessionInfo())%>
+
+
+\end{document}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% HISTORY:
+% 2009-07-02
+% o Added ASCN plots.
+% o Created from main.tex.rsp.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
