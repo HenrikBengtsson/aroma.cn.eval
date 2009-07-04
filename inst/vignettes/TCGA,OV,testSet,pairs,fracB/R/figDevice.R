@@ -1,4 +1,4 @@
-setMethodS3("figDevice", "default", function(label, width, height=aspect*width, aspect=1, device, extension, ..., path="figures", safe=TRUE, force=FALSE) {
+setMethodS3("figDevice", "default", function(label, width=6, height=aspect*width, aspect=1, scale=1, device, extension, ..., path="figures", safe=TRUE, force=FALSE) {
   # Argument 'label':
   label <- Arguments$getCharacter(label);
 
@@ -37,14 +37,17 @@ setMethodS3("figDevice", "default", function(label, width, height=aspect*width, 
 }, protected=TRUE) # figDevice()
 
 
-pngDev <- function(..., width=840, device=findPngDevice()) {
-  figDevice(..., width=width, device=device, extension="png");
+pngDev <- function(..., scale=140, device=findPngDevice()) {
+  figDevice(..., width=width, scale=scale, device=device, extension="png");
 } # pngDev()
 
 
 
 ############################################################################
 # HISTORY:
+# 2009-07-03
+# o Added argument 'scale' to figDevice() to make argument 'width' be
+#   device independent.
 # 2009-07-02
 # o Added generic figDevice().
 # o Created.
