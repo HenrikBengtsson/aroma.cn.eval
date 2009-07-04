@@ -1,4 +1,4 @@
-getCnList <- function(dsList, cnList=NULL, ..., what=c("log2ratios", "ratios"), verbose=TRUE) {
+getCnList <- function(dsList, cnList=NULL, ..., what=c("log2ratios", "ratios"), pattern=NULL, verbose=TRUE) {
   # Nothing todo?
   if (!is.null(cnList)) {
     return(cnList);
@@ -6,6 +6,11 @@ getCnList <- function(dsList, cnList=NULL, ..., what=c("log2ratios", "ratios"), 
 
   # Arguments 'what':
   what <- match.arg(what);
+
+  if (!is.null(pattern)) {
+    keep <- grep(pattern, names(dsList));
+    dsList <- dsList[keep];
+  }
 
   truth <- makeTruth(region, verbose=verbose);
   cnList <- extractListOfCopyNumbers(dsList, region, truth=truth,
@@ -25,6 +30,8 @@ getCnList <- function(dsList, cnList=NULL, ..., what=c("log2ratios", "ratios"), 
 
 ############################################################################
 # HISTORY:
+# 2009-07-04
+# o Added argument 'pattern'.
 # 2009-04-09
 # o Added argument 'what'.
 # 2009-02-23

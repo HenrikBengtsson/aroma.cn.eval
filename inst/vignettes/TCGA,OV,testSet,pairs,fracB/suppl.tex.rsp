@@ -289,9 +289,7 @@ figTag <- "BAF";
 % BEGIN Figure: <%=what%>
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 <%
-fracBList <- getFracBList(fracBDsList, what=what, force=(figForce > 2));
-keep <- grep(methodPattern, names(fracBList));
-fracBList <- fracBList[keep];
+fracBList <- getFracBList(fracBDsList, what=what, pattern=methodPattern, force=(figForce > 2));
 print(fracBList);
 nbrOfSources <- length(fracBList);
 
@@ -403,9 +401,7 @@ figTags <- c("BAF,hets", "MBAF,hets");
 % BEGIN Figure: <%=what%> <%=hetsMsg%>
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 <%
-fracBList <- getFracBList(fracBDsList, what=what, force=(figForce > 2));
-keep <- grep(methodPattern, names(fracBList));
-fracBList <- fracBList[keep];
+fracBList <- getFracBList(fracBDsList, what=what, pattern=methodPattern, force=(figForce > 2));
 
 fracBList <- extractHeterozygous(fracBList, gcN, gcsN, confQuantile=confQuantile);
 fracBList <- lapply(fracBList, FUN=getBalancedRegions, minNbPoints)
@@ -535,9 +531,7 @@ what <- "ratios";
  C <- getSignals(cn);
  col <- getStateColors(cn, na.rm=TRUE);
 
-fracBList <- getFracBList(fracBDsList, what="fracB", force=(figForce > 2));
-keep <- grep(methodPattern, names(fracBList));
-fracBList <- fracBList[keep];
+fracBList <- getFracBList(fracBDsList, what="fracB", pattern=methodPattern, force=(figForce > 2));
 
 print(fracBList);
 nbrOfSources <- length(fracBList);
@@ -592,9 +586,7 @@ tbl <- tbl[, 1]
 <%
 verbose && enter(verbose, "Plotting (beta_N, beta_T")
 what <- "fracB"
-fracBList <- getFracBList(fracBDsList, what=what, force=(figForce > 2));
-keep <- grep(methodPattern, names(fracBList));
-fracBList <- fracBList[keep];
+fracBList <- getFracBList(fracBDsList, what=what, pattern=methodPattern, force=(figForce > 2));
 
 fracBN <- getFracBList(list(dsN), what=what, force=(figForce > 2))[[1]];
 betaN <- getSignals(fracBN)

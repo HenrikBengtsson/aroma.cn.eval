@@ -64,6 +64,7 @@ setMethodS3("extractListOfCopyNumbers", "list", function(this, name, chromosome,
       if (chipType != targetChipType) {
         units <- matchUnitsToTargetCdf(chipType, targetChipType);
       }
+      verbose && str(verbose, units);
       verbose && exit(verbose);
     }
 
@@ -71,6 +72,7 @@ setMethodS3("extractListOfCopyNumbers", "list", function(this, name, chromosome,
     verbose && enter(verbose, "Extracting CNs");
     cn <- extractRawCopyNumbers(df, chromosome=chromosome, 
                                             region=region, units=units);
+    verbose && print(verbose, cn);
     verbose && exit(verbose);
 
     # Add true CN functions?

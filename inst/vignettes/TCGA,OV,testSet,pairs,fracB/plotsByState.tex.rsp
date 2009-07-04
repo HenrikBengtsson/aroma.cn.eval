@@ -16,8 +16,6 @@ what <- "fracB";
 addLegend <- TRUE;
 addSdEst <- FALSE;
 
-cnList <- NULL
-
 figPath <- "figures/col/";
 figForce <- 1;
 figDev <- function(..., force=(figForce > 0)) { epsDev(..., path=figPath, force=force) }
@@ -51,7 +49,7 @@ smoothedColorMap <-  c("*" = "#000000", "NA" = "#999999");
 
 \newcommand{\pkg}[1]{\textsl{#1}\xspace}
 
-\newcommand{\trackWidth}{<%=trackWidth%>\textwidth}
+%\newcommand{\trackWidth}{<=trackWidth>\textwidth}
 
 
 \title{<%=title%>}
@@ -144,12 +142,10 @@ getNbLociPerState <- function(object) {
 <%
 verbose && enter(verbose, "Plotting (beta_N, beta_T")
 what <- "fracB"
-fracBList <- getFracBList(fracBDsList, what=what, force=(figForce > 2));
-keep <- grep(methodPattern, names(fracBList));
-fracBList <- fracBList[keep];
+fracBList <- getFracBList(fracBDsList, what=what, pattern=methodPattern, force=(figForce > 2));
 
 fracBN <- getFracBList(list(dsN), what=what, force=(figForce > 2))[[1]];
-betaN <- getSignals(fracBN)
+betaN <- getSignals(fracBN);
 
 print(fracBList);
 nbrOfSources <- length(fracBList);
@@ -270,27 +266,20 @@ tbl <- tbl[, 1]
 verbose && enter(verbose, "Plotting (C_A,C_B)")
 what <- "ratios";
 
-  xlab <- expression(C[A] == theta[A,T]/theta[N]);
-  ylab <- expression(C[B] == theta[B,T]/theta[N]);
-  xlab <- expression(C["T,A"] == theta["T,A"]/theta[N]);
-  ylab <- expression(C["T,B"] == theta["T,B"]/theta[N]);
-  xlab <- expression(C["T,A"] == (1-beta[T])*C);
-  ylab <- expression(C["T,B"] == beta[T]*C);
-  xlab <- expression(C["T,A"]);
-  ylab <- expression(C["T,B"]);
-  lim <- c(-0.5,4.5);
+xlab <- expression(C["TA"] == theta["TA"]/theta[N]);
+ylab <- expression(C["TB"] == theta["TB"]/theta[N]);
+xlab <- expression(C["TA"]);
+ylab <- expression(C["TB"]);
+lim <- c(-0.5,4.5);
 
- # Extract total CNs 
- cnList <- getCnList(cnDsList, cnList=cnList, what=what, force=(figForce > 2));
- cn <- cnList[[1]];
- print(cn);
- C <- getSignals(cn);
- col <- getStateColors(cn, na.rm=TRUE);
+# Extract total CNs 
+cnList <- getCnList(cnDsList, what=what, force=(figForce > 2));
+cn <- cnList[[1]];
+print(cn);
+C <- getSignals(cn);
+col <- getStateColors(cn, na.rm=TRUE);
 
-fracBList <- getFracBList(fracBDsList, what="fracB", force=(figForce > 2));
-keep <- grep(methodPattern, names(fracBList));
-fracBList <- fracBList[keep];
-
+fracBList <- getFracBList(fracBDsList, what="fracB", pattern=methodPattern, force=(figForce > 2));
 print(fracBList);
 nbrOfSources <- length(fracBList);
 
@@ -317,9 +306,16 @@ tbl <- tbl[, 1]
     fracB <- fracBList[[kk]];
     ustates <- na.omit(getUniqueStates(fracB));
     for (ss in seq(along=ustates)) {
-      fracBState <- extractSubsetByState(fracB, state=ustates[ss]);
-      fracBNState <- extractSubsetByState(fracBN, state=ustates[ss]);
+      state <- ustates[ss];
+      cnState <- extractSubsetByState(cn, state=state);
+      fracBState <- extractSubsetByState(fracB, state=state);
+      fracBNState <- extractSubsetByState(fracBN, state=state);
+
+      C <- getSignals(cnState);
       beta <- getSignals(fracBState);
+      # Sanity check
+      stopifnot(length(beta) == length(C));
+
       CA <- (1-beta) * C;
       CB <- beta * C;
  
@@ -334,7 +330,7 @@ tbl <- tbl[, 1]
       
       col <- 1+isHet;
 
-      figName <- sprintf("%s,ASCN,%s,%s,%s,state=%s", region$label, what, name, genTag, ustates[ss]);
+      figName <- sprintf("%s,ASCN,%s,%s,%s,state=%s", region$label, what, name, genTag, state);
       if (fig <- figDev(figName)) {
         par(mar=c(2.7,2.6,1.2,0)+0.1, mgp=c(1.4,0.3,0), tcl=-0.3, cex=cex);
         plot(NA, col=col, xlim=lim, ylim=lim, xlab=xlab, ylab=ylab);
@@ -371,16 +367,14 @@ tbl <- tbl[, 1]
 <%
 verbose && enter(verbose, "Plotting densities");
 what <- "fracB";
-fracBList <- getFracBList(fracBDsList, what=what, force=(figForce > 2));
-keep <- grep(methodPattern, names(fracBList));
-fracBList <- fracBList[keep];
+fracBList <- getFracBList(fracBDsList, what=what, pattern=methodPattern, force=(figForce > 2));
 ustates <- na.omit(getUniqueStates(fracBList[[1]]));
 %>
 
 <%
-tbl <- sapply(fracBList, getNbLociPerState)
-stopifnot(all(rowSds(tbl)==0))
-tbl <- tbl[, 1]
+tbl <- sapply(fracBList, FUN=getNbLociPerState);
+stopifnot(all(rowSds(tbl)==0));
+tbl <- tbl[, 1];
 %>
 
 <%
@@ -389,11 +383,13 @@ lim <- c(-0.1,1.1);
 %>
 
 <%
+xlim <- c(-0.2,1.2);
+ylim <- c(0,3.2);
 for (ss in seq(along=ustates)) {
   ustates <- na.omit(getUniqueStates(fracB));
   figName <- sprintf("%s,%s,density,state=%s", region$label, what, ustates[ss]);
-  fracBStateList <- lapply(fracBList, extractSubsetByState, ustates[ss]);
-  betaT <- sapply(fracBStateList, getSignals);
+  fracBStateList <- lapply(fracBList, FUN=extractSubsetByState, ustates[ss]);
+  betaT <- sapply(fracBStateList, FUN=getSignals);
 %>
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
@@ -401,13 +397,16 @@ for (ss in seq(along=ustates)) {
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 \begin{figure}[htb]
   \begin{center}
-    <%
-    if (fig <- figDev(figName, aspect=0.6)) {
-      par(mar=c(2.7,2.6,1.2,0)+0.1, mgp=c(1.4,0.3,0), tcl=-0.3, cex=cex);
-      plotDensity(betaT, lwd=4, adjust=.5, xlab=xlab, lty=c(1,3,1));
-      stext(side=3, pos=0.5, line=-0.2, cex=cex, names(tbl)[ss]);
+    <% 
+    if (fig <- figDev(figName, aspect=0.4)) {
+      par(mar=c(2.7,0.2,1.2,0.2)+0.1, mgp=c(1.4,0.3,0), tcl=-0.3, cex=cex);
+      plotDensity(betaT, col=c("#999999", "#999999", "#000000"), lty=c(3,1,1), lwd=4, adjust=0.5, xlim=xlim, ylim=ylim, xlab=xlab, ylab=NULL, axes=FALSE);
+      axis(side=1, labels=FALSE, col.ticks=NA);
+      axis(side=1, at=c(0,1/2,1));
+      stext(side=3, pos=0.5, line=0, margin=c(0.2,0), cex=cex, names(tbl)[ss]);
       devDone(figName);
-    } # if (figDev(...)) %>\resizebox{0.49\textwidth}{!}{\includegraphics{<%=fig$fullname%>}}
+    } # if (figDev(...)) 
+    %>\resizebox{0.49\textwidth}{!}{\includegraphics{<%=fig$fullname%>}}
   \end{center}
   \caption{<%=names(tbl)[ss]%>.}
   \label{fig<%=figName%>}

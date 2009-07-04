@@ -1,4 +1,4 @@
-getFracBList <- function(dsList, fracBList=NULL, ..., what=c("fracB", "abs(fracB-1/2)"), verbose=TRUE) {
+getFracBList <- function(dsList, fracBList=NULL, ..., what=c("fracB", "abs(fracB-1/2)"), pattern=NULL, verbose=TRUE) {
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # Validate arguments
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -19,9 +19,14 @@ getFracBList <- function(dsList, fracBList=NULL, ..., what=c("fracB", "abs(fracB
 
   verbose && enter(verbose, "getFracBList()");
 
+  if (!is.null(pattern)) {
+    keep <- grep(pattern, names(dsList));
+    dsList <- dsList[keep];
+  }
+
   truth <- makeTruth(region, verbose=verbose);
   fracBList <- extractListOfFracB(dsList, region, truth=truth,
-                       targetChipType=targetChipType, what=what, ..., verbose=verbose);
+            targetChipType=targetChipType, what=what, ..., verbose=verbose);
   verbose && print(verbose, fracBList);
 
   ## Rho
@@ -98,6 +103,8 @@ extractHeterozygous <- function(fracBList, genotypeCalls, confidenceScores=NULL,
 
 ############################################################################
 # HISTORY:
+# 2009-07-04
+# o Added argument 'pattern'.
 # 2009-04-30
 # o Created from getCnList.R.
 ############################################################################

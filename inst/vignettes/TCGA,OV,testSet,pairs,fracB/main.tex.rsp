@@ -231,12 +231,10 @@ test <- function(fracB, testFUN, output=c("statistic")) {
 
 <%
 what <- "fracB";
-fracBList <- getFracBList(fracBDsList, what=what);
-keep <- grep(methodPattern, names(fracBList));
-fracBList <- fracBList[keep];
+fracBList <- getFracBList(fracBDsList, what=what, pattern=methodPattern);
 
 ## remove NAs
-fracBList <- lapply(fracBList, function(fracB) {
+fracBList <- lapply(fracBList, FUN=function(fracB) {
   isNA <- is.na(getSignals(fracB))
   fracB <- extractSubset(fracB, whichVector(!isNA))
 })
@@ -248,8 +246,10 @@ cn <- cnList[[1]];
 
 fracBList[["TCN"]] <- cn ## Add TCN
 
-minNbPoints <- min(sapply(fracBList, function(fracB) table(getStates(fracB))))
-fracBList <- lapply(fracBList, FUN=getBalancedRegions, minNbPoints)
+minNbPoints <- min(sapply(fracBList, FUN=function(fracB) {
+  table(getStates(fracB));
+}));
+fracBList <- lapply(fracBList, FUN=getBalancedRegions, minNbPoints);
 %>
 
 <%
@@ -267,7 +267,7 @@ display <- c("s", rep("fg", ncol(testStat)))
 Note that the number of loci in each state is constrained to be the same for all methods:
 
 <%
-tbl <- sapply(fracBList, getNbLociPerState)
+tbl <- sapply(fracBList, FUN=getNbLociPerState);
 ## stopifnot(all(rowSds(tbl)==0))
 tbl <- tbl[, 1]
 %>
@@ -275,7 +275,9 @@ tbl <- tbl[, 1]
 
 <%
 caption <- "Number of loci in each state"
-df <- t(sapply(fracBList, function(fracB) table(getStates(fracB), exclude=NULL)));
+df <- t(sapply(fracBList, FUN=function(fracB) {
+  table(getStates(fracB), exclude=NULL);
+}));
 colnames(df) <- names(tbl);
 colnames(df)[is.na(colnames(df))] <- "Safety Margin"
 %>
@@ -288,20 +290,18 @@ colnames(df)[is.na(colnames(df))] <- "Safety Margin"
 
 <% ## setup
 what <- "abs(fracB-1/2)";
-fracBList <- getFracBList(fracBDsList, what=what);
-keep <- grep(methodPattern, names(fracBList));
-fracBList <- fracBList[keep];
+fracBList <- getFracBList(fracBDsList, what=what, pattern=methodPattern);
 fracB <- fracBList[[1]];
 fracBList[["TCN"]] <- cn;
 fracBList[["TCN"]]$unit <- fracBList[[1]]$unit;
 
-fracBList <- sapply(genTags, function(genTag) {
+fracBList <- sapply(genTags, FUN=function(genTag) {
   extractHeterozygous(fracBList, gcDsList[[genTag]], gcsDsList[[genTag]], confQuantile=confQuantile)
 });
 str(fracBList);
 
 dn <- dimnames(fracBList)
-nms <- sapply(dn[[2]], function(nm) sprintf("%s,%s", dn[[1]], nm))
+nms <- sapply(dn[[2]], FUN=function(nm) sprintf("%s,%s", dn[[1]], nm));
 nms <- as.character(nms)
 
 cols <- c("black", "blue", "red", "green");
@@ -313,7 +313,7 @@ labels <- strsplit(nms, split="\n");
 labels <- sapply(labels, FUN=function(s) s[1]);
  
 patts <- c("raw", sprintf("%s,%s", dn[[2]], dn[[2]]), "TCN")
-keep <- unlist(sapply(patts, grep, nms))
+keep <- unlist(sapply(patts, FUN=grep, nms));
 ##    keep <- seq(nms)
 fracBList <- fracBList[keep]
 names(fracBList) <- nms[keep]
@@ -329,8 +329,10 @@ fracBList[["TCN,SNP+CN"]] <- cn
 snps <- whichVector(!is.na(fracB$y))
 fracBList[["TCN,SNP"]] <- extractSubset(cn, snps)
 
-minNbPoints <- min(sapply(fracBList, function(fracB) table(getStates(fracB))))
-fracBList <- lapply(fracBList, FUN=getBalancedRegions, minNbPoints)
+minNbPoints <- min(sapply(fracBList, FUN=function(fracB) {
+  table(getStates(fracB));
+}));
+fracBList <- lapply(fracBList, FUN=getBalancedRegions, minNbPoints);
 
 cols <- c(cols,  rep("darkgreen", 2))
 ltys <- c(ltys,  2, 3)
@@ -350,7 +352,7 @@ if (!plotAllRocCurves) {
 %>
 
 <%
-tbl <- sapply(fracBList, getNbLociPerState)
+tbl <- sapply(fracBList, FUN=getNbLociPerState);
 ## stopifnot(all(rowSds(tbl)==0))
 tbl <- tbl[, 1]
 %>
@@ -484,7 +486,9 @@ Note that the number of loci in each state is constrained to be the same for all
 
 <%
 caption <- "Number of loci in each state"
-df <- t(sapply(fracBList, function(fracB) table(getStates(fracB), exclude=NULL)));
+df <- t(sapply(fracBList, FUN=function(fracB) {
+  table(getStates(fracB), exclude=NULL);
+}));
 colnames(df) <- names(tbl);
 colnames(df)[is.na(colnames(df))] <- "Safety Margin"
 row.names(df) <- labels;
@@ -539,7 +543,7 @@ if (!byCount) {
     
      if (binWidth > 0) {
        # Smooth FracBs using consecutive bins of given width (in kb)
-       fracBSList <- lapply(fracBList, FUN=smtFUN) 
+       fracBSList <- lapply(fracBList, FUN=smtFUN);
        dim(fracBSList) <- dim(fracBList)
         names(fracBSList) <- names(fracBList)
 

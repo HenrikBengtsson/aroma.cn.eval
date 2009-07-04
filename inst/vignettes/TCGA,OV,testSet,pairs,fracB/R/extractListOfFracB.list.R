@@ -65,6 +65,7 @@ setMethodS3("extractListOfFracB", "list", function(this, name, chromosome, regio
       if (chipType != targetChipType) {
         units <- matchUnitsToTargetCdf(chipType, targetChipType);
       }
+      verbose && str(verbose, units);
       verbose && exit(verbose);
     }
 
@@ -72,6 +73,7 @@ setMethodS3("extractListOfFracB", "list", function(this, name, chromosome, regio
     verbose && enter(verbose, "Extracting FracBs");
     fracB <- extractRawAlleleBFractions(df, chromosome=chromosome, 
                            region=region, units=units, keepUnits=TRUE);
+    verbose && print(verbose, fracB);
     verbose && print(verbose, fracB);
 
     # Add true FracB functions?
