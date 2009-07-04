@@ -24,7 +24,7 @@ setMethodS3("figDevice", "default", function(label, width=6, height=aspect*width
   pathname <- Arguments$getWritablePathname(filename, path=path);
   res <- FALSE;
   if (force || !isFile(pathname)) {
-    devNew(device, pathname, width=width, height=height, ..., label=label);
+    devNew(device, pathname, width=scale*width, height=scale*height, ..., label=label);
     res <- TRUE;
   }
 
