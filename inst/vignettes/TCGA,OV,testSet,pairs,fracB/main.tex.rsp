@@ -17,8 +17,9 @@ what <- "fracB";
 addLegend <- TRUE;
 addSdEst <- FALSE;
 
-addBinTrack <- FALSE;
-doRocCurves <- FALSE;
+addBinTrack <- TRUE;
+doRocCurves <- TRUE;
+plotAllRocCurves <- FALSE;
 
 trackAspect <- 0.22;
 trackWidth <- 0.9;
@@ -26,14 +27,12 @@ trackWidth <- 0.9;
 binCounts <- c(1, 1.25, 1.5, 2, 3, 4); rocCols <- 2;
 ## binCounts <- binCounts[c(1, 4)]
 
-if (!doRocCurves) binCounts <- TRUE;
-
 byCount <- c(TRUE, FALSE)[1]
 
 fpLim <- c(0,0.5);
 ## fpLim <- c(0,1);
 
-robust <- c(FALSE, TRUE)[1];
+robust <- c(FALSE, TRUE)[2];
 robustStr <- ifelse(robust, "median", "mean");
 binFFracB <- ifelse(robust, "median", "mean"); 
 confQuantile <- 1
@@ -52,7 +51,11 @@ verbose && exit(verbose);
 pch <- 19; cex <- 0.5;
 pch <- "."; cex <- 2.5;
 colorMap <- c("*"="#000000", "NA"="#999999", "1"="red", "2"="orange", "3"="blue", "4"="purple");
-smoothedColorMap <-  c("*" = "#000000", "NA" = "#999999");
+
+fullResColorMap <- c("*" = "#000000", "NA" = "#999999");
+smoothedColorMap <- c("*" = "#6666FF", "NA" = "#999999");
+  
+
 %>
 
 %\documentclass[a4paper,draft]{article}
@@ -212,7 +215,7 @@ getNbLociPerState <- function(object) {
 what <- "ratios";
 cnList <- NULL
 figName <- sprintf("%s,%s,track", region$label, what);
-if (fig <- figDev(figName, aspect=0.618)) {
+if (fig <- figDev(figName, aspect=trackAspect)) {
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
   # Plot CN ratios along genome
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -334,8 +337,7 @@ what <- "ratios";
   lim <- c(-0.5,4.5);
 
   xScale <- 1e-6;
-  states <- na.omit(sort(getUniqueStates(fracBList[[1]])));
-  cp <- region$params$cp;
+ cp <- region$params$cp;
   s <- region$params$s;
 
  # Extract total CNs 
@@ -348,6 +350,8 @@ what <- "ratios";
 fracBList <- getFracBList(fracBDsList, what="fracB", force=(figForce > 2));
 keep <- grep(methodPattern, names(fracBList));
 fracBList <- fracBList[keep];
+
+  states <- na.omit(sort(getUniqueStates(fracBList[[1]])));
 
 print(fracBList);
 nbrOfSources <- length(fracBList);
@@ -371,13 +375,13 @@ tbl <- tbl[, 1]
     ## if (fig <- figDev(figName, aspect=1.12*(1/nbrOfSources))) {
       ##  subplots(nbrOfSources, ncol=nbrOfSources);
       if (fig <- figDev(figName)) {
-        par(mar=c(2.7,2.6,1.2,0)+0.1, mgp=c(1.4,0.3,0), tcl=-0.3, cex=2);
+        par(mar=c(2.7,2.6,1.2,0)+0.1, mgp=c(1.4,0.3,0), tcl=-0.3, cex=cex);
         beta <- getSignals(fracB);
         CA <- (1-beta) * C;
         CB <- beta * C;
         plot(NA, col=col, xlim=lim, ylim=lim, xlab=xlab, ylab=ylab);
         for (c in 2) lines(x=c(0,c), y=c(c,0), lty=1, lwd=2, col="#999999");
-        stext(side=3, pos=0, line=-0.3, cex=2.0, name);
+        stext(side=3, pos=0, line=-0.3, cex=cex, name);
         points(CA, CB, col=col, pch=pch, cex=cex);
         devDone(figName);
       } # if (figDev(...))
@@ -450,15 +454,15 @@ tbl <- tbl[, 1]
 ##if (fig <- figDev(figName, aspect=1.12*(1/nbrOfSources))) {
 ##   subplots(nbrOfSources, ncol=nbrOfSources);
 if (fig <- figDev(figName)) {
-  par(mar=c(2.7,2.6,1.2,0)+0.1, mgp=c(1.4,0.3,0), tcl=-0.3, cex=2);
+  par(mar=c(2.7,2.6,1.2,0)+0.1, mgp=c(1.4,0.3,0), tcl=-0.3, cex=cex);
   plot(NA, xlim=lim, ylim=lim, xlab=xlab, ylab=ylab, axes=FALSE);
   axis(side=1, at=c(0,1/2,1));
   axis(side=2, at=c(0,1/2,1));
   box();  # optional?
 
   abline(a=0, b=1, lty=2, lwd=1, col="#999999");
-  points(betaN, betaT, pch=pch, col=col);
-  stext(side=3, pos=0, line=-0.3, cex=2.0, name);
+  points(betaN, betaT, pch=pch, col=col, cex=cex);
+  stext(side=3, pos=0, line=-0.3, cex=cex, name);
  devDone(figName);
 } # if (figDev(...)) %>\resizebox{0.33\textwidth}{!}{\includegraphics{<%=fig$fullname%>}}
 <%  } # for (kk ...) %>
@@ -473,7 +477,6 @@ if (fig <- figDev(figName)) {
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % END Figure
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 <% verbose && exit(verbose); %>
 
 \clearpage
@@ -583,38 +586,75 @@ nms <- names(fracBList)
 labels <- c(labels, "TCN,SNP+CN", "TCN,SNP")
 %>
 
+<% ## keep only some combinations for the evaluation
+if (!plotAllRocCurves) {
+  keep <- grep(rocCurvesPattern, names(fracBList))
+  fracBList <- fracBList[keep];
+  cols <- cols[keep]
+  ltys <- ltys[keep]
+  nms <- nms[keep]
+  labels <- labels[keep]
+}
+%>
+
+<%
+tbl <- sapply(fracBList, getNbLociPerState)
+## stopifnot(all(rowSds(tbl)==0))
+tbl <- tbl[, 1]
+%>
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% BEGIN FIGURE: rho tracks
+% BEGIN FIGURE: eval tracks
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 <%
-figTag <- "MBAF";
-tcnIdx <- grep("TCN", names(fracBList))
-rhoList <- fracBList[-tcnIdx]
-maxRho <- sapply(rhoList, function(x) max(x$y, na.rm=TRUE))
-fracBLim <- c(-0.02, max(maxRho));
+fracBLim <- c(0, 0.4);
 fracBLab <- expression(rho);
 
+cnLim <- c(0, 5);
+cnLab <- expression(C == 2*(theta[T]/theta[N]));
+cnLab <- "C";
+
 xScale <- 1e-6;
-xRange <- range(sapply(rhoList, FUN=xRange));
-states <- na.omit(getUniqueStates(rhoList[[1]]));
+xRange <- range(sapply(fracBList, FUN=xRange));
+states <- na.omit(getUniqueStates(fracBList[[1]]));
 xlim <- xRange*xScale;
 cp <- region$params$cp;
 s <- region$params$s;
 xs <- cp["position"]+c(-1,+1)*cp["delta"];
 figList <- list();
-for (kk in seq(along=rhoList)) {
-  name <- names(rhoList)[kk];
-  fracB <- rhoList[[kk]];
+for (kk in seq(along=fracBList)) {
+  name <- names(fracBList)[kk];
+  fracB <- fracBList[[kk]];
+
+  if (length(grep("TCN", name))) {
+    addStateLabels <- TRUE;
+   ylim <- cnLim;
+    ylab <- cnLab;
+    figTag <- "ratios"
+  } else {
+    addStateLabels <- FALSE;
+    ylim <- fracBLim;
+    ylab <- fracBLab;
+    figTag <- "MBAF"
+  }
+
+ setStateColorMap(fracB,fullResColorMap);
+  
 
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-  # Plot 'what' along genome
+  # Plot along genome
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   figName <- sprintf("%s,%s,track,%s", region$label, figTag, name);
   if (fig <- figDev(figName, aspect=trackAspect)) {
     # subplots(nbrOfSources, ncol=1);
-    par(mar=c(1.2,2.8,0,2)+0.1, mgp=c(1.9,0.4,0), tcl=-0.3, cex=1.2, las=1);
+    par(mar=c(1.2,2.8,0,0)+0.2, mgp=c(1.9,0.4,0), tcl=-0.3, cex=cex);
+    
+    plot(fracB, pch=pch, cex=cex, xlim=xlim, ylim=ylim, xScale=xScale, ylab=ylab);
+    if (addStateLabels) {
+      stext(side=3, pos=0, line=-0.3, cex=0.8*cex, names(tbl[1]))
+      stext(side=3, pos=1, line=-0.3, cex=0.8*cex, names(tbl[2]))
+    }
 
-    plot(fracB, pch=pch, cex=0.8*cex, xlim=xlim, ylim=fracBLim, xScale=xScale, ylab=fracBLab);
     ys <- par("usr")[3:4];
     dy <- 0.04*diff(ys);
     if (s[1] != 0) {
@@ -623,35 +663,33 @@ for (kk in seq(along=rhoList)) {
       rect(xs[2],ys[1],xlim[2],ys[1]+dy, col="#999999");
     }
     rect(xs[1],ys[1], xs[2],ys[2], density=10, col="#999999");
-    stext(side=4, pos=-0.1, line=0, cex=0.8, name, las=3);
+##     stext(side=4, pos=1, line=-0.7, cex=cex, name, las=3);
   if (addSdEst) {
       sd <- estimateStandardDeviation(fracB);
-      stext(side=4, pos=1, line=0, cex=0.8, sprintf("SD=%.3g", sd));
+      stext(side=4, pos=1, line=-0.7, cex=0.8*cex, sprintf("SD=%.3g", sd));
     }
-    if (addBinTrack && (what=="abs(fracB-1/2)")) {
+    if (addBinTrack) {
       binWidths <- binCounts;
       binWidth <- binWidths[length(binWidths)];
       if (!byCount) {
         binWidth <- round(diff(xRange(fracB))/(nbrOfLoci(fracB, na.rm=TRUE)-1)*binWidth)
       }
     fracBS <- binnedSmoothingByState(fracB, from=xRange[1], to=xRange[2], by=binWidth, FUN=binFFracB, byCount=byCount);
-     setStateColorMap(fracBS, smoothedColorMap);
-      points(fracBS, pch=pch, cex=0.6*cex, col="white", xScale=xScale);
-      points(fracBS, pch=pch, cex=0.4*cex, xScale=xScale);
+      setStateColorMap(fracBS, smoothedColorMap);
+##       points(fracBS, pch=19, cex=1, col="white", xScale=xScale);
+##       points(fracBS, pch=1, cex=.8, xScale=xScale);
+      lines(fracBS, lty=1, lwd=2, col="white", xScale=xScale);
+      points(fracBS, pch=19, cex=.7, col="white", xScale=xScale);
+      lines(fracBS, lty=3, lwd=1, xScale=xScale);
+      points(fracBS, pch=19, cex=.5, xScale=xScale);
     }
     ts <- signif(test(fracB, testFUN=ks.test), digits=2)
-    stext(side=4, pos=0, line=-0.7, cex=0.8, sprintf("KS = %s",ts), las=3)
+ ##    stext(side=4, pos=0, line=-0.7, cex=0.8*cex, sprintf("KS = %s",ts), las=3)
 
    devDone(figName);
   } # if (figDev(...))
   figList[[kk]] <- fig;
 } # for (kk ...)
-%>
-
-<%
-tbl <- sapply(rhoList, getNbLociPerState)
-## stopifnot(all(rowSds(tbl)==0))
-tbl <- tbl[, 1]
 %>
 
 \begin{figure}[htb]
@@ -745,7 +783,7 @@ if (!byCount) {
        figName <- sprintf("%s,ROC,%s,binWidth=%s", region$label, robustStr,binWidth);
        if (fig <- figDev(figName, aspect=1)) {
          ##   layout(matrix(seq(along=binWidths), ncol=rocCols, byrow=TRUE));
-         par(mar=c(2.5,2.4,1.3,0.7)+0.1, mgp=c(1.4,0.3,0), tcl=-0.3, cex=2);
+         par(mar=c(2.5,2.4,1.3,0.7)+0.1, mgp=c(1.4,0.3,0), tcl=-0.3, cex=cex);
     
      if (binWidth > 0) {
        # Smooth FracBs using consecutive bins of given width (in kb)
@@ -777,7 +815,7 @@ if (!byCount) {
 
   
    for (kk in seq(fits)) {
-     first <- ((kk==1) && (ww==1))
+     doLgd <- ((kk==1) && (ww==length(binWidths)))
      fit <- fits[[kk]]
      roc <- fit$roc;
      if (kk==1) {
@@ -787,8 +825,8 @@ if (!byCount) {
      } else {
        lines(roc, lwd=3, col=cols[kk], lty=ltys[kk]);
      }
-     if (addLegend && first) {
-       legend("bottomright", col=cols, lwd=2, lty=ltys, labels, cex=0.8, bty="n");
+     if (addLegend && doLgd) {
+       legend("bottomright", col=cols, lwd=2, lty=ltys, labels, cex=0.4*cex, bty="n");
      }
    } # for (kk ...)
    devDone(figName);
