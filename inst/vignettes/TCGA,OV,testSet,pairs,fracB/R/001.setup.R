@@ -2,7 +2,9 @@
 # Data set
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 rootPath <- "totalAndFracBData"
-dataSet <- "TCGA,OV,testSet,pairs,Broad";
+dataSet <- "TCGA,OV,testSet,pairs,Broad,ismpolish";
+dataSet <- "TCGA,OV,testSet,pairs,Broad,ASCN";
+dataSet <- "TCGA,OV,testSet,pairs,Broad,ACC,ra,-XY,BPN,-XY,AVG,FLN,-XY";
 chipType <- "GenomeWideSNP_6";
 targetChipType <- chipType;
 

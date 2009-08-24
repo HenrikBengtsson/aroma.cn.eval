@@ -140,7 +140,7 @@ getNbLociPerState <- function(object) {
 
 \subsection{$(\beta_N, \beta_T)$ plots}
 <%
-verbose && enter(verbose, "Plotting (beta_N, beta_T")
+verbose && enter(verbose, "Plotting (beta_N, beta_T)")
 what <- "fracB"
 fracBList <- getFracBList(fracBDsList, what=what, pattern=methodPattern, force=(figForce > 2));
 
@@ -368,6 +368,8 @@ tbl <- tbl[, 1]
 verbose && enter(verbose, "Plotting densities");
 what <- "fracB";
 fracBList <- getFracBList(fracBDsList, what=what, pattern=methodPattern, force=(figForce > 2));
+# Sanity check
+stopifnot(length(fracBList) == 3);   # raw, Birdseed, NGC
 ustates <- na.omit(getUniqueStates(fracBList[[1]]));
 %>
 
@@ -384,7 +386,8 @@ lim <- c(-0.1,1.1);
 
 <%
 xlim <- c(-0.2,1.2);
-ylim <- c(0,3.2);
+adjust <- 0.5; ylim <- c(0,3.2);
+adjust <- 0.3; ylim <- c(0,4.0);
 for (ss in seq(along=ustates)) {
   ustates <- na.omit(getUniqueStates(fracB));
   figName <- sprintf("%s,%s,density,state=%s", region$label, what, ustates[ss]);
@@ -400,7 +403,7 @@ for (ss in seq(along=ustates)) {
     <% 
     if (fig <- figDev(figName, aspect=0.4)) {
       par(mar=c(2.7,0.2,1.2,0.2)+0.1, mgp=c(1.4,0.3,0), tcl=-0.3, cex=cex);
-      plotDensity(betaT, col=c("#999999", "#999999", "#000000"), lty=c(3,1,1), lwd=4, adjust=0.5, xlim=xlim, ylim=ylim, xlab=xlab, ylab=NULL, axes=FALSE);
+      plotDensity(betaT, col=c("#999999", "#999999", "#000000"), lty=c(3,1,1), lwd=6, adjust=adjust, xlim=xlim, ylim=ylim, xlab=xlab, ylab=NULL, axes=FALSE);
       axis(side=1, labels=FALSE, col.ticks=NA);
       axis(side=1, at=c(0,1/2,1));
       stext(side=3, pos=0.5, line=0, margin=c(0.2,0), cex=cex, names(tbl)[ss]);

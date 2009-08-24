@@ -27,7 +27,7 @@ trackWidth <- 0.9;
 binCounts <- c(1, 1.25, 1.5, 2, 3, 4); rocCols <- 2;
 ## binCounts <- binCounts[c(1, 4)]
 
-byCount <- c(TRUE, FALSE)[1]
+byCount <- c(TRUE, FALSE)[1];
 
 fpLim <- c(0,0.5);
 ## fpLim <- c(0,1);
@@ -35,7 +35,7 @@ fpLim <- c(0,0.5);
 robust <- c(FALSE, TRUE)[1];
 robustStr <- ifelse(robust, "median", "mean");
 binFFracB <- ifelse(robust, "median", "mean"); 
-confQuantile <- 1
+confQuantile <- 1;
 
 figPath <- "figures/col/";
 figForce <- 3;
@@ -300,14 +300,21 @@ fracBList <- sapply(genTags, FUN=function(genTag) {
 });
 str(fracBList);
 
-dn <- dimnames(fracBList)
+dn <- dimnames(fracBList);
 nms <- sapply(dn[[2]], FUN=function(nm) sprintf("%s,%s", dn[[1]], nm));
-nms <- as.character(nms)
+nms <- as.character(nms);
 
-cols <- c("black", "blue", "red", "green");
-ltys <- c(4,1)
-cols <- rep(cols[1:(dim(fracBList)[1])], times=dim(fracBList)[2]);
-ltys <- rep(ltys, each=dim(fracBList)[1]);
+nbrOfSets <- length(nms);
+cols <- rep("black", times=nbrOfSets);
+cols[regexpr("raw", nms) != -1] <- "black";
+cols[regexpr("TCN", nms) != -1] <- "green";
+cols[regexpr("TBN(,v[0-9]|),Birdseed", nms) != -1] <- "blue";
+cols[regexpr("TBN(,v[0-9]|),NGC", nms) != -1] <- "red";
+
+ltys <- rep(1, times=nbrOfSets);
+ltys[regexpr("raw", nms) != -1] <- 2;  # dot-dashed
+ltys[regexpr("TCN", nms) != -1] <- 3;  # dotted
+ltys[regexpr("TBN(,v[0-9]|),Birdseed", nms) != -1] <- 4; # dashed
 
 labels <- strsplit(nms, split="\n");
 labels <- sapply(labels, FUN=function(s) s[1]);
@@ -655,6 +662,8 @@ This report was automatically generated using the R.rsp package.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % HISTORY:
+% 2009-08-23
+# o Updated the line styles ('ltys').
 % 2009-07-02
 % o Added support for PNG output.
 % 2009-07-01

@@ -2,6 +2,11 @@ getFracBList <- function(dsList, fracBList=NULL, ..., what=c("fracB", "abs(fracB
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # Validate arguments
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  # Argument 'dsList':
+  if (length(dsList) == 0) {
+    throw("Argument 'dsList' is empty.");
+  }
+
   # Argument 'verbose':
   verbose <- Arguments$getVerbose(verbose);
   if (verbose) {
@@ -20,9 +25,17 @@ getFracBList <- function(dsList, fracBList=NULL, ..., what=c("fracB", "abs(fracB
   verbose && enter(verbose, "getFracBList()");
 
   if (!is.null(pattern)) {
-    keep <- grep(pattern, names(dsList));
+    verbose && cat(verbose, "Pattern: ", pattern);
+    verbose && print(verbose, names(dsList));
+    keep <- (regexpr(pattern, names(dsList)) != -1);
+    verbose && print(verbose, keep);
     dsList <- dsList[keep];
+    # Sanity check
+    if (length(dsList) == 0) {
+      throw("No data sets remaining after name pattern filtering.");
+    }
   }
+
 
   truth <- makeTruth(region, verbose=verbose);
   fracBList <- extractListOfFracB(dsList, region, truth=truth,

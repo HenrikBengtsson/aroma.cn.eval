@@ -1,7 +1,7 @@
 ############################################################################
 #
 ############################################################################
-loadAllDataSets <- function(dataSet, chipType="*", pattern=NULL, ..., rootPath="totalAndFracBData", type=c("fracB", "total", "genotypes", "confidenceScores")) {
+loadAllDataSets <- function(dataSet, chipType="*", pattern=NULL, ..., rootPath="totalAndFracBData", type=c("fracB", "total", "genotypes", "confidenceScores"), verbose=FALSE) {
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # Validate arguments
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -23,22 +23,45 @@ loadAllDataSets <- function(dataSet, chipType="*", pattern=NULL, ..., rootPath="
   # Argument 'type':
   type <- match.arg(type, c("fracB", "total", "genotypes", "confidenceScores"))
 
+  # Argument 'verbose':
+  verbose <- Arguments$getVerbose(verbose);
+  if (verbose) {
+    pushState(verbose);
+    on.exit(popState(verbose));
+  }
+
+
+  verbose && enter(verbose, "loadAllDataSets()");
+
 
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # Identify all data sets
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  cat("Scanning directory for data sets:\n");
-  cat("Path: ", rootPath, "\n");
-  cat("Pattern: ", pattern, "\n");
-  dataSets <- list.files(path=rootPath, pattern=pattern);
-  print(dataSets);
+  verbose && enter(verbose, "Scanning directory for data sets");
+  verbose && cat(verbose, "Path: ", rootPath);
+  verbose && cat(verbose, "Pattern: ", pattern);
+  # Search for directories and links
+  paths <- list.files(path=rootPath, pattern=pattern, full.names=TRUE);
+  verbose && cat(verbose, "Located paths:");
+  verbose && print(verbose, paths);
+  paths <- sapply(paths, FUN=Arguments$getReadablePath);
+  paths <- paths[sapply(paths, FUN=isDirectory)];
+  dataSets <- basename(paths);
+  verbose && cat(verbose, "Located data sets:");
+  verbose && print(verbose, dataSets);
+  verbose && exit(verbose);
 
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # Setup data sets
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   dsList <- list();
+  verbose && enter(verbose, "Loading data sets");
   for (kk in seq(along=dataSets)) {
     dataSet <- dataSets[kk];
+    verbose && enter(verbose, sprintf("Data set #%d ('%s') of %d",
+                                          kk, dataSet, length(dataSets)));
+    verbose && cat(verbose, "Type: ", type);
+
     if (type=="total") {
       ds <- AromaUnitTotalCnBinarySet$byName(dataSet, chipType=chipType, paths=rootPath);
     } else if (type=="fracB") {
@@ -50,12 +73,22 @@ loadAllDataSets <- function(dataSet, chipType="*", pattern=NULL, ..., rootPath="
     }
     if (length(ds)) {
       dsList[[kk]] <- ds;
+      verbose && print(verbose, ds);
+    } else {
+      verbose && cat(verbose, "No such data set found.");
     }
-  }
+    verbose && exit(verbose);
+  } # for (kk ...)
+  verbose && exit(verbose);
 
   # Set the names
   names <- sapply(dsList, FUN=getFullName);
   names(dsList) <- names;
+
+  verbose && cat(verbose, "Loaded data sets:");
+  verbose && print(verbose, dsList);
+
+  verbose && exit(verbose);
 
   dsList;
 } # loadAllDataSets()

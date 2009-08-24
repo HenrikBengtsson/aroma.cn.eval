@@ -11,26 +11,35 @@ fntFUN <- function(names, ...) {
 # Setting up fracB data sets
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 if (!exists("fracBDsList", mode="list")) {
-  pattern <- sprintf("^%s(|,TBN.*)$", dataSet)
+  verbose && enter(verbose, "Loading 'fracBDsList'");
+
+  pattern <- sprintf("^%s(|,TBN.*)$", dataSet);
   fracBDsList <- loadAllDataSets(dataSet, chipType=chipType, pattern=pattern, type="fracB", rootPath=rootPath);
 
   fracBDsList <- lapply(fracBDsList, setFullNamesTranslator, fntFUN);
+  verbose && print(verbose, fracBDsList);
   
-  ## normals
-  dsN0 <- fracBDsList[[dataSet]]
+  verbose && enter(verbose, "Identifying normals");
+  dsN0 <- fracBDsList[[dataSet]];
   types <- sapply(dsN0, function(df) getTags(df)[1]);
   keep <- grep("^1[01][A-Z]$", types);
   dsN <- extract(dsN0, keep);
+  verbose && print(verbose, dsN);
+  verbose && exit(verbose);
 
   ## Keep only tumors
+  verbose && enter(verbose, "Keeping only tumors");
   fracBDsList <- lapply(fracBDsList, function(ds) {
     types <- sapply(ds, function(df) getTags(df)[1]);
     keep <- grep("^01[A-Z]$", types);
     ds <- extract(ds, keep);
     ds;
   });
+  verbose && print(verbose, fracBDsList);
+  verbose && exit(verbose);
 
   # Set names
+  verbose && enter(verbose, "Updating data set names");
   names <- names(fracBDsList);
   names <- sapply(names, FUN=strsplit, split=",", fixed=TRUE);
   commonTags <- Reduce(intersect, names);
@@ -38,8 +47,12 @@ if (!exists("fracBDsList", mode="list")) {
   names <- sapply(names, FUN=paste, collapse=",");
   names[names == ""] <- "raw";
   names(fracBDsList) <- names;
+  verbose && exit(verbose);
+
+  verbose && exit(verbose);
 }
 
+# Sanity check
 if (length(fracBDsList) == 0) {
   rm(fracBDsList);
   throw("No matching data sets found.");
@@ -65,18 +78,23 @@ if (!exists("cnDsList", mode="list")) {
     exportTotalCnRatioSet(acsT, acsN, verbose=verbose);
   }
   
-  pattern <- sprintf("^%s$", dataSet)
-  cnDsList <- loadAllDataSets(dataSet, chipType=chipType, pattern=pattern, type="total", rootPath="rawCnData");
+  pattern <- sprintf("^%s(|.lnk)$", dataSet)
+  cnDsList <- loadAllDataSets(dataSet, chipType=chipType, pattern=pattern, type="total", rootPath="rawCnData", verbose=verbose);
+}
+
+# Sanity check
+if (length(cnDsList) == 0) {
+  rm(cnDsList);
+  throw("No matching data sets found.");
 }
 
 
 # - - - - - - - - - - - - - - - - - - - 
 # Setting up normal genotype data set
 # - - - - - - - - - - - - - - - - - - - 
-
 if (!exists("gcDsList", mode="list")) {
   pattern <- sprintf("^%s,", dataSet)
-  gcDsList <- loadAllDataSets(dataSet, chipType=chipType, pattern=pattern, type="genotypes", rootPath="callData");
+  gcDsList <- loadAllDataSets(dataSet, chipType=chipType, pattern=pattern, type="genotypes", rootPath="callData", verbose=verbose);
 
   gcDsList <- lapply(gcDsList, setFullNamesTranslator, fntFUN);
 
@@ -92,12 +110,19 @@ if (!exists("gcDsList", mode="list")) {
   names <- names(gcDsList);
   names <- sapply(names, FUN=strsplit, split=",", fixed=TRUE);
   commonTags <- Reduce(intersect, names);
-  names <- sapply(names, FUN=setdiff, commonTags);
+  names <- lapply(names, FUN=setdiff, commonTags);
   names <- sapply(names, FUN=paste, collapse=",");
   names(gcDsList) <- names;
 
-  gcDsList <- gcDsList[genTags]
+  gcDsList <- gcDsList[genTags];
 }
+
+# Sanity check
+if (length(gcDsList) == 0) {
+  rm(gcDsList);
+  throw("No matching data sets found.");
+}
+
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Setting up normal genotype call confidence scores data set
@@ -105,7 +130,7 @@ if (!exists("gcDsList", mode="list")) {
 
 if (!exists("gcsDsList", mode="list")) {
   pattern <- sprintf("^%s,", dataSet)
-  gcsDsList <- loadAllDataSets(dataSet, chipType=chipType, pattern=pattern, type="confidenceScores", rootPath="callData");
+  gcsDsList <- loadAllDataSets(dataSet, chipType=chipType, pattern=pattern, type="confidenceScores", rootPath="callData", verbose=verbose);
 
   gcsDsList <- lapply(gcsDsList, setFullNamesTranslator, fntFUN);
 
