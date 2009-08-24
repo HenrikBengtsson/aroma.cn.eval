@@ -1,0 +1,274 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Authors: Henrik Bengtsson, hb@stat.berkeley.edu
+%          Pierre Neuvial, pierre@stat.berkeley.edu
+% Created on: 2009-08-23
+%
+% Usage:
+%  library("R.rsp");
+%  rsptex("tables.tex.rsp");  # => *.tex.rsp => ... => *.dvi
+%  rsptex("tables.tex.rsp", pdf=TRUE);  # => *.tex.rsp => ... => *.pdf
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+<%
+verbose && enter(verbose, "Setup");
+sourceDirectory("R/");
+
+output <- c("statistic", "p.value")[1]
+fixedNbPoints <- FALSE ## constrain the nb of point to be the same across regions
+minNbPoints <- 250 ## used when fixedNbPoints is TRUE
+
+title <- sprintf("Single sample assessment of the TumorBoost method based on the '%s' data set", dataSet);
+authors <- "HB, PN.";
+verbose && exit(verbose);
+%>
+
+
+%\documentclass[a4paper,draft]{article}
+\documentclass[a4paper]{article}
+\usepackage{graphicx}
+\usepackage{fancyvrb}
+\usepackage{a4wide}
+\usepackage{xspace}
+\usepackage{amsmath} 
+\usepackage{natbib}
+
+% The search path (within curly brackets and separated by commas)
+% where to find graphics files
+\graphicspath{{<%=figPath%>}}
+\DeclareGraphicsRule{.eps.gz}{eps}{.eps.bb}{`gunzip -c #1}
+
+\newcommand{\pkg}[1]{\textsl{#1}\xspace}
+
+\newcommand{\trackWidth}{<%=trackWidth%>\textwidth}
+
+
+\title{<%=title%>}
+\author{<%=authors%>}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+This report provides a single-sample approach to assess the performance of the TumorBoost method.  The results presented herein are intended to complement the results presented in the main manuscript.
+
+\section{Data set}
+
+<%
+df <- getFile(fracBDsList[[1]],1);
+tumorName <- getName(df);
+normalName <- sub("ref=","",getTags(df)[1]);
+pairName <- paste(tumorName, normalName, sep=" / ");
+%>
+This report is based on the data set <%=dataSet%>. All data is based on the Affymetrix GenomeWideSNP\_6 chip type.  This evaluation will be based on $\rho$ estimated from one such pair, more precisely the <%=tumorName%> CEL file (tumor) and the <%=normalName%> CEL file (matched normal).
+
+The two CEL files were preprocessed separately using CRMAv2 (without any reference arrays)
+
+<%
+getRegionLabels <- function(state) {
+  lab <- character(length=length(state));
+  lab[state==0] <- "'normal' (1,1)";
+  lab[state==1] <- "'gain' (1,2)";
+  lab[state==2] <- "'deletion' (0,1)";
+  lab[state==3] <- "'copy neutral LOH' (0,2)";
+  lab;
+}
+
+%>
+
+\subsection{List of change points}
+For this data set, we have selected a few regions for which one safely can assume there exists a single changepoint and for which the fracB distribution looks constant.  This selection was done visually.  For each region we chose large enough safety margin such that the risk for the two sets $\mathcal{J}_A$ and $\mathcal{J}_B$ to contain loci from the other set is extremely small.  
+
+\begin{table}[htp]
+\begin{center}
+\begin{tabular}{c|c|c|c|c|c|c}
+Tumor-normal pair & Chr & Region & Change point & Margin & Before & After \\
+\hline
+<% for (region in regions) { %>
+<%
+region <- parseRegion(region);
+str(region);
+sample <- region$name;
+## sample <- pairName;
+chr <- region$chromosome;
+reg <- region$region/1e6;
+## regionStr <- sprintf("%.2f", reg);
+cp <- region$params$cp[1];
+## cpStr <- sprintf("%.2f", cp);
+delta <- region$params$cp[2];
+## deltaStr <- sprintf("%.2f", delta);
+regionLabels <- getRegionLabels(region$params$s);%>
+<%=sample%> & <%=chr%> & <%=reg[1]%>-<%=reg[2]%> & <%=cp%> & <%=delta%> & <%=regionLabels[1]%> & <%=regionLabels[2]%> \\ \hline
+<% } # for (region ...) %>
+\end{tabular}
+\end{center}
+\caption{Regions used for the evaluation and that each contain a single changepoint.  All positions and lengths are in units of Mb.}
+\label{tblRegions}
+\end{table}
+
+<%
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Count the number of loci with each state
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+getNbLociPerState <- function(object) {
+  states <- getStates(object);
+  tbl <- table(states, exclude=NULL);
+  uniqueStates <- as.integer(names(tbl));
+  o <- order(abs(uniqueStates));
+  tbl <- tbl[o];
+  names <- names(tbl);
+  sign <- as.integer(names);
+  names(tbl) <- getRegionLabels(sign);
+  tbl
+}
+%>
+
+<%
+test <- function(fracB, ...) {
+  testSeparation(fracB, test="ks.test")$statistic;
+} 
+
+test <- function(fracB, testFUN, output=c("statistic")) {
+  states <- getStates(fracB)
+  us <- na.omit(getUniqueStates(fracB))
+  testFUN(getSignals(fracB)[states==us[1]], getSignals(fracB)[states==us[2]])[[output]]
+}
+%>
+
+<% 
+ksRes <- NULL;
+%>
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% BEGIN Regions of interest
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+<% for (region in regions) { %>
+<%
+firstRegion <- (region==regions[1]);
+print(region);
+region <- parseRegion(region);
+print(region);
+%>
+%%%%%%%%
+%% TCN
+%%%%%%%%
+<%
+cnList <- NULL;
+# Extract total CNs 
+cnList <- getCnList(cnDsList, cnList=cnList, what="ratios", force=(figForce > 2));
+cn <- cnList[[1]];
+%>
+
+<% ksCol <- c(); %>
+
+<% for (what in c("fracB", "abs(fracB-1/2)")) { %>
+<% for (hetsOnly in c(FALSE, TRUE)) { %>
+<% 
+fracBList <- getFracBList(fracBDsList, what=what, pattern=methodPattern);
+
+## remove NAs
+fracBList <- lapply(fracBList, FUN=function(fracB) {
+  isNA <- is.na(getSignals(fracB))
+  fracB <- extractSubset(fracB, whichVector(!isNA))
+})
+
+fracBList[["TCN"]] <- cn ## Add TCN
+fracBList[["TCN"]]$unit <- fracBList[[1]]$unit;
+
+whom <- ifelse(hetsOnly, "Hets", "All SNPs")
+
+if (hetsOnly) {
+  fracBList <- sapply(genTags, FUN=function(genTag) {
+    extractHeterozygous(fracBList, gcDsList[[genTag]], gcsDsList[[genTag]], confQuantile=confQuantile)
+  });
+
+  dn <- dimnames(fracBList)
+  nms <- sapply(dn[[2]], FUN=function(nm) sprintf("%s,%s", dn[[1]], nm));
+  nms <- as.character(nms)
+
+  patts <- c("raw", sprintf("%s,%s", dn[[2]], dn[[2]]), "TCN")
+  keep <- unlist(sapply(patts, FUN=grep, nms));
+  fracBList <- fracBList[keep]
+  names(fracBList) <- nms[keep]
+
+  ## Add TCN
+  fracBList[["TCN,SNP+CN"]] <- cn
+  snps <- whichVector(!is.na(fracB$y))
+  fracBList[["TCN,SNP"]] <- extractSubset(cn, snps)
+
+  ## keep only some combinations for the evaluation
+  if (!plotAllRocCurves) {
+    keep <- grep(rocCurvesPattern, names(fracBList))
+    fracBList <- fracBList[keep];
+  }
+}
+str(fracBList);
+
+if (!fixedNbPoints) {
+minNbPoints <- min(sapply(fracBList, FUN=function(fracB) {
+  table(getStates(fracB));
+}));
+}
+fracBList <- lapply(fracBList, FUN=getBalancedRegions, minNbPoints);
+%>
+
+<%
+ks <- sapply(fracBList, FUN=test, testFUN=ks.test, output=output)
+names(ks) <- names(fracBList)
+ksRes[[what]][[whom]] <- cbind(ksRes[[what]][[whom]], ks) 
+
+%>
+
+<%   } ## for (hetsOnly ...%>
+<% } ## for (what ...%>
+
+<% } # for (region in regions) %>
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% END Regions of interest
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+<%
+if (require(xtable)) {
+for (what in c("fracB", "abs(fracB-1/2)")) {
+for (hetsOnly in c(FALSE, TRUE)) {
+
+  whom <- ifelse(hetsOnly, "Hets", "All SNPs")
+  tab <- ksRes[[what]][[whom]];
+  if (output=="p.value") 
+    tab <- -log(tab)
+  tab <- round(tab, 2)
+  what2 <- ifelse(what=="fracB","beta", "rho")
+  output2 <- ifelse(output=="statistic", "test statistics", "p-value")
+  caption <- sprintf("Kolmogorov %s of the null hypothesis of equal distribution before and after each ASCN change point (%s): raw or TumorBoost-normalized %s, and total copy number (last line). The larger value, the more different the distributions are. N: normal; G: gain; NL: copy number neutral LOH; D: deletion.", output2, whom, what2)
+  label <- sprintf("tabKs%s%s", what2, toCamelCase(whom))
+%>
+<%=print(xtable(tab, caption=caption, label=label)) %>
+<%   } ## for (hetsOnly ...%>
+<% } ## for (what ...%>
+<% } %>
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Session information
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\clearpage
+\appendix
+\section{Data files}
+\begin{Verbatim}[fontfamily=helvetica]
+<%={x <- capture.output(print(fracBDsList));x <- gsub(": .*/(totalAndFracBData/)", ": \\1", x);paste(x, collapse="\n");}%>
+\end{Verbatim}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Session information
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\clearpage
+\section{Session information}
+This report was automatically generated using the R.rsp package.
+<%=toLatex(sessionInfo())%>
+
+\end{document}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% HISTORY:
+% 2009-08-23
+% o Created.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 

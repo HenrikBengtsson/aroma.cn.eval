@@ -135,29 +135,41 @@ This report is based on the data set <%=dataSet%>. All data is based on the Affy
 
 The two CEL files were preprocessed separately using CRMAv2 (without any reference arrays)
 
+<%
+getRegionLabels <- function(state) {
+  lab <- character(length=length(state));
+  lab[state==0] <- "'normal' (1,1)";
+  lab[state==1] <- "'gain' (1,2)";
+  lab[state==2] <- "'deletion' (0,1)";
+  lab[state==3] <- "'copy neutral LOH' (0,2)";
+  lab;
+}
+
+%>
+
 \subsection{List of change points}
 For this data set, we have selected a few regions for which one safely can assume there exists a single changepoint and for which the fracB distribution looks constant.  This selection was done visually.  For each region we chose large enough safety margin such that the risk for the two sets $\mathcal{J}_A$ and $\mathcal{J}_B$ to contain loci from the other set is extremely small.  
 
 \begin{table}[htp]
 \begin{center}
-\begin{tabular}{c|c|c|c|c}
-Tumor-normal pair & Chromosome & Region & Change point & Safety region \\
+\begin{tabular}{c|c|c|c|c|c|c}
+Tumor-normal pair & Chr & Region & Change point & Margin & Before & After \\
 \hline
 <% for (region in regions) { %>
 <%
 region <- parseRegion(region);
 str(region);
 sample <- region$name;
-sample <- pairName;
+## sample <- pairName;
 chr <- region$chromosome;
-regionStr <- sprintf("%.2f", region$region/1e6);
+reg <- region$region/1e6;
+## regionStr <- sprintf("%.2f", reg);
 cp <- region$params$cp[1];
-cpStr <- sprintf("%.2f", cp);
+## cpStr <- sprintf("%.2f", cp);
 delta <- region$params$cp[2];
-deltaStr <- sprintf("%.2f", delta);
-%>
-<%=sample%> & <%=chr%> & <%=regionStr[1]%>-<%=regionStr[2]%> & <%=cpStr%> & <%=deltaStr%> \\
-\hline
+## deltaStr <- sprintf("%.2f", delta);
+regionLabels <- getRegionLabels(region$params$s);%>
+<%=sample%> & <%=chr%> & <%=reg[1]%>-<%=reg[2]%> & <%=cp%> & <%=delta%> & <%=regionLabels[1]%> & <%=regionLabels[2]%> \\ \hline
 <% } # for (region ...) %>
 \end{tabular}
 \end{center}
@@ -195,11 +207,7 @@ getNbLociPerState <- function(object) {
   tbl <- tbl[o];
   names <- names(tbl);
   sign <- as.integer(names);
-  names[sign==0] <- "'NORMAL' (1,1)";
-  names[sign==1] <- "'GAIN' (1,2)";
-  names[sign==2] <- "'DELETION' (0,1)";
-  names[sign==3] <- "'COPY NEUTRAL LOH' (0,2)";
-  names(tbl) <- names;
+  names(tbl) <- getRegionLabels(sign);
   tbl
 }
 %>
