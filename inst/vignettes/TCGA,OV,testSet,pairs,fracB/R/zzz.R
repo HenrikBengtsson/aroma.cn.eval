@@ -110,6 +110,7 @@ if (!exists("gcDsList", mode="list")) {
   names <- names(gcDsList);
   names <- sapply(names, FUN=strsplit, split=",", fixed=TRUE);
   commonTags <- Reduce(intersect, names);
+  commonTags <- setdiff(commonTags, genTags);
   names <- lapply(names, FUN=setdiff, commonTags);
   names <- sapply(names, FUN=paste, collapse=",");
   names(gcDsList) <- names;
@@ -122,7 +123,6 @@ if (length(gcDsList) == 0) {
   rm(gcDsList);
   throw("No matching data sets found.");
 }
-
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Setting up normal genotype call confidence scores data set
@@ -146,11 +146,16 @@ if (!exists("gcsDsList", mode="list")) {
   names <- names(gcsDsList);
   names <- sapply(names, FUN=strsplit, split=",", fixed=TRUE);
   commonTags <- Reduce(intersect, names);
+  commonTags <- setdiff(commonTags, genTags);
   names <- sapply(names, FUN=setdiff, commonTags);
   names <- sapply(names, FUN=paste, collapse=",");
   names(gcsDsList) <- names;
 
-  gcsDsList <- gcsDsList[genTags]
+  gcsDsList <- gcsDsList[genTags];
+
+  if (length(gcsDsList) == 0) {
+    # No genotypes confidence scores available
+  }
 }
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

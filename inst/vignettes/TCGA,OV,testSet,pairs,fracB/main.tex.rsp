@@ -12,35 +12,6 @@
 <%
 verbose && enter(verbose, "Setup");
 sourceDirectory("R/");
-what <- "fracB";
-
-addLegend <- TRUE;
-addSdEst <- FALSE;
-
-addBinTrack <- TRUE;
-doRocCurves <- TRUE;
-plotAllRocCurves <- FALSE;
-
-trackAspect <- 0.22;
-trackWidth <- 0.9;
-
-binCounts <- c(1, 1.25, 1.5, 2, 3, 4); rocCols <- 2;
-## binCounts <- binCounts[c(1, 4)]
-
-byCount <- c(TRUE, FALSE)[1];
-
-fpLim <- c(0,0.5);
-## fpLim <- c(0,1);
-
-robust <- c(FALSE, TRUE)[1];
-robustStr <- ifelse(robust, "median", "mean");
-binFFracB <- ifelse(robust, "median", "mean"); 
-confQuantile <- 1;
-
-figPath <- "figures/col/";
-figForce <- 3;
-figDev <- function(..., force=(figForce > 0)) { epsDev(..., path=figPath, force=force) }
-figDev <- function(..., force=(figForce > 0)) { pngDev(..., device=png, path=figPath, force=force) }
 
 title <- sprintf("Single sample assessment of the TumorBoost method based on the '%s' data set", dataSet);
 authors <- "HB, PN.";
@@ -54,8 +25,6 @@ colorMap <- c("*"="#000000", "NA"="#999999", "1"="red", "2"="orange", "3"="blue"
 
 fullResColorMap <- c("*" = "#000000", "NA" = "#999999");
 smoothedColorMap <- c("*" = "#6666FF", "NA" = "#999999");
-  
-
 %>
 
 %\documentclass[a4paper,draft]{article}
@@ -339,36 +308,36 @@ labels <- sapply(labels, FUN=function(s) s[1]);
 patts <- c("raw", sprintf("%s,%s", dn[[2]], dn[[2]]), "TCN")
 keep <- unlist(sapply(patts, FUN=grep, nms));
 ##    keep <- seq(nms)
-fracBList <- fracBList[keep]
-names(fracBList) <- nms[keep]
+fracBList <- fracBList[keep];
+names(fracBList) <- nms[keep];
 
-cols <- cols[keep]
-ltys <- ltys[keep]
-labels <- labels[keep]
-nms <- nms[keep]
+cols <- cols[keep];
+ltys <- ltys[keep];
+labels <- labels[keep];
+nms <- nms[keep];
 %>
 
 <%  ## Add TCN
-fracBList[["TCN,SNP+CN"]] <- cn
-snps <- whichVector(!is.na(fracB$y))
-fracBList[["TCN,SNP"]] <- extractSubset(cn, snps)
+fracBList[["TCN,SNP+CN"]] <- cn;
+snps <- whichVector(!is.na(fracB$y));
+fracBList[["TCN,SNP"]] <- extractSubset(cn, snps);
 
 if (byCount) {
-   minNbPoints <- min(sapply(fracBList, FUN=function(fracB) {
-     table(getStates(fracB));
-     }));
-     fracBList <- lapply(fracBList, FUN=getBalancedRegions, minNbPoints);
+  minNbPoints <- min(sapply(fracBList, FUN=function(fracB) {
+    table(getStates(fracB));
+  }));
+  fracBList <- lapply(fracBList, FUN=getBalancedRegions, minNbPoints);
 }
 
-cols <- c(cols,  rep("darkgreen", 2))
-ltys <- c(ltys,  2, 3)
-nms <- names(fracBList)
-labels <- c(labels, "TCN,SNP+CN", "TCN,SNP")
+cols <- c(cols,  rep("darkgreen", 2));
+ltys <- c(ltys,  2, 3);
+nms <- names(fracBList);
+labels <- c(labels, "TCN,SNP+CN", "TCN,SNP");
 %>
 
 <% ## keep only some combinations for the evaluation
 if (!plotAllRocCurves) {
-  keep <- grep(rocCurvesPattern, names(fracBList))
+  keep <- grep(rocCurvesPattern, names(fracBList));
   fracBList <- fracBList[keep];
   cols <- cols[keep]
   ltys <- ltys[keep]
@@ -475,7 +444,7 @@ for (kk in seq(along=fracBList)) {
 \begin{figure}[htb]
  \begin{center}
   <% for (fig in figList) { %>
-  \resizebox{\trackWidth}{!}{\includegraphics{<%=fig$fullname%>}}
+  \resizebox{\trackWidth}{!}{\includegraphics{<%=figPath%>/<%=fig$fullname%>}}
   <% } %>
  \end{center}
  \caption{<%=what%> for region <%=region$src%>. Only heterozygous SNPs are plotted. There are <%=tbl[1]%> loci of state <%=names(tbl)[1]%> ("negatives") and
@@ -546,9 +515,8 @@ if (!byCount) {
   nbrOfLoci <- sum(is.finite(fracB$y), na.rm=TRUE);
   fullRes <- (diff(xRange(fracB))+1) / (nbrOfLoci-1);
   
-   xRange <- range(sapply(fracBList, FUN=xRange));
-   states <- na.omit(getUniqueStates(fracB));
-
+  xRange <- range(sapply(fracBList, FUN=xRange));
+  states <- na.omit(getUniqueStates(fracB));
 %>
 
 \begin{figure}[htb]
@@ -613,7 +581,7 @@ if (!byCount) {
    } # for (kk ...)
    devDone(figName);
  } # if (figDev(...)) %> 
-\resizebox{0.45\textwidth}{!}{\includegraphics{<%=fig$fullname%>}}  <% } # for (ww ...) %>
+\resizebox{0.45\textwidth}{!}{\includegraphics{<%=figPath%>/<%=fig$fullname%>}}  <% } # for (ww ...) %>
 \end{center}
  \caption{(<%=region$src%>) ROC curves for each of the <%=length(fracBDsList)%> preprocessing methods at the full resolution as well as <%=length(binWidths)-1%> different amounts of smoothing (using the <%=binFFracB%> function).  %Legend: raw (solid red), TBN-Birdseed (dashed blue) and TBN-NGC (solid light blue).
 }
@@ -681,6 +649,10 @@ This report was automatically generated using the R.rsp package.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % HISTORY:
+% 2009-09-06
+% o WORKAROUND: For some unknown reasons does \graphicspath{} not 
+%   work anymore; added explicity paths to figures.
+% o Moved document configs to R/002.config.R.
 % 2009-08-23
 # o Updated the line styles ('ltys').
 % 2009-07-02

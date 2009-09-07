@@ -1,0 +1,59 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Additional configurations
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+what <- "fracB";
+
+addLegend <- TRUE;
+addSdEst <- FALSE;
+
+addBinTrack <- TRUE;
+doRocCurves <- TRUE;
+plotAllRocCurves <- FALSE;
+
+trackAspect <- 0.22;
+trackWidth <- 0.9;
+
+binCounts <- c(1, 1.25, 1.5, 2, 3, 4); rocCols <- 2;
+## binCounts <- binCounts[c(1, 4)]
+
+byCount <- c(TRUE, FALSE)[1];
+
+fpLim <- c(0,0.5);
+## fpLim <- c(0,1);
+
+robust <- c(FALSE, TRUE)[1];
+robustStr <- ifelse(robust, "median", "mean");
+binFFracB <- ifelse(robust, "median", "mean"); 
+confQuantile <- 1;
+
+# Infer document tags
+if (regexpr("ismpolish", dataSet) != -1) {
+  docTags <- "ismpolish";
+  genTags <- c("Birdseed", "NGC");
+  rocCurvesPattern <- "^(raw|TCN),Birdseed$|^TBN";
+} else if (regexpr("ACC,ra,-XY,BPN,-XY,AVG,FLN,-XY", dataSet) != -1) {
+  docTags <- "CRMAv2";
+  genTags <- c("Birdseed", "NGC");
+  rocCurvesPattern <- "^(raw|TCN),Birdseed$|^TBN";
+} else if (regexpr("BeadStudio", dataSet) != -1) {
+  docTags <- "BeadStudio";
+  genTags <- c("NGC");
+  rocCurvesPattern <- "^(raw|TCN),NGC$|^TBN";
+} else {
+  throw("Cannot infer ('docTags', 'genTags') from 'dataSet': ", dataSet);
+}
+
+genTag <- genTags[1];
+
+
+docPath <- sprintf("doc-%s", docTags);
+docPath <- Arguments$getWritablePath(docPath);
+docName <- sprintf("main,%s", docTags);
+
+pdfName <- sprintf("%s.pdf", docName);
+pdfPathname <- filePath(docPath, pdfName);
+
+figPath <- file.path(docPath, "figures", "col");
+figForce <- 3;
+figDev <- function(..., force=(figForce > 0)) { epsDev(..., path=figPath, force=force) }
+figDev <- function(..., force=(figForce > 0)) { pngDev(..., device=png, path=figPath, force=force) }

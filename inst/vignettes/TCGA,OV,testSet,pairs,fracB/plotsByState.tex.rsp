@@ -16,10 +16,7 @@ what <- "fracB";
 addLegend <- TRUE;
 addSdEst <- FALSE;
 
-figPath <- "figures/col/";
 figForce <- 1;
-figDev <- function(..., force=(figForce > 0)) { epsDev(..., path=figPath, force=force) }
-figDev <- function(..., force=(figForce > 0)) { pngDev(..., device=png, path=figPath, force=force) }
 
 title <- sprintf("Plots before and after TumorBoost in regions with no ASCN change");
 authors <- "HB, PN.";
@@ -243,7 +240,7 @@ tbl <- tbl[, 1]
         stext(side=4, pos=0, line=-0.8, cex=cex, txt);
         stext(side=3, pos=0, line=-0.3, cex=cex, names(tbl)[ss]);
         devDone(figName);
-      } # if (figDev(...)) %>\resizebox{0.49\textwidth}{!}{\includegraphics{<%=fig$fullname%>}}
+      } # if (figDev(...)) %>\resizebox{0.49\textwidth}{!}{\includegraphics{<%=figPath%>/<%=fig$fullname%>}}
       <%  } # for (ss ...) %>
     \end{center}
     \caption{<%=txt%>.}
@@ -348,7 +345,7 @@ tbl <- tbl[, 1]
         stext(side=3, pos=1, line=-0.3, cex=cex, names(tbl)[ss]);
         points(CA, CB, col=col, pch=pch, cex=cex);
         devDone(figName);
-      } # if (figDev(...)) %>\resizebox{0.49\textwidth}{!}{\includegraphics{<%=fig$fullname%>}}
+      } # if (figDev(...)) %>\resizebox{0.49\textwidth}{!}{\includegraphics{<%=figPath%>/<%=fig$fullname%>}}
  <% } # for (ss ...) %>
     \end{center}
     \caption{<%=txt%>.}
@@ -369,7 +366,7 @@ verbose && enter(verbose, "Plotting densities");
 what <- "fracB";
 fracBList <- getFracBList(fracBDsList, what=what, pattern=methodPattern, force=(figForce > 2));
 # Sanity check
-stopifnot(length(fracBList) == 3);   # raw, Birdseed, NGC
+stopifnot(length(fracBList) %in% c(2,3));   # raw, Birdseed*, NGC
 ustates <- na.omit(getUniqueStates(fracBList[[1]]));
 %>
 
@@ -386,14 +383,20 @@ lim <- c(-0.1,1.1);
 
 <%
 xlim <- c(-0.2,1.2);
-adjust <- 0.5; ylim <- c(0,3.2);
-adjust <- 0.3; ylim <- c(0,4.0);
+platform <- getPlatform(fracBDsList[[1]]);
+if (platform == "Affymetrix") {
+  adjust <- 0.5; ylim <- c(0,3.2);
+  adjust <- 0.3; ylim <- c(0,4.0);
+} else if (platform == "Illumina") {
+  adjust <- 0.3; ylim <- c(0,6.0);
+}
 for (ss in seq(along=ustates)) {
   ustates <- na.omit(getUniqueStates(fracB));
   figName <- sprintf("%s,%s,density,state=%s", region$label, what, ustates[ss]);
   fracBStateList <- lapply(fracBList, FUN=extractSubsetByState, ustates[ss]);
   betaT <- sapply(fracBStateList, FUN=getSignals);
 %>
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % BEGIN Figure: betaT densities for state <%=ustates[ss]%>
@@ -409,7 +412,7 @@ for (ss in seq(along=ustates)) {
       stext(side=3, pos=0.5, line=0, margin=c(0.2,0), cex=cex, names(tbl)[ss]);
       devDone(figName);
     } # if (figDev(...)) 
-    %>\resizebox{0.49\textwidth}{!}{\includegraphics{<%=fig$fullname%>}}
+    %>\resizebox{0.49\textwidth}{!}{\includegraphics{<%=figPath%>/<%=fig$fullname%>}}
   \end{center}
   \caption{<%=names(tbl)[ss]%>.}
   \label{fig<%=figName%>}
@@ -461,6 +464,8 @@ This report was automatically generated using the R.rsp package.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % HISTORY:
+% 2009-09-06
+% o Updated to work with Illumina too.
 % 2009-07-03
 % o Added density plots.
 % 2009-07-02

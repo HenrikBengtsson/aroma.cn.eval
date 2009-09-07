@@ -2,17 +2,32 @@
 # Data set
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 rootPath <- "totalAndFracBData"
-dataSet <- "TCGA,OV,testSet,pairs,Broad,ismpolish";
-## dataSet <- "TCGA,OV,testSet,pairs,Broad,ASCN";
-## dataSet <- "TCGA,OV,testSet,pairs,Broad,ACC,ra,-XY,BPN,-XY,AVG,FLN,-XY";
-chipType <- "GenomeWideSNP_6";
+
+dataSets <- c(
+  "TCGA,OV,testSet,pairs,Broad,ismpolish",
+  "TCGA,OV,testSet,pairs,Broad,ACC,ra,-XY,BPN,-XY,AVG,FLN,-XY",
+  "TCGA,OV,testSet,pairs,Stanford,BeadStudio"
+);
+if (interactive()) {
+  require("R.menu") || throw("Package not loaded: R.menu");
+  dataSet <- textMenu(dataSets, value=TRUE);
+} else {
+  dataSet <- dataSets[2];
+}
+
+
+# Infer chip type for data set directory
+path <- file.path(rootPath, dataSet);
+path <- Arguments$getReadablePath(path);
+paths <- list.files(path=path, full.names=TRUE);
+paths <- paths[sapply(paths, FUN=isDirectory)];
+stopifnot(length(paths) == 1);
+chipType <- basename(paths);
+
+
 targetChipType <- chipType;
 
-genTags <- c("Birdseed", "NGC");
-genTag <- genTags[1];
-
 methodPattern <- "^(raw|TBN,v4)";
-rocCurvesPattern <- "^(raw|TCN),Birdseed$|^TBN";
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Change-points of interest
@@ -28,7 +43,7 @@ regions <- c(
              "TCGA-23-1027:Chr10@80-109,cp=94+/-0.5,s=0/2", ## deletion
 ##              "TCGA-23-1027:Chr10@106.4-113.6,cp=110+/-0.25,s=2/3", ## deletion -> CN LOH
              "TCGA-23-1027:Chr10@106.5-113.5,cp=110+/-0.5,s=2/3", ## deletion -> CN LOH
-             "TCGA-23-1027:Chr2@0-100.0,cp=50.0+/-0.5,s=0/1" ## "FALSE BREAKPOINT #2"
+             "TCGA-23-1027:Chr2@55.0-75.0,cp=65.0+/-0.5,s=0/1" ## "FALSE BREAKPOINT #2"
              );
 
 ## regions <- regions[1:5]
