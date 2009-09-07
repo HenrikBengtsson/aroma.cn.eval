@@ -254,10 +254,12 @@ cn <- cnList[[1]];
 
 fracBList[["TCN"]] <- cn ## Add TCN
 
-minNbPoints <- min(sapply(fracBList, FUN=function(fracB) {
-  table(getStates(fracB));
-}));
-fracBList <- lapply(fracBList, FUN=getBalancedRegions, minNbPoints);
+if (byCount) {
+   minNbPoints <- min(sapply(fracBList, FUN=function(fracB) {
+     table(getStates(fracB));
+     }));
+     fracBList <- lapply(fracBList, FUN=getBalancedRegions, minNbPoints);
+}
 %>
 
 <%
@@ -287,7 +289,7 @@ df <- t(sapply(fracBList, FUN=function(fracB) {
   table(getStates(fracB), exclude=NULL);
 }));
 colnames(df) <- names(tbl);
-colnames(df)[is.na(colnames(df))] <- "Safety Margin"
+colnames(df)[colnames(df)==""] <- "Safety Margin"
 %>
 <%=print(xtable(df, caption=caption)) %>
 
@@ -307,6 +309,13 @@ fracBList <- sapply(genTags, FUN=function(genTag) {
   extractHeterozygous(fracBList, gcDsList[[genTag]], gcsDsList[[genTag]], confQuantile=confQuantile)
 });
 str(fracBList);
+
+## Number of het calls for each genotyping method, genome-wide.
+## lapply(gcDsList, function(ds) {
+##     df <- getFile(ds, 1); 
+##     gens <- extractGenotypes(df); 
+##     table(gens);
+## });
 
 dn <- dimnames(fracBList);
 nms <- sapply(dn[[2]], FUN=function(nm) sprintf("%s,%s", dn[[1]], nm));
@@ -344,10 +353,12 @@ fracBList[["TCN,SNP+CN"]] <- cn
 snps <- whichVector(!is.na(fracB$y))
 fracBList[["TCN,SNP"]] <- extractSubset(cn, snps)
 
-minNbPoints <- min(sapply(fracBList, FUN=function(fracB) {
-  table(getStates(fracB));
-}));
-fracBList <- lapply(fracBList, FUN=getBalancedRegions, minNbPoints);
+if (byCount) {
+   minNbPoints <- min(sapply(fracBList, FUN=function(fracB) {
+     table(getStates(fracB));
+     }));
+     fracBList <- lapply(fracBList, FUN=getBalancedRegions, minNbPoints);
+}
 
 cols <- c(cols,  rep("darkgreen", 2))
 ltys <- c(ltys,  2, 3)
@@ -505,7 +516,7 @@ df <- t(sapply(fracBList, FUN=function(fracB) {
   table(getStates(fracB), exclude=NULL);
 }));
 colnames(df) <- names(tbl);
-colnames(df)[is.na(colnames(df))] <- "Safety Margin"
+colnames(df)[colnames(df)==""] <- "Safety Margin"
 row.names(df) <- labels;
 %>
 <%=print(xtable(df, caption=caption)) %>

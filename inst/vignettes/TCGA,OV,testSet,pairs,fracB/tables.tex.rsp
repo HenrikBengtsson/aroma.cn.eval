@@ -12,9 +12,19 @@
 verbose && enter(verbose, "Setup");
 sourceDirectory("R/");
 
+figForce <- TRUE;
+trackWidth <- 0.9;
+
+testName <- c("ks", "t")[2]
+testFUN <- eval(as.name(sprintf("%s.test", testName)))
+testLabel <- ifelse(testName=="ks", "Kolmogorov-Smirnov", "Student")
+
 output <- c("statistic", "p.value")[1]
-fixedNbPoints <- FALSE ## constrain the nb of point to be the same across regions
+fixedNbPoints <- (testName=="t") ## constrain the nb of point to be the same across regions
 minNbPoints <- 250 ## used when fixedNbPoints is TRUE
+
+keepAllCombinations <- c(TRUE, FALSE)[2];
+figPath <- "figures/col/";
 
 title <- sprintf("Single sample assessment of the TumorBoost method based on the '%s' data set", dataSet);
 authors <- "HB, PN.";
@@ -123,10 +133,6 @@ getNbLociPerState <- function(object) {
 %>
 
 <%
-test <- function(fracB, ...) {
-  testSeparation(fracB, test="ks.test")$statistic;
-} 
-
 test <- function(fracB, testFUN, output=c("statistic")) {
   states <- getStates(fracB)
   us <- na.omit(getUniqueStates(fracB))
@@ -135,7 +141,7 @@ test <- function(fracB, testFUN, output=c("statistic")) {
 %>
 
 <% 
-ksRes <- NULL;
+tstRes <- NULL;
 %>
 
 
@@ -159,7 +165,7 @@ cnList <- getCnList(cnDsList, cnList=cnList, what="ratios", force=(figForce > 2)
 cn <- cnList[[1]];
 %>
 
-<% ksCol <- c(); %>
+<% tstCol <- c(); %>
 
 <% for (what in c("fracB", "abs(fracB-1/2)")) { %>
 <% for (hetsOnly in c(FALSE, TRUE)) { %>
@@ -193,11 +199,11 @@ if (hetsOnly) {
 
   ## Add TCN
   fracBList[["TCN,SNP+CN"]] <- cn
-  snps <- whichVector(!is.na(fracB$y))
+  snps <- whichVector(!is.na(fracBList[[1]]$y))
   fracBList[["TCN,SNP"]] <- extractSubset(cn, snps)
 
   ## keep only some combinations for the evaluation
-  if (!plotAllRocCurves) {
+  if (!keepAllCombinations) {
     keep <- grep(rocCurvesPattern, names(fracBList))
     fracBList <- fracBList[keep];
   }
@@ -213,9 +219,9 @@ fracBList <- lapply(fracBList, FUN=getBalancedRegions, minNbPoints);
 %>
 
 <%
-ks <- sapply(fracBList, FUN=test, testFUN=ks.test, output=output)
-names(ks) <- names(fracBList)
-ksRes[[what]][[whom]] <- cbind(ksRes[[what]][[whom]], ks) 
+tst <- sapply(fracBList, FUN=test, testFUN=testFUN, output=output)
+names(tst) <- names(fracBList)
+tstRes[[what]][[whom]] <- cbind(tstRes[[what]][[whom]], tst) 
 
 %>
 
@@ -233,14 +239,15 @@ for (what in c("fracB", "abs(fracB-1/2)")) {
 for (hetsOnly in c(FALSE, TRUE)) {
 
   whom <- ifelse(hetsOnly, "Hets", "All SNPs")
-  tab <- ksRes[[what]][[whom]];
+  tab <- tstRes[[what]][[whom]];
   if (output=="p.value") 
     tab <- -log(tab)
+  tab <- abs(tab)
   tab <- round(tab, 2)
   what2 <- ifelse(what=="fracB","beta", "rho")
   output2 <- ifelse(output=="statistic", "test statistics", "p-value")
-  caption <- sprintf("Kolmogorov %s of the null hypothesis of equal distribution before and after each ASCN change point (%s): raw or TumorBoost-normalized %s, and total copy number (last line). The larger value, the more different the distributions are. N: normal; G: gain; NL: copy number neutral LOH; D: deletion.", output2, whom, what2)
-  label <- sprintf("tabKs%s%s", what2, toCamelCase(whom))
+  caption <- sprintf("%s %s of the null hypothesis of equal distribution before and after each ASCN change point (%s): raw or TumorBoost-normalized %s, and total copy number (last line). The larger value, the more different the distributions are. N: normal; G: gain; NL: copy number neutral LOH; D: deletion.", testLabel, output2, whom, what2)
+  label <- sprintf("tab%s%s%s", testName, what2, toCamelCase(whom))
 %>
 <%=print(xtable(tab, caption=caption, label=label)) %>
 <%   } ## for (hetsOnly ...%>
