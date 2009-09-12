@@ -10,6 +10,10 @@ addBinTrack <- TRUE;
 doRocCurves <- TRUE;
 plotAllRocCurves <- FALSE;
 
+addTrueBetaLines <- FALSE;
+addTrueBetaPoints <- TRUE
+kappas <- c(0.6, 0.76, 1);
+
 trackAspect <- 0.22;
 trackWidth <- 0.9;
 

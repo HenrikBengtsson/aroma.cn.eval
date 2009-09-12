@@ -197,7 +197,7 @@ tbl <- tbl[, 1]
       gf <- getFile(gcN, idx);
       isHet <- isHeterozygous(gf, units=fracBNState$unit, drop=TRUE);
       
-      if (name =="raw") {
+      if ((addTrueBetaLines) && (name =="raw")) {
         ## slope: exploiting symmetries...
         slopeDatAbove <- betaT/betaN;
         slopeDatBelow <- (1-betaT)/(1-betaN);
@@ -226,8 +226,8 @@ tbl <- tbl[, 1]
 
         points(betaN, betaT, pch=pch, col=col, cex=cex);
 
-        if (name =="raw") {
-          abline(a=0, b=1, lty=2, lwd=2, col="#999999");
+        if ((addTrueBetaLines) && (name =="raw")) {
+         abline(a=0, b=1, lty=2, lwd=2, col="#999999");
           x0 <- rep(0, 2);
           x1 <- rep(1, 2);
           y0 <- c(0, 1-hetSlope);
@@ -235,8 +235,90 @@ tbl <- tbl[, 1]
           segments(x0, y0, x1, y1, lty=1, lwd=4, col="white");
           segments(x0, y0, x1, y1, lty=1, lwd=3, col=2);
         }
+        
+        as <- seq(-1,1, by=.1);
+        b <- ifelse(name == "raw", 1, 0);
+        la <- lapply(as, function(x) abline(a=x, b=b, col="lightgray", lty=2));
 
         txt <- sprintf("%s,%s", name, genTag);
+        nm <- names(tbl)[ss];
+        stext(side=4, pos=0, line=-0.8, cex=cex, txt);
+        stext(side=3, pos=0, line=-0.3, cex=cex, nm);
+
+        if (addTrueBetaPoints) {         ## add points for true allele B fractions
+         for (kk in seq(along=kappas)) {
+            kappa <- kappas[kk];
+            tbc <- (3:5)[kk];
+            tbCex <- c(2, 1.5, 1)[kk];
+            points(0,0, col=tbc, cex=tbCex, pch=20);
+            points(1,1, col=tbc, cex=tbCex, pch=20);
+            trueBeta <- switch(nm,
+              "'NORMAL' (1,1)" = 1/2,
+              "'GAIN' (1,2)" = (1*kappa+(1-kappa))/(3*kappa+2*(1-kappa)),
+              "'DELETION' (0,1)" = (1-kappa)/(kappa+2*(1-kappa)),
+              "'COPY NEUTRAL LOH' (0,2)" = (1-kappa)/2);
+            points(1/2, trueBeta, col=tbc, cex=tbCex, pch=20)
+            points(1/2, 1-trueBeta, col=tbc, cex=tbCex, pch=20)
+          }
+        }
+        devDone(figName);
+      } # if (figDev(...)) %>\resizebox{0.49\textwidth}{!}{\includegraphics{<%=figPath%>/<%=fig$fullname%>}}
+      <%  } # for (ss ...) %>
+    \end{center}
+    \caption{<%=txt%>.}
+   \label{fig<%=figName%>}
+    \end{figure}
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+    % END Figure
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+
+<%         if (name =="raw") { %>
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+% BEGIN Figure: (betaN, betaT) for each state separately: <%=names(fracBList)[kk]%>
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+\begin{figure}[htb]
+  \begin{center}
+<%
+    name <- names(fracBList)[kk];
+    fracB <- fracBList[[kk]];
+    ustates <- na.omit(getUniqueStates(fracB));
+    for (ss in seq(along=ustates)) {
+      fracBState <- extractSubsetByState(fracB, state=ustates[ss]);
+      fracBNState <- extractSubsetByState(fracBN, state=ustates[ss]);
+      betaN <- getSignals(fracBNState)
+
+      betaT <- getSignals(fracBState);
+
+      ## genotype calls
+      genName <- unlist(strsplit(name, ","))
+      genName <- genName[length(genName)]
+      genTag <- ifelse(genName=="raw", "NGC", genName);
+      gcN <- gcDsList[[genTag]]
+      idx <- indexOf(gcN, region$name);
+      gf <- getFile(gcN, idx);
+      isHet <- isHeterozygous(gf, units=fracBNState$unit, drop=TRUE);
+      
+     col <- 1+isHet;
+
+      isBelowDiagonal <- (betaT<betaN);
+      xx <- median(betaN[isBelowDiagonal & isHet], na.rm=TRUE);
+      yy <- median(betaT[isBelowDiagonal & isHet], na.rm=TRUE);
+
+      figName <- sprintf("%s,betaNvsBetaT,%s,%s,%s,smoothScatter,state=%s", region$label, what, name, genTag, ustates[ss]);
+      if (fig <- figDev(figName)) {
+        par(mar=c(2.7,2.6,1.2,0)+0.1, mgp=c(1.4,0.3,0), tcl=-0.3, cex=cex);
+        smoothScatter(betaN, betaT, xlim=lim, ylim=lim, xlab=xlab, ylab=ylab, axes=FALSE)
+       axis(side=1, at=c(0,1/2,1));
+        axis(side=2, at=c(0,1/2,1));
+##        box();  # optional?
+
+        abline(a=0, b=yy/xx)
+        abline(v=xx)
+        abline(v=.5)
+        abline(h=yy)
+        abline(h=yy/xx*.5)
+
+        txt <- sprintf("%s,%s --- smoothScatter version", name, genTag);
         stext(side=4, pos=0, line=-0.8, cex=cex, txt);
         stext(side=3, pos=0, line=-0.3, cex=cex, names(tbl)[ss]);
         devDone(figName);
@@ -249,6 +331,7 @@ tbl <- tbl[, 1]
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
     % END Figure
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+      <%  } # if (name ... %>
  <%  } # for (kk ...) %>
 
 <% verbose && exit(verbose); %>

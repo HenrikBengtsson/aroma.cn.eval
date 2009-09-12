@@ -8,11 +8,16 @@ dataSets <- c(
   "TCGA,OV,testSet,pairs,Broad,ACC,ra,-XY,BPN,-XY,AVG,FLN,-XY",
   "TCGA,OV,testSet,pairs,Stanford,BeadStudio"
 );
+
+flavors <- c("v1", "v2", "v3", "v4", "v5");
+
 if (interactive()) {
   require("R.menu") || throw("Package not loaded: R.menu");
-  dataSet <- textMenu(dataSets, value=TRUE);
+  dataSet <- textMenu(dataSets, title="Data set:", value=TRUE);
+  flavor <- textMenu(flavors, title="TumorBoost normalization flavor:", value=TRUE);
 } else {
   dataSet <- dataSets[2];
+  flavor <- "v4";
 }
 
 
@@ -26,8 +31,7 @@ chipType <- basename(paths);
 
 
 targetChipType <- chipType;
-
-methodPattern <- "^(raw|TBN,v4)";
+methodPattern <- sprintf("^(raw|TBN,%s)", flavor);
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Change-points of interest
@@ -50,4 +54,3 @@ regions <- c(
 ## regions <- regions[9]
 regions <- regions[c(3:4, 8:9)]
 ## regions <- regions[10]
-
