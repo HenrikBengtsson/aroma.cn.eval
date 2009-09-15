@@ -191,8 +191,8 @@ tbl <- tbl[, 1]
       ## genotype calls
       genName <- unlist(strsplit(name, ","))
       genName <- genName[length(genName)]
-      genTag <- ifelse(genName=="raw", "NGC", genName);
-      gcN <- gcDsList[[genTag]]
+      gTag <- ifelse(genName=="raw", genTag, genName);
+     gcN <- gcDsList[[gTag]]
       idx <- indexOf(gcN, region$name);
       gf <- getFile(gcN, idx);
       isHet <- isHeterozygous(gf, units=fracBNState$unit, drop=TRUE);
@@ -207,9 +207,31 @@ tbl <- tbl[, 1]
         hetSlope <- median(slopeDat[isHet], na.rm=TRUE);
      }
       
+      if ((addLinearRegressionLines) && (name =="raw")) {
+        isBelow <- (betaT < betaN);
+        wBelow <- whichVector(isHet & isBelow);
+        wAbove <- whichVector(isHet & !isBelow);
+        xxBelow <- c(betaN[wBelow], 1-betaN[wAbove]);
+        yyBelow <- c(betaT[wBelow], 1-betaT[wAbove]);
+        xxAbove <- 1-xxBelow;
+        yyAbove <- 1-yyBelow;
+        
+        lmBelow <- lm(betaT[wBelow]~betaN[wBelow]);
+        lmAbove <- lm(betaT[wAbove]~betaN[wAbove]);
+
+        if (require(MASS)) {
+          ##           lmBelow <- rlm(betaT[wBelow]~betaN[wBelow], weights=abs(betaN[wBelow]-1/2));
+          ##           lmBelow <- rlm(betaT[wBelow]~betaN[wBelow]);
+          lmBelow <- rlm(yyBelow~xxBelow);
+          ##           lmAbove <- rlm(betaT[wAbove]~betaN[wAbove], weights=abs(betaN[wAbove]-1/2));
+          ##           lmAbove <- rlm(betaT[wAbove]~betaN[wAbove]);
+          lmAbove <- rlm(yyAbove~xxAbove);
+        }
+      }
+      
       col <- 1+isHet;
 
-      figName <- sprintf("%s,betaNvsBetaT,%s,%s,%s,state=%s", region$label, what, name, genTag, ustates[ss]);
+      figName <- sprintf("%s,betaNvsBetaT,%s,%s,%s,state=%s", region$label, what, name, gTag, ustates[ss]);
       if (fig <- figDev(figName)) {
         par(mar=c(2.7,2.6,1.2,0)+0.1, mgp=c(1.4,0.3,0), tcl=-0.3, cex=cex);
         plot(NA, xlim=lim, ylim=lim, xlab=xlab, ylab=ylab, axes=FALSE);
@@ -236,11 +258,27 @@ tbl <- tbl[, 1]
           segments(x0, y0, x1, y1, lty=1, lwd=3, col=2);
         }
         
+        if ((addLinearRegressionLines) && (name =="raw")) {
+          xb <- 1/2;
+          abline(lmBelow, lwd=4, col="white");
+          abline(lmBelow, lwd=3, col="red", lty=2);
+          coef <- lmBelow$coefficients
+          yb <- coef[1]+xb*coef[2];
+          points(xb, yb, col="white", cex=2.4, pch=20);
+          points(xb, yb, col=2, cex=2, pch=20);
+          abline(lmAbove, lwd=4, col="white");
+          abline(lmAbove, lwd=3, col="red", lty=2);
+          coef <- lmAbove$coefficients
+          yb <- coef[1]+xb*coef[2];
+          points(xb, yb, col="white", cex=2.4, pch=20);
+          points(xb, yb, col=2, cex=2, pch=20);
+      }
+        
         as <- seq(-1,1, by=.1);
         b <- ifelse(name == "raw", 1, 0);
         la <- lapply(as, function(x) abline(a=x, b=b, col="lightgray", lty=2));
 
-        txt <- sprintf("%s,%s", name, genTag);
+        txt <- sprintf("%s,%s", name, gTag);
         nm <- names(tbl)[ss];
         stext(side=4, pos=0, line=-0.8, cex=cex, txt);
         stext(side=3, pos=0, line=-0.3, cex=cex, nm);
@@ -292,8 +330,8 @@ tbl <- tbl[, 1]
       ## genotype calls
       genName <- unlist(strsplit(name, ","))
       genName <- genName[length(genName)]
-      genTag <- ifelse(genName=="raw", "NGC", genName);
-      gcN <- gcDsList[[genTag]]
+      gTag <- ifelse(genName=="raw", genTag, genName);
+      gcN <- gcDsList[[gTag]]
       idx <- indexOf(gcN, region$name);
       gf <- getFile(gcN, idx);
       isHet <- isHeterozygous(gf, units=fracBNState$unit, drop=TRUE);
@@ -304,7 +342,7 @@ tbl <- tbl[, 1]
       xx <- median(betaN[isBelowDiagonal & isHet], na.rm=TRUE);
       yy <- median(betaT[isBelowDiagonal & isHet], na.rm=TRUE);
 
-      figName <- sprintf("%s,betaNvsBetaT,%s,%s,%s,smoothScatter,state=%s", region$label, what, name, genTag, ustates[ss]);
+      figName <- sprintf("%s,betaNvsBetaT,%s,%s,%s,smoothScatter,state=%s", region$label, what, name, gTag, ustates[ss]);
       if (fig <- figDev(figName)) {
         par(mar=c(2.7,2.6,1.2,0)+0.1, mgp=c(1.4,0.3,0), tcl=-0.3, cex=cex);
         smoothScatter(betaN, betaT, xlim=lim, ylim=lim, xlab=xlab, ylab=ylab, axes=FALSE)
@@ -318,7 +356,7 @@ tbl <- tbl[, 1]
         abline(h=yy)
         abline(h=yy/xx*.5)
 
-        txt <- sprintf("%s,%s --- smoothScatter version", name, genTag);
+        txt <- sprintf("%s,%s --- smoothScatter version", name, gTag);
         stext(side=4, pos=0, line=-0.8, cex=cex, txt);
         stext(side=3, pos=0, line=-0.3, cex=cex, names(tbl)[ss]);
         devDone(figName);
@@ -402,15 +440,15 @@ tbl <- tbl[, 1]
       ## genotype calls
       genName <- unlist(strsplit(name, ","))
       genName <- genName[length(genName)]
-      genTag <- ifelse(genName=="raw", "NGC", genName);
-      gcN <- gcDsList[[genTag]]
+      gTag <- ifelse(genName=="raw", genTag, genName);
+      gcN <- gcDsList[[gTag]]
       idx <- indexOf(gcN, region$name);
       gf <- getFile(gcN, idx);
       isHet <- isHeterozygous(gf, units=fracBNState$unit, drop=TRUE);
       
       col <- 1+isHet;
 
-      figName <- sprintf("%s,ASCN,%s,%s,%s,state=%s", region$label, what, name, genTag, state);
+      figName <- sprintf("%s,ASCN,%s,%s,%s,state=%s", region$label, what, name, gTag, state);
       if (fig <- figDev(figName)) {
         par(mar=c(2.7,2.6,1.2,0)+0.1, mgp=c(1.4,0.3,0), tcl=-0.3, cex=cex);
         plot(NA, col=col, xlim=lim, ylim=lim, xlab=xlab, ylab=ylab);
@@ -423,7 +461,7 @@ tbl <- tbl[, 1]
         segments(a, z, b, z, col="#999999", lty=2);
         segments(z, a, z, b, col="#999999", lty=2);
 
-        txt <- sprintf("%s,%s", name, genTag);
+        txt <- sprintf("%s,%s", name, gTag);
         stext(side=4, pos=0, line=-0.8, cex=cex, txt);
         stext(side=3, pos=1, line=-0.3, cex=cex, names(tbl)[ss]);
         points(CA, CB, col=col, pch=pch, cex=cex);

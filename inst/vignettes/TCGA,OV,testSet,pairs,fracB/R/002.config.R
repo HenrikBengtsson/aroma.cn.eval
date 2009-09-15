@@ -11,8 +11,10 @@ doRocCurves <- TRUE;
 plotAllRocCurves <- FALSE;
 
 addTrueBetaLines <- FALSE;
-addTrueBetaPoints <- TRUE
-kappas <- c(0.6, 0.76, 1);
+addLinearRegressionLines <- TRUE;
+addTrueBetaPoints <- FALSE;
+## kappas <- c(0.6, 0.76, 1);
+kappas <- c(0.55, 1);
 
 trackAspect <- 0.22;
 trackWidth <- 0.9;
@@ -47,7 +49,7 @@ if (regexpr("ismpolish", dataSet) != -1) {
   throw("Cannot infer ('docTags', 'genTags') from 'dataSet': ", dataSet);
 }
 
-genTag <- genTags[1];
+genTag <- genTags[2];
 
 
 docPath <- sprintf("doc-%s", docTags);
