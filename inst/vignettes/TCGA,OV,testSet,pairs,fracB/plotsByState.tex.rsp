@@ -28,6 +28,8 @@ pch <- 19; cex <- 0.5;
 pch <- "."; cex <- 3;
 colorMap <- c("*"="#000000", "NA"="#999999", "1"="red", "2"="orange", "3"="blue", "4"="purple");
 smoothedColorMap <-  c("*" = "#000000", "NA" = "#999999");
+homCol <- 2;
+hetCol <- 1;
 %>
 
 %\documentclass[a4paper,draft]{article}
@@ -197,39 +199,8 @@ tbl <- tbl[, 1]
       gf <- getFile(gcN, idx);
       isHet <- isHeterozygous(gf, units=fracBNState$unit, drop=TRUE);
       
-      if ((addTrueBetaLines) && (name =="raw")) {
-        ## slope: exploiting symmetries...
-        slopeDatAbove <- betaT/betaN;
-        slopeDatBelow <- (1-betaT)/(1-betaN);
-        slopeDat <- slopeDatAbove;
-        slopeDat[which(slopeDat>1)] <- slopeDatBelow[which(slopeDat>1)];
-        
-        hetSlope <- median(slopeDat[isHet], na.rm=TRUE);
-     }
-      
-      if ((addLinearRegressionLines) && (name =="raw")) {
-        isBelow <- (betaT < betaN);
-        wBelow <- whichVector(isHet & isBelow);
-        wAbove <- whichVector(isHet & !isBelow);
-        xxBelow <- c(betaN[wBelow], 1-betaN[wAbove]);
-        yyBelow <- c(betaT[wBelow], 1-betaT[wAbove]);
-        xxAbove <- 1-xxBelow;
-        yyAbove <- 1-yyBelow;
-        
-        lmBelow <- lm(betaT[wBelow]~betaN[wBelow]);
-        lmAbove <- lm(betaT[wAbove]~betaN[wAbove]);
-
-        if (require(MASS)) {
-          ##           lmBelow <- rlm(betaT[wBelow]~betaN[wBelow], weights=abs(betaN[wBelow]-1/2));
-          ##           lmBelow <- rlm(betaT[wBelow]~betaN[wBelow]);
-          lmBelow <- rlm(yyBelow~xxBelow);
-          ##           lmAbove <- rlm(betaT[wAbove]~betaN[wAbove], weights=abs(betaN[wAbove]-1/2));
-          ##           lmAbove <- rlm(betaT[wAbove]~betaN[wAbove]);
-          lmAbove <- rlm(yyAbove~xxAbove);
-        }
-      }
-      
-      col <- 1+isHet;
+      col <- rep(homCol, length(isHet));
+      col[isHet] <-hetCol;
 
       figName <- sprintf("%s,betaNvsBetaT,%s,%s,%s,state=%s", region$label, what, name, gTag, ustates[ss]);
       if (fig <- figDev(figName)) {
@@ -249,29 +220,63 @@ tbl <- tbl[, 1]
         points(betaN, betaT, pch=pch, col=col, cex=cex);
 
         if ((addTrueBetaLines) && (name =="raw")) {
-         abline(a=0, b=1, lty=2, lwd=2, col="#999999");
+          ## slope: exploiting symmetries...
+          slopeDatAbove <- betaT/betaN;
+          slopeDatBelow <- (1-betaT)/(1-betaN);
+          slopeDat <- slopeDatAbove;
+          slopeDat[which(slopeDat>1)] <- slopeDatBelow[which(slopeDat>1)];
+          
+          hetSlope <- median(slopeDat[isHet], na.rm=TRUE);
+          
+          abline(a=0, b=1, lty=2, lwd=2, col="#999999");
           x0 <- rep(0, 2);
           x1 <- rep(1, 2);
           y0 <- c(0, 1-hetSlope);
           y1 <- c(hetSlope, 1);
-          segments(x0, y0, x1, y1, lty=1, lwd=4, col="white");
-          segments(x0, y0, x1, y1, lty=1, lwd=3, col=2);
+          segments(x0, y0, x1, y1, lty=1, lwd=5, col="white");
+          segments(x0, y0, x1, y1, lty=1, lwd=4, col=hetCol);
         }
         
-        if ((addLinearRegressionLines) && (name =="raw")) {
+##         if ((addLinearRegressionLines) && (name =="raw")) {
+        if ((addLinearRegressionLines)) {
+          
+          if (name =="raw") {
+            isBelow <- (betaT < betaN);
+          } else {
+            isBelow <- (betaT<1/2);
+         };
+          wBelow <- whichVector(isHet & isBelow);
+          wAbove <- whichVector(isHet & !isBelow);
+          xxBelow <- c(betaN[wBelow], 1-betaN[wAbove]);
+          yyBelow <- c(betaT[wBelow], 1-betaT[wAbove]);
+          xxAbove <- 1-xxBelow;
+          yyAbove <- 1-yyBelow;
+        
+          lmBelow <- lm(betaT[wBelow]~betaN[wBelow]);
+          lmAbove <- lm(betaT[wAbove]~betaN[wAbove]);
+
+          if (require(MASS)) {
+            ##           lmBelow <- rlm(betaT[wBelow]~betaN[wBelow], weights=abs(betaN[wBelow]-1/2));
+            ##           lmBelow <- rlm(betaT[wBelow]~betaN[wBelow]);
+            lmBelow <- rlm(yyBelow~xxBelow);
+            ##           lmAbove <- rlm(betaT[wAbove]~betaN[wAbove], weights=abs(betaN[wAbove]-1/2));
+            ##           lmAbove <- rlm(betaT[wAbove]~betaN[wAbove]);
+            lmAbove <- rlm(yyAbove~xxAbove);
+          }
+
           xb <- 1/2;
-          abline(lmBelow, lwd=4, col="white");
-          abline(lmBelow, lwd=3, col="red", lty=2);
+          abline(lmBelow, lwd=5, col="white");
+          abline(lmBelow, lwd=4, col=hetCol, lty=1);
           coef <- lmBelow$coefficients
           yb <- coef[1]+xb*coef[2];
           points(xb, yb, col="white", cex=2.4, pch=20);
-          points(xb, yb, col=2, cex=2, pch=20);
-          abline(lmAbove, lwd=4, col="white");
-          abline(lmAbove, lwd=3, col="red", lty=2);
+          points(xb, yb, col=hetCol, cex=2, pch=20);
+          abline(lmAbove, lwd=5, col="white");
+          abline(lmAbove, lwd=4, col=hetCol, lty=1);
           coef <- lmAbove$coefficients
           yb <- coef[1]+xb*coef[2];
           points(xb, yb, col="white", cex=2.4, pch=20);
-          points(xb, yb, col=2, cex=2, pch=20);
+          points(xb, yb, col=hetCol, cex=2, pch=20);
       }
         
         as <- seq(-1,1, by=.1);
@@ -336,7 +341,8 @@ tbl <- tbl[, 1]
       gf <- getFile(gcN, idx);
       isHet <- isHeterozygous(gf, units=fracBNState$unit, drop=TRUE);
       
-     col <- 1+isHet;
+      col <- rep(homCol, length(isHet));
+      col[isHet] <-hetCol;
 
       isBelowDiagonal <- (betaT<betaN);
       xx <- median(betaN[isBelowDiagonal & isHet], na.rm=TRUE);
@@ -446,7 +452,8 @@ tbl <- tbl[, 1]
       gf <- getFile(gcN, idx);
       isHet <- isHeterozygous(gf, units=fracBNState$unit, drop=TRUE);
       
-      col <- 1+isHet;
+      col <- rep(homCol, length(isHet));
+      col[isHet] <-hetCol;
 
       figName <- sprintf("%s,ASCN,%s,%s,%s,state=%s", region$label, what, name, gTag, state);
       if (fig <- figDev(figName)) {
