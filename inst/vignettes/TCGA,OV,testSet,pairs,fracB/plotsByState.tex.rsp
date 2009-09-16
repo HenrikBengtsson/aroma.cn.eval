@@ -127,10 +127,10 @@ getNbLociPerState <- function(object) {
   tbl <- tbl[o];
   names <- names(tbl);
   sign <- as.integer(names);
-  names[sign==0] <- "'NORMAL' (1,1)";
-  names[sign==1] <- "'GAIN' (1,2)";
-  names[sign==2] <- "'DELETION' (0,1)";
-  names[sign==3] <- "'COPY NEUTRAL LOH' (0,2)";
+  names[sign==0] <- "NORMAL (1,1)";
+  names[sign==1] <- "GAIN (1,2)";
+  names[sign==2] <- "DELETION (0,1)";
+  names[sign==3] <- "COPY NEUTRAL LOH (0,2)";
   names(tbl) <- names;
   tbl
 }
@@ -210,6 +210,10 @@ tbl <- tbl[, 1]
         axis(side=2, at=c(0,1/2,1));
 ##        box();  # optional?
 
+        as <- seq(-1.5, 1.5, by=.1);
+        b <- ifelse(name == "raw", 1, 0);
+        la <- lapply(as, function(x) abline(a=x, b=b, col="#999999", lty=1, lwd=1));
+
         ## boxes
         z <- 0:2/2;
         a <- rep(min(z), length(z));
@@ -233,7 +237,7 @@ tbl <- tbl[, 1]
           x1 <- rep(1, 2);
           y0 <- c(0, 1-hetSlope);
           y1 <- c(hetSlope, 1);
-          segments(x0, y0, x1, y1, lty=1, lwd=5, col="white");
+          segments(x0, y0, x1, y1, lty=1, lwd=6, col="white");
           segments(x0, y0, x1, y1, lty=1, lwd=4, col=hetCol);
         }
         
@@ -265,27 +269,24 @@ tbl <- tbl[, 1]
           }
 
           xb <- 1/2;
-          abline(lmBelow, lwd=5, col="white");
-          abline(lmBelow, lwd=4, col=hetCol, lty=1);
+          abline(lmBelow, lwd=9, col="white");
+          abline(lmBelow, lwd=6, col=hetCol, lty=1);
           coef <- lmBelow$coefficients
           yb <- coef[1]+xb*coef[2];
-          points(xb, yb, col="white", cex=2.4, pch=20);
+          points(xb, yb, col="white", cex=2.6, pch=20);
           points(xb, yb, col=hetCol, cex=2, pch=20);
-          abline(lmAbove, lwd=5, col="white");
-          abline(lmAbove, lwd=4, col=hetCol, lty=1);
+          abline(lmAbove, lwd=9, col="white");
+          abline(lmAbove, lwd=6, col=hetCol, lty=1);
           coef <- lmAbove$coefficients
           yb <- coef[1]+xb*coef[2];
-          points(xb, yb, col="white", cex=2.4, pch=20);
-          points(xb, yb, col=hetCol, cex=2, pch=20);
-      }
+         points(xb, yb, col="white", cex=2.6, pch=20);
+         points(xb, yb, col=hetCol, cex=2, pch=20);
+         points(xb, yb, col=hetCol, cex=2, pch=1);
+       }
         
-        as <- seq(-1,1, by=.1);
-        b <- ifelse(name == "raw", 1, 0);
-        la <- lapply(as, function(x) abline(a=x, b=b, col="lightgray", lty=2));
-
-        txt <- sprintf("%s,%s", name, gTag);
+       txt <- sprintf("%s,%s", name, gTag);
         nm <- names(tbl)[ss];
-        stext(side=4, pos=0, line=-0.8, cex=cex, txt);
+        stext(side=4, pos=0, line=-0.8, cex=cex, txt, col="#999999");
         stext(side=3, pos=0, line=-0.3, cex=cex, nm);
 
         if (addTrueBetaPoints) {         ## add points for true allele B fractions
@@ -296,10 +297,10 @@ tbl <- tbl[, 1]
             points(0,0, col=tbc, cex=tbCex, pch=20);
             points(1,1, col=tbc, cex=tbCex, pch=20);
             trueBeta <- switch(nm,
-              "'NORMAL' (1,1)" = 1/2,
-              "'GAIN' (1,2)" = (1*kappa+(1-kappa))/(3*kappa+2*(1-kappa)),
-              "'DELETION' (0,1)" = (1-kappa)/(kappa+2*(1-kappa)),
-              "'COPY NEUTRAL LOH' (0,2)" = (1-kappa)/2);
+              "NORMAL (1,1)" = 1/2,
+              "GAIN (1,2)" = (1*kappa+(1-kappa))/(3*kappa+2*(1-kappa)),
+              "DELETION (0,1)" = (1-kappa)/(kappa+2*(1-kappa)),
+              "COPY NEUTRAL LOH (0,2)" = (1-kappa)/2);
             points(1/2, trueBeta, col=tbc, cex=tbCex, pch=20)
             points(1/2, 1-trueBeta, col=tbc, cex=tbCex, pch=20)
           }
@@ -363,7 +364,7 @@ tbl <- tbl[, 1]
         abline(h=yy/xx*.5)
 
         txt <- sprintf("%s,%s --- smoothScatter version", name, gTag);
-        stext(side=4, pos=0, line=-0.8, cex=cex, txt);
+        stext(side=4, pos=0, line=-0.8, cex=cex, txt, col="#999999");
         stext(side=3, pos=0, line=-0.3, cex=cex, names(tbl)[ss]);
         devDone(figName);
       } # if (figDev(...)) %>\resizebox{0.49\textwidth}{!}{\includegraphics{<%=figPath%>/<%=fig$fullname%>}}
@@ -469,7 +470,7 @@ tbl <- tbl[, 1]
         segments(z, a, z, b, col="#999999", lty=2);
 
         txt <- sprintf("%s,%s", name, gTag);
-        stext(side=4, pos=0, line=-0.8, cex=cex, txt);
+        stext(side=4, pos=0, line=-0.8, cex=cex, txt, col="#999999");
         stext(side=3, pos=1, line=-0.3, cex=cex, names(tbl)[ss]);
         points(CA, CB, col=col, pch=pch, cex=cex);
         devDone(figName);

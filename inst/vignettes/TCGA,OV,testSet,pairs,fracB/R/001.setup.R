@@ -53,4 +53,4 @@ regions <- c(
 ## regions <- regions[1:5]
 ## regions <- regions[9]
 regions <- regions[c(3:4, 8:9)]
-## regions <- regions[4]
+## regions <- regions[3]
