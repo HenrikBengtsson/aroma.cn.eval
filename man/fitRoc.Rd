@@ -60,9 +60,6 @@ lines(fit2$roc, type="l", lwd=2, col="red")
 
  \author{Henrik Bengtsson (\url{http://www.braju.com/R/})}
 
- \seealso{
- }
-
 
 
 \keyword{internal}

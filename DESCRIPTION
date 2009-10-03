@@ -1,13 +1,13 @@
 Package: aroma.cn.eval
-Version: 0.0.5
-Date: 2009-06-10
+Version: 0.1.0
+Date: 2009-10-02
 Title: Package for evaluating copy-number estimates
 Author: Henrik Bengtsson <henrikb@braju.com>,
 Maintainer: Henrik Bengtsson <henrikb@braju.com>
-Depends: R (>= 2.6.0), R.methodsS3 (>= 1.0.3), R.oo (>= 1.4.6), R.utils (>= 1.1.6), R.cache (>= 0.1.7), matrixStats (>= 0.1.4), aroma.core (>= 1.1.1)
+Depends: R (>= 2.6.0), R.methodsS3 (>= 1.0.3), R.oo (>= 1.6.0), R.utils (>= 1.2.0), R.cache (>= 0.1.9), matrixStats (>= 0.1.4), aroma.core (>= 1.2.1)
 Suggests: R.rsp (>= 0.3.4), ROC (>= 1.16.0)
 Description: This package is a private for now.
-License: Private for now (LGPL to come)
+License: LGPL (>= 2.1)
 URL: http://www.braju.com/R/
 PatchURL: http://www.braju.com/R/
 LazyLoad: TRUE

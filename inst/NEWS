@@ -1,6 +1,10 @@
 Package: aroma.cn.eval
 ======================
 
+Version: 0.1.0 [2009-10-02]
+o Updated the dependencies.
+
+
 Version: 0.0.5 [2009-06-10]
 o Now all ROC functions are implemented for the 
   SegmentedGenomicSignalsInterface.

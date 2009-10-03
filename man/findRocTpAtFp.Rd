@@ -73,9 +73,6 @@ for (fpRate in c(0.2, 0.4)) {
 
  \author{Henrik Bengtsson (\url{http://www.braju.com/R/})}
 
- \seealso{
- }
-
 
 
 \keyword{internal}
