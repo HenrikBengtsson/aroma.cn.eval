@@ -2,6 +2,7 @@
 # Additional configurations
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 what <- "fracB";
+evalSignal <- c("abs(fracB-1/2)", "minorCn", "majorCn")[1];
 
 addLegend <- TRUE;
 addSdEst <- FALSE;
@@ -10,17 +11,26 @@ addBinTrack <- TRUE;
 doRocCurves <- TRUE;
 plotAllRocCurves <- FALSE;
 
+## options for for plotsByState
 addTrueBetaLines <- FALSE;
 addLinearRegressionLines <- TRUE;
 addTrueBetaPoints <- FALSE;
-## kappas <- c(0.6, 0.76, 1);
-kappas <- c(0.55, 1);
+kappasPbs <- c(0.55, 1);
+
+## options for main
+tumorPurify <- c(FALSE, TRUE)[1];
+kappaMain <- 0.5;
+if (!tumorPurify) {
+   kappaMain <- 1;
+};
+
+
 
 trackAspect <- 0.22;
 trackWidth <- 0.9;
 
 binCounts <- c(1, 1.25, 1.5, 2, 3, 4); rocCols <- 2;
-## binCounts <- binCounts[c(1, 4)]
+binCounts <- binCounts[c(1, 4:6)];
 
 byCount <- c(TRUE, FALSE)[1];
 

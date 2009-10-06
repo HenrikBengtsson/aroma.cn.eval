@@ -290,8 +290,8 @@ tbl <- tbl[, 1]
         stext(side=3, pos=0, line=-0.3, cex=cex, nm);
 
         if (addTrueBetaPoints) {         ## add points for true allele B fractions
-         for (kk in seq(along=kappas)) {
-            kappa <- kappas[kk];
+         for (kk in seq(along=kappasPbs)) {
+            kappa <- kappasPbs[kk];
             tbc <- (3:5)[kk];
             tbCex <- c(2, 1.5, 1)[kk];
             points(0,0, col=tbc, cex=tbCex, pch=20);

@@ -2,13 +2,14 @@
 % Authors: Henrik Bengtsson, hb@stat.berkeley.edu
 %          Pierre Neuvial, pierre@stat.berkeley.edu
 % Created on: 2009-02-23
-% Modified on: 2009-06-13
+% Modified on: 2009-10-06
 %
 % Usage:
 %  library("R.rsp");
 %  rsptex("main.tex.rsp");  # => *.tex.rsp => ... => *.dvi
 %  rsptex("main.tex.rsp", pdf=TRUE);  # => *.tex.rsp => ... => *.pdf
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+
 <%
 verbose && enter(verbose, "Setup");
 sourceDirectory("R/");
@@ -113,7 +114,19 @@ getRegionLabels <- function(state) {
   lab[state==3] <- "'copy neutral LOH' (0,2)";
   lab;
 }
+getRegionPcns <- function(state) {
+  switch(state+1, c(1,1), c(1,2), c(0,1), c(0,2))
+}
 
+getQuantStates <- function(states, evalSignal=c("TCN", "abs(fracB-1/2)", "minorCn", "majorCn")) {
+  match.arg(evalSignal);
+  pcns <- sapply(states, getRegionPcns);
+  switch(evalSignal, 
+    TCN = apply(pcns, 2, sum),
+    "abs(fracB-1/2)" = states,
+    minorCn = pcns[1,],
+    majorCn = pcns[2,])
+}
 %>
 
 \subsection{List of change points}
@@ -156,7 +169,6 @@ We now compare the  raw, TBN-NGC, and TBN-Birdseed methods using the afformentio
 <% for (region in regions) { %>
 \clearpage
 \section{Region: <%=region%>}
-
 <%
 print(region);
 region <- parseRegion(region);
@@ -186,14 +198,14 @@ getNbLociPerState <- function(object) {
 
 
 <%
-test <- function(fracB, ...) {
-  testSeparation(fracB, test="ks.test")$statistic;
+test <- function(signal, ...) {
+  testSeparation(signal, test="ks.test")$statistic;
 } 
 
-test <- function(fracB, testFUN, output=c("statistic")) {
-  states <- getStates(fracB)
-  us <- na.omit(getUniqueStates(fracB))
-  testFUN(getSignals(fracB)[states==us[1]], getSignals(fracB)[states==us[2]])[[output]]
+test <- function(signal, testFUN, output=c("statistic")) {
+  states <- getStates(signal)
+  us <- na.omit(getUniqueStates(signal))
+  testFUN(getSignals(signal)[states==us[1]], getSignals(signal)[states==us[2]])[[output]]
 }
 %>
 
@@ -208,12 +220,13 @@ test <- function(fracB, testFUN, output=c("statistic")) {
 
 <%
 what <- "fracB";
-fracBList <- getFracBList(fracBDsList, what=what, pattern=methodPattern);
+enter(verbose, what);
+signalList <- getFracBList(fracBDsList, what=what, pattern=methodPattern);
 
 ## remove NAs
-fracBList <- lapply(fracBList, FUN=function(fracB) {
-  isNA <- is.na(getSignals(fracB))
-  fracB <- extractSubset(fracB, whichVector(!isNA))
+signalList <- lapply(signalList, FUN=function(signal) {
+  isNA <- is.na(getSignals(signal))
+  signal <- extractSubset(signal, whichVector(!isNA))
 })
 
 cnList <- NULL;
@@ -221,20 +234,20 @@ cnList <- NULL;
 cnList <- getCnList(cnDsList, cnList=cnList, what="ratios", force=(figForce > 2));
 cn <- cnList[[1]];
 
-fracBList[["TCN"]] <- cn ## Add TCN
+signalList[["TCN"]] <- cn ## Add TCN
 
 if (byCount) {
-   minNbPoints <- min(sapply(fracBList, FUN=function(fracB) {
-     table(getStates(fracB));
+   minNbPoints <- min(sapply(signalList, FUN=function(signal) {
+     table(getStates(signal));
      }));
-     fracBList <- lapply(fracBList, FUN=getBalancedRegions, minNbPoints);
+     signalList <- lapply(signalList, FUN=getBalancedRegions, minNbPoints);
 }
 %>
 
 <%
 caption <- sprintf("Test of the null hypothesis of equal distribution of %s before and after the breakpoint: Kolmogorov-Smirnov test statistic. The larger value, the more different the distributions are.", what)
-testStat <- as.matrix(sapply(fracBList, FUN=test, testFUN=ks.test))
-rownames(testStat) <- names(fracBList)
+testStat <- as.matrix(sapply(signalList, FUN=test, testFUN=ks.test))
+rownames(testStat) <- names(signalList)
 colnames(testStat) <- "ks"
 display <- c("s", rep("fg", ncol(testStat)))
 %>
@@ -246,7 +259,7 @@ display <- c("s", rep("fg", ncol(testStat)))
 Note that the number of loci in each state is constrained to be the same for all methods:
 
 <%
-tbl <- sapply(fracBList, FUN=getNbLociPerState);
+tbl <- sapply(signalList, FUN=getNbLociPerState);
 ## stopifnot(all(rowSds(tbl)==0))
 tbl <- tbl[, 1]
 %>
@@ -254,30 +267,72 @@ tbl <- tbl[, 1]
 
 <%
 caption <- "Number of loci in each state"
-df <- t(sapply(fracBList, FUN=function(fracB) {
-  table(getStates(fracB), exclude=NULL);
+df <- t(sapply(signalList, FUN=function(signal) {
+  table(getStates(signal), exclude=NULL);
 }));
 colnames(df) <- names(tbl);
 colnames(df)[colnames(df)==""] <- "Safety Margin"
 %>
 <%=print(xtable(df, caption=caption)) %>
+<%
+exit(verbose);
+%>
+
+
+
+<%
+what <- ifelse(evalSignal=="abs(fracB-1/2)", "mBAF", evalSignal);
+%>
 
 %%%%%%%%%%%%
-% abs(fracB-1/2)
+% <%=what%>
 %%%%%%%%%%%%
 
 
 <% ## setup
-what <- "abs(fracB-1/2)";
-fracBList <- getFracBList(fracBDsList, what=what, pattern=methodPattern);
-fracB <- fracBList[[1]];
-fracBList[["TCN"]] <- cn;
-fracBList[["TCN"]]$unit <- fracBList[[1]]$unit;
 
-fracBList <- sapply(genTags, FUN=function(genTag) {
-  extractHeterozygous(fracBList, gcDsList[[genTag]], gcsDsList[[genTag]], confQuantile=confQuantile)
+signalList <- getFracBList(fracBDsList, what="fracB", pattern=methodPattern);
+signalN <- getFracBList(list(dsN), what="fracB", force=(figForce > 2))[[1]];
+
+enter(verbose, what);
+
+###############
+## BEGIN purifier
+###############
+enter(verbose, "purifier");
+signalList <- lapply(signalList, FUN=function(signal) {
+  signal$y <- (signal$y*cn$y-2*(1-kappaMain)*1/2)/(cn$y-2*(1-kappaMain));
+  signal$y <- abs(signal$y-1/2);
+  signal;
 });
-str(fracBList);
+
+cn$y <- (cn$y-2*(1-kappaMain))/kappaMain;
+exit(verbose);
+###############
+## END purifier
+###############
+
+if (evalSignal=="minorCn" || evalSignal=="majorCn") {
+  direction <- ifelse(evalSignal=="minorCn", -1, 1);
+  enter(verbose, "Calculating minor/major CNs");
+  signalList <- lapply(signalList, FUN=function(signal) {
+    signal$y <- cn$y*(1/2+direction*signal$y);
+    signal;
+  });
+
+  exit(verbose);  
+}
+
+
+signal <- signalList[[1]];
+signalList[["TCN"]] <- cn;
+signalList[["TCN"]]$unit <- signalList[[1]]$unit;
+ 
+signalList <- sapply(genTags, FUN=function(genTag) {
+  extractHeterozygous(signalList, gcDsList[[genTag]], gcsDsList[[genTag]], confQuantile=confQuantile)
+});
+str(signalList);
+
 
 ## Number of het calls for each genotyping method, genome-wide.
 ## lapply(gcDsList, function(ds) {
@@ -286,7 +341,7 @@ str(fracBList);
 ##     table(gens);
 ## });
 
-dn <- dimnames(fracBList);
+dn <- dimnames(signalList);
 nms <- sapply(dn[[2]], FUN=function(nm) sprintf("%s,%s", dn[[1]], nm));
 nms <- as.character(nms);
 
@@ -308,8 +363,8 @@ labels <- sapply(labels, FUN=function(s) s[1]);
 patts <- c("raw", sprintf("%s,%s", dn[[2]], dn[[2]]), "TCN")
 keep <- unlist(sapply(patts, FUN=grep, nms));
 ##    keep <- seq(nms)
-fracBList <- fracBList[keep];
-names(fracBList) <- nms[keep];
+signalList <- signalList[keep];
+names(signalList) <- nms[keep];
 
 cols <- cols[keep];
 ltys <- ltys[keep];
@@ -318,27 +373,27 @@ nms <- nms[keep];
 %>
 
 <%  ## Add TCN
-fracBList[["TCN,SNP+CN"]] <- cn;
-snps <- whichVector(!is.na(fracB$y));
-fracBList[["TCN,SNP"]] <- extractSubset(cn, snps);
+signalList[["TCN,SNP+CN"]] <- cn;
+snps <- whichVector(!is.na(signal$y));
+signalList[["TCN,SNP"]] <- extractSubset(cn, snps);
 
 if (byCount) {
-  minNbPoints <- min(sapply(fracBList, FUN=function(fracB) {
-    table(getStates(fracB));
+  minNbPoints <- min(sapply(signalList, FUN=function(signal) {
+    table(getStates(signal));
   }));
-  fracBList <- lapply(fracBList, FUN=getBalancedRegions, minNbPoints);
+  signalList <- lapply(signalList, FUN=getBalancedRegions, minNbPoints);
 }
 
 cols <- c(cols,  rep("darkgreen", 2));
 ltys <- c(ltys,  2, 3);
-nms <- names(fracBList);
+nms <- names(signalList);
 labels <- c(labels, "TCN,SNP+CN", "TCN,SNP");
 %>
 
 <% ## keep only some combinations for the evaluation
 if (!plotAllRocCurves) {
-  keep <- grep(rocCurvesPattern, names(fracBList));
-  fracBList <- fracBList[keep];
+  keep <- grep(rocCurvesPattern, names(signalList));
+  signalList <- signalList[keep];
   cols <- cols[keep]
   ltys <- ltys[keep]
   nms <- nms[keep]
@@ -347,47 +402,87 @@ if (!plotAllRocCurves) {
 %>
 
 <%
-tbl <- sapply(fracBList, FUN=getNbLociPerState);
+tbl <- sapply(signalList, FUN=getNbLociPerState);
 ## stopifnot(all(rowSds(tbl)==0))
 tbl <- tbl[, 1]
 %>
 
+\subsection{Test statistics: <%=what%>}
+
+<%
+testNames <- c("t", "ks")
+testStat <- NULL
+for (testName in testNames) {
+  testFUN <- get(sprintf("%s.test", testName), mode="function");
+  testStat <- rbind(testStat, sapply(signalList, FUN=test, testFUN=testFUN))
+}
+colnames(testStat) <- names(signalList)
+rownames(testStat) <- testNames
+
+caption <- sprintf("Significance of the breakpoint in the distributions of %s for heterozygous SNPs:Kolmogorov-Smirnov (equality of the distribution before and after the breakpoint) and Student (equal mean before and after the breakpoint) test statistics. The larger in absolute value, the more significant the breakpoint is.", what)
+display <- c("s", rep("fg", nrow(testStat)))
+%>
+
+<%=print(xtable(t(testStat), caption=caption, display=display)) %>
+
+Note that the number of loci in each state is constrained to be the same for all methods:
+
+<%
+caption <- "Number of loci in each state"
+df <- t(sapply(signalList, FUN=function(signal) {
+  table(getStates(signal), exclude=NULL);
+}));
+colnames(df) <- names(tbl);
+colnames(df)[colnames(df)==""] <- "Safety Margin"
+row.names(df) <- labels;
+%>
+<%=print(xtable(df, caption=caption)) %>
+
+<% } %>
+
+\subsection{<%=what%> tracks}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % BEGIN FIGURE: eval tracks
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 <%
-fracBLim <- c(0, 0.4);
-fracBLab <- expression(rho);
+rhoLim <- c(0, 0.4);
+rhoLab <- expression(rho);
 
 cnLim <- c(0, 5);
 cnLab <- expression(C == 2*(theta[T]/theta[N]));
 cnLab <- "C";
 
 xScale <- 1e-6;
-xRange <- range(sapply(fracBList, FUN=xRange));
-states <- na.omit(getUniqueStates(fracBList[[1]]));
+xRange <- range(sapply(signalList, FUN=xRange));
+states <- na.omit(getUniqueStates(signalList[[1]]));
 xlim <- xRange*xScale;
 cp <- region$params$cp;
 s <- region$params$s;
 xs <- cp["position"]+c(-1,+1)*cp["delta"];
 figList <- list();
-for (kk in seq(along=fracBList)) {
-  name <- names(fracBList)[kk];
-  fracB <- fracBList[[kk]];
+for (kk in seq(along=signalList)) {
+  name <- names(signalList)[kk];
+  signal <- signalList[[kk]];
 
+  addStateLabels <- FALSE;
+  ylim <- cnLim;
   if (length(grep("TCN", name))) {
     addStateLabels <- TRUE;
-   ylim <- cnLim;
     ylab <- cnLab;
     figTag <- "ratios"
+  } else if (evalSignal=="majorCn") {
+    ylab <- expression(C[2]);
+    figTag <- "majorCn";
+  } else if (evalSignal=="minorCn") {
+    ylab <- expression(C[3]);
+    figTag <- "minorCn";
   } else {
-    addStateLabels <- FALSE;
-    ylim <- fracBLim;
-    ylab <- fracBLab;
+    ylim <- rhoLim;
+    ylab <- rhoLab;
     figTag <- "MBAF"
   }
 
- setStateColorMap(fracB,fullResColorMap);
+ setStateColorMap(signal,fullResColorMap);
   
 
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -398,7 +493,7 @@ for (kk in seq(along=fracBList)) {
     # subplots(nbrOfSources, ncol=1);
     par(mar=c(1.2,2,0.1,0)+0.2, mgp=c(1.2,0.3,0), tcl=-0.3, cex=cex, cex.axis=0.7);
     
-    plot(fracB, pch=pch, cex=cex, xlim=xlim, ylim=ylim, xScale=xScale, ylab=ylab);
+    plot(signal, pch=pch, cex=cex, xlim=xlim, ylim=ylim, xScale=xScale, ylab=ylab);
     if (addStateLabels) {
       stext(side=3, pos=0, line=-0.2, cex=0.8*cex, names(tbl[1]))
       stext(side=3, pos=1, line=-0.2, cex=0.8*cex, names(tbl[2]))
@@ -414,25 +509,25 @@ for (kk in seq(along=fracBList)) {
     rect(xs[1],ys[1], xs[2],ys[2], density=10, col="#999999");
 ##     stext(side=4, pos=1, line=-0.7, cex=cex, name, las=3);
   if (addSdEst) {
-      sd <- estimateStandardDeviation(fracB);
+      sd <- estimateStandardDeviation(signal);
       stext(side=4, pos=1, line=-0.7, cex=0.8*cex, sprintf("SD=%.3g", sd));
     }
     if (addBinTrack) {
       binWidths <- binCounts;
       binWidth <- binWidths[length(binWidths)];
       if (!byCount) {
-        binWidth <- round(diff(xRange(fracB))/(nbrOfLoci(fracB, na.rm=TRUE)-1)*binWidth)
+        binWidth <- round(diff(xRange(signal))/(nbrOfLoci(signal, na.rm=TRUE)-1)*binWidth)
       }
-    fracBS <- binnedSmoothingByState(fracB, from=xRange[1], to=xRange[2], by=binWidth, FUN=binFFracB, byCount=byCount);
-      setStateColorMap(fracBS, smoothedColorMap);
-##       points(fracBS, pch=19, cex=1, col="white", xScale=xScale);
-##       points(fracBS, pch=1, cex=.8, xScale=xScale);
-      lines(fracBS, lty=1, lwd=2, col="white", xScale=xScale);
-      points(fracBS, pch=19, cex=.7, col="white", xScale=xScale);
-      lines(fracBS, lty=3, lwd=1, xScale=xScale);
-      points(fracBS, pch=19, cex=.5, xScale=xScale);
+    signalS <- binnedSmoothingByState(signal, from=xRange[1], to=xRange[2], by=binWidth, FUN=binFFracB, byCount=byCount);
+      setStateColorMap(signalS, smoothedColorMap);
+##       points(signalS, pch=19, cex=1, col="white", xScale=xScale);
+##       points(signalS, pch=1, cex=.8, xScale=xScale);
+      lines(signalS, lty=1, lwd=2, col="white", xScale=xScale);
+      points(signalS, pch=19, cex=.7, col="white", xScale=xScale);
+      lines(signalS, lty=3, lwd=1, xScale=xScale);
+      points(signalS, pch=19, cex=.5, xScale=xScale);
     }
-    ts <- signif(test(fracB, testFUN=ks.test), digits=2)
+    ts <- signif(test(signal, testFUN=ks.test), digits=2)
  ##    stext(side=4, pos=0, line=-0.7, cex=0.8*cex, sprintf("KS = %s",ts), las=3)
 
    devDone(figName);
@@ -459,39 +554,6 @@ for (kk in seq(along=fracBList)) {
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-\subsection{Test statistics: <%=what%>}
-
-<%
-testNames <- c("t", "ks")
-testStat <- NULL
-for (testName in testNames) {
-  testFUN <- get(sprintf("%s.test", testName), mode="function");
-  testStat <- rbind(testStat, sapply(fracBList, FUN=test, testFUN=testFUN))
-}
-colnames(testStat) <- names(fracBList)
-rownames(testStat) <- testNames
-
-caption <- sprintf("Significance of the breakpoint in the distributions of %s for heterozygous SNPs:Kolmogorov-Smirnov (equality of the distribution before and after the breakpoint) and Student (equal mean before and after the breakpoint) test statistics. The larger in absolute value, the more significant the breakpoint is.", what)
-display <- c("s", rep("fg", nrow(testStat)))
-%>
-
-<%=print(xtable(t(testStat), caption=caption, display=display)) %>
-
-Note that the number of loci in each state is constrained to be the same for all methods:
-
-<%
-caption <- "Number of loci in each state"
-df <- t(sapply(fracBList, FUN=function(fracB) {
-  table(getStates(fracB), exclude=NULL);
-}));
-colnames(df) <- names(tbl);
-colnames(df)[colnames(df)==""] <- "Safety Margin"
-row.names(df) <- labels;
-%>
-<%=print(xtable(df, caption=caption)) %>
-
-<% } %>
-
 \subsection{ROC curves}
 % We focus on heterozygous SNP as called by <%=genTag%>. 
 Smoothing is done using the <%=binFFracB%> function.
@@ -499,7 +561,7 @@ Smoothing is done using the <%=binFFracB%> function.
 <%
 binWidths <- binCounts;
 if (!byCount) {
-  binWidths <- round(diff(xRange(fracBList[[1]]))/(nbrOfLoci(fracBList[[1]], na.rm=TRUE)-1)*binWidths)
+  binWidths <- round(diff(xRange(signalList[[1]]))/(nbrOfLoci(signalList[[1]], na.rm=TRUE)-1)*binWidths)
 }
 %>
 
@@ -511,12 +573,12 @@ if (!byCount) {
   rocRows <- ceiling(length(binCounts)/rocCols); 
   aspect <- rocRows/rocCols;
 
-  fracB <- fracBList[[1]];
-  nbrOfLoci <- sum(is.finite(fracB$y), na.rm=TRUE);
-  fullRes <- (diff(xRange(fracB))+1) / (nbrOfLoci-1);
+  signal <- signalList[[1]];
+  nbrOfLoci <- sum(is.finite(signal$y), na.rm=TRUE);
+  fullRes <- (diff(xRange(signal))+1) / (nbrOfLoci-1);
   
-  xRange <- range(sapply(fracBList, FUN=xRange));
-  states <- na.omit(getUniqueStates(fracB));
+  xRange <- range(sapply(signalList, FUN=xRange));
+  states <- na.omit(getUniqueStates(signal));
 %>
 
 \begin{figure}[htb]
@@ -524,22 +586,23 @@ if (!byCount) {
 <%   for (ww in seq(along=binWidths)) {
        binWidth <- binWidths[ww];
       
-       smtFUN <- function(fracB) {
-           fracBS <- binnedSmoothingByState(fracB, from=xRange[1], to=xRange[2], by=binWidth, FUN=binFFracB, byCount=byCount);
-         fracBS <- extractSubsetByState(fracBS, states=states);
-         fracBS;
+       smtFUN <- function(signal) {
+           signalS <- binnedSmoothingByState(signal, from=xRange[1], to=xRange[2], 
+           by=binWidth, FUN=binFFracB, byCount=byCount);
+         signalS <- extractSubsetByState(signalS, states=states);
+         signalS;
        }
 
-       figName <- sprintf("%s,ROC,%s,binWidth=%s", region$label, robustStr,binWidth);
+       figName <- sprintf("%s,ROC,%s,%s,binWidth=%s,kappa=%s", region$label, what, robustStr, binWidth, kappaMain);
        if (fig <- figDev(figName, aspect=1, scale=0.5)) {
          ##   layout(matrix(seq(along=binWidths), ncol=rocCols, byrow=TRUE));
-         par(mar=c(2.5,2.4,1.3,0.7)+0.1, mgp=c(1.4,0.3,0), tcl=-0.3, cex=cex);
+         par(mar=c(2.5,2.4,1.3,1)+0.1, mgp=c(1.4,0.3,0), tcl=-0.3, cex=cex);
     
      if (binWidth > 0) {
-       # Smooth FracBs using consecutive bins of given width (in kb)
-       fracBSList <- lapply(fracBList, FUN=smtFUN);
-       dim(fracBSList) <- dim(fracBList)
-        names(fracBSList) <- names(fracBList)
+       # Smooth signal using consecutive bins of given width (in kb)
+       signalSList <- lapply(signalList, FUN=smtFUN);
+       dim(signalSList) <- dim(signalList)
+        names(signalSList) <- names(signalList)
 
        if (byCount) {
          binLabel <- sprintf("Bin size: %g", binWidth);
@@ -547,22 +610,26 @@ if (!byCount) {
          binLabel <- sprintf("Bin width %g kb", binWidth/1e3);
       }
    } else {
-      fracBSList <- fracBList;
-      binLabel <- sprintf("Full resolution (%.1f kb, %s points)", fullRes/1e3, length(fracB$unit));
+      signalSList <- signalList;
+      binLabel <- sprintf("Full resolution (%.1f kb, %s points)", fullRes/1e3, length(signal$unit));
     }
-    print(fracBSList);
+    print(signalSList);
   
-    fits <- lapply(fracBSList, FUN=function(fracBS) {
-      cat("Number of missing values: ", sum(is.na(getSignals(fracBS))), "\n", sep="");
-      fitRoc(fracBS, states=states, recall=states[1]);
-    });
-    for (gg in grep("TCN", names(fracBList))) {
-      if ((states[1]<2) && (states[2]>1)) { ## ie TCN(state[2]) <= TCNstate[1])
-        fits[[gg]]$roc <- 1-fits[[gg]]$roc
-      }
+    fits <- NULL;
+    for (ss in seq(along=signalSList)) {
+      signalS <- signalSList[[ss]];
+      cat("Number of missing values: ", sum(is.na(getSignals(signalS))), "\n", sep="");
+      es <- ifelse(length(grep("TCN", names(signalList)[ss])), "TCN", evalSignal);
+      cat("Evaluation statistics:", es, "\n");
+      cat("States:", states, "\n");
+      qs <- getQuantStates(states, es);
+      cat("qs=", qs, "\n");
+      recall <- states[which.min(qs)]; ## In 'fitRoc', 'recall' is in fact the neutral state
+      cat("Recall:", recall ,"\n");
+      roc <- fitRoc(signalS, states=states, recall=recall);
+      fits <- append(fits, list(roc));
     }
-    
-
+    names(fits) <- names(signalSList);     
   
    for (kk in seq(fits)) {
      doLgd <- ((kk==1) && (ww==length(binWidths)))
@@ -571,10 +638,12 @@ if (!byCount) {
      if (kk==1) {
        plot(roc, type="l", lwd=3, col=cols[kk], lty=ltys[kk], xlim=fpLim, ylim=sort(1-fpLim), xlab="False-positive rate", ylab="True-positive rate");
        abline(a=0, b=1, lty=3);
-       stext(side=3, pos=1, binLabel);
+       stext(side=3, pos=1, binLabel, line=0);
      } else {
        lines(roc, lwd=3, col=cols[kk], lty=ltys[kk]);
      }
+     stext(side=4, pos=0, what, col="#999999", line=-0.4);
+
      if (addLegend && doLgd) {
        legend("bottomright", col=cols, lwd=2, lty=ltys, labels, cex=0.4, bty="n");
      }
@@ -608,6 +677,9 @@ if (require(xtable)) {
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % END Figure
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+<%
+exit(verbose);
+%>
 
 
 <% } # for (region in regions) %>
@@ -649,12 +721,14 @@ This report was automatically generated using the R.rsp package.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % HISTORY:
+% 2009-08-23
+% o Added evaluation based on major and minor CNs.
 % 2009-09-06
 % o WORKAROUND: For some unknown reasons does \graphicspath{} not 
 %   work anymore; added explicity paths to figures.
 % o Moved document configs to R/002.config.R.
 % 2009-08-23
-# o Updated the line styles ('ltys').
+% o Updated the line styles ('ltys').
 % 2009-07-02
 % o Added support for PNG output.
 % 2009-07-01
