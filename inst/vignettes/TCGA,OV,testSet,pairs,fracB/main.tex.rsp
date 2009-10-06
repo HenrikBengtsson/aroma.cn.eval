@@ -6,7 +6,7 @@
 %
 % Usage:
 %  library("R.rsp");
-%  rsptex("main.tex.rsp");  # => *.tex.rsp => ... => *.dvi
+%  rsptex("main .tex.rsp");  # => *.tex.rsp => ... => *.dvi
 %  rsptex("main.tex.rsp", pdf=TRUE);  # => *.tex.rsp => ... => *.pdf
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
@@ -121,11 +121,13 @@ getRegionPcns <- function(state) {
 getQuantStates <- function(states, evalSignal=c("TCN", "abs(fracB-1/2)", "minorCn", "majorCn")) {
   match.arg(evalSignal);
   pcns <- sapply(states, getRegionPcns);
-  switch(evalSignal, 
+  qs <- switch(evalSignal, 
     TCN = apply(pcns, 2, sum),
     "abs(fracB-1/2)" = states,
     minorCn = pcns[1,],
-    majorCn = pcns[2,])
+    majorCn = pcns[2,]);
+  ## if ties then order by TCN
+  switch(length(unique(qs)), apply(pcns, 2, sum), qs);
 }
 %>
 
