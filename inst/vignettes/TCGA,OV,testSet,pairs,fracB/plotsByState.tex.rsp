@@ -210,9 +210,11 @@ tbl <- tbl[, 1]
         axis(side=2, at=c(0,1/2,1));
 ##        box();  # optional?
 
-        as <- seq(-1.5, 1.5, by=.1);
-        b <- ifelse(name == "raw", 1, 0);
-        la <- lapply(as, function(x) abline(a=x, b=b, col="#999999", lty=1, lwd=1));
+        if (addDiagHorizLines) {	
+          as <- seq(-1.5, 1.5, by=.1);
+          b <- ifelse(name == "raw", 1, 0);
+          la <- lapply(as, function(x) abline(a=x, b=b, col="#999999", lty=1, lwd=1));
+	}
 
         ## boxes
         z <- 0:2/2;

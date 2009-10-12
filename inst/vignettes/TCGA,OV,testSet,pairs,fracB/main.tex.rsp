@@ -212,13 +212,19 @@ test <- function(signal, testFUN, output=c("statistic")) {
 %>
 
 
+<%
+cnList <- NULL;
+# Extract total CNs 
+cnList <- getCnList(cnDsList, cnList=cnList, what="ratios", force=(figForce > 2));
+cn <- cnList[[1]];
+%>
 
 
 %%%%%%%%%%%%
 % fracB
 %%%%%%%%%%%%
 
-<% if (require(xtable)) { %>
+<% if (doFracB) { %>
 
 <%
 what <- "fracB";
@@ -230,11 +236,6 @@ signalList <- lapply(signalList, FUN=function(signal) {
   isNA <- is.na(getSignals(signal))
   signal <- extractSubset(signal, whichVector(!isNA))
 })
-
-cnList <- NULL;
-# Extract total CNs 
-cnList <- getCnList(cnDsList, cnList=cnList, what="ratios", force=(figForce > 2));
-cn <- cnList[[1]];
 
 signalList[["TCN"]] <- cn ## Add TCN
 
@@ -253,6 +254,8 @@ rownames(testStat) <- names(signalList)
 colnames(testStat) <- "ks"
 display <- c("s", rep("fg", ncol(testStat)))
 %>
+
+<% if (require(xtable)) { %>
 
 \subsection{Test statistics: <%=what%>}
 
@@ -276,11 +279,14 @@ colnames(df) <- names(tbl);
 colnames(df)[colnames(df)==""] <- "Safety Margin"
 %>
 <%=print(xtable(df, caption=caption)) %>
+
+<% } ## if (require(xtable)) { %>
+
 <%
 exit(verbose);
 %>
 
-
+<% } ## if (doFracB) { %>
 
 <%
 what <- ifelse(evalSignal=="abs(fracB-1/2)", "mBAF", evalSignal);
@@ -308,7 +314,6 @@ signalList <- lapply(signalList, FUN=function(signal) {
   signal;
 });
 
-cn$y <- (cn$y-2*(1-kappaMain))/kappaMain;
 exit(verbose);
 ###############
 ## END purifier
@@ -325,6 +330,7 @@ if (evalSignal=="minorCn" || evalSignal=="majorCn") {
   exit(verbose);  
 }
 
+cn$y <- (cn$y-2*(1-kappaMain))/kappaMain;
 
 signal <- signalList[[1]];
 signalList[["TCN"]] <- cn;
@@ -409,6 +415,8 @@ tbl <- sapply(signalList, FUN=getNbLociPerState);
 tbl <- tbl[, 1]
 %>
 
+<% if (require(xtable)) { %>
+
 \subsection{Test statistics: <%=what%>}
 
 <%
@@ -440,8 +448,9 @@ row.names(df) <- labels;
 %>
 <%=print(xtable(df, caption=caption)) %>
 
-<% } %>
+<% } ## if (require(xtable)) { %>
 
+<% if (plotTracks) { %>
 \subsection{<%=what%> tracks}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % BEGIN FIGURE: eval tracks
@@ -522,8 +531,6 @@ for (kk in seq(along=signalList)) {
       }
     signalS <- binnedSmoothingByState(signal, from=xRange[1], to=xRange[2], by=binWidth, FUN=binFFracB, byCount=byCount);
       setStateColorMap(signalS, smoothedColorMap);
-##       points(signalS, pch=19, cex=1, col="white", xScale=xScale);
-##       points(signalS, pch=1, cex=.8, xScale=xScale);
       lines(signalS, lty=1, lwd=2, col="white", xScale=xScale);
       points(signalS, pch=19, cex=.7, col="white", xScale=xScale);
       lines(signalS, lty=3, lwd=1, xScale=xScale);
@@ -554,7 +561,7 @@ for (kk in seq(along=signalList)) {
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % END FIGURE: rho tracks
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+<% } ## if (plotTracks) { %>
 
 \subsection{ROC curves}
 % We focus on heterozygous SNP as called by <%=genTag%>. 
@@ -634,17 +641,22 @@ if (!byCount) {
     names(fits) <- names(signalSList);     
   
    for (kk in seq(fits)) {
-     doLgd <- ((kk==1) && (ww==length(binWidths)))
+     doLgd <- ((kk==1) && (ww==length(binWidths)) && (ww>1))
      fit <- fits[[kk]]
      roc <- fit$roc;
      if (kk==1) {
        plot(roc, type="l", lwd=3, col=cols[kk], lty=ltys[kk], xlim=fpLim, ylim=sort(1-fpLim), xlab="False-positive rate", ylab="True-positive rate");
        abline(a=0, b=1, lty=3);
-       stext(side=3, pos=1, binLabel, line=0);
+       stext(side=3, pos=1, binLabel, line=0, cex=0.8*cex);
      } else {
        lines(roc, lwd=3, col=cols[kk], lty=ltys[kk]);
      }
+     pcns <- sapply(states, getRegionPcns);
+     pcnTxt <- apply(pcns, 2, function(x) sprintf("(%s,%s)", x[1], x[2]));
+     pcnTxt <- paste(pcnTxt, collapse=" vs ");
+     stext(side=3, pos=0, pcnTxt, line=0, col="#999999", cex=0.8*cex);
      stext(side=4, pos=0, what, col="#999999", line=-0.4);
+     stext(side=4, pos=1, sprintf("k=%s", kappaMain), col="#999999", line=-0.4);
 
      if (addLegend && doLgd) {
        legend("bottomright", col=cols, lwd=2, lty=ltys, labels, cex=0.4, bty="n");
@@ -673,7 +685,7 @@ if (require(xtable)) {
   caption <- sprintf("Legend of Figure \\ref{fig%s}.", figName)
 %>
 <%=print(xtable(lgd, caption=caption)) %>
-<% } %>
+<% } ## if (require(xtable)) %>
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -10,11 +10,14 @@ addSdEst <- FALSE;
 addBinTrack <- TRUE;
 doRocCurves <- TRUE;
 plotAllRocCurves <- FALSE;
+doFracB <- c(TRUE, FALSE)[1];
+plotTracks <- c(TRUE, FALSE)[1];
 
 ## options for for plotsByState
 addTrueBetaLines <- FALSE;
-addLinearRegressionLines <- TRUE;
+addLinearRegressionLines <- FALSE;
 addTrueBetaPoints <- FALSE;
+addDiagHorizLines <- FALSE;
 kappasPbs <- c(0.55, 1);
 
 ## options for main
@@ -30,7 +33,8 @@ trackAspect <- 0.22;
 trackWidth <- 0.9;
 
 binCounts <- c(1, 1.25, 1.5, 2, 3, 4); rocCols <- 2;
-binCounts <- binCounts[c(1, 4:6)];
+## binCounts <- binCounts[c(1, 4:6)];
+binCounts <- binCounts[union(1, length(binCounts))];
 
 byCount <- c(TRUE, FALSE)[1];
 
