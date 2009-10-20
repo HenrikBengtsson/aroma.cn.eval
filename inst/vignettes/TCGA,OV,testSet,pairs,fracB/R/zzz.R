@@ -115,7 +115,13 @@ if (!exists("gcDsList", mode="list")) {
   names <- sapply(names, FUN=paste, collapse=",");
   names(gcDsList) <- names;
 
+  # keep those who match genTags and update genTags accordingly
+  m <- match(genTags, names);
+  genTags <- genTags[which(!is.na(m))];
   gcDsList <- gcDsList[genTags];
+  if (sum(is.na(m))) {
+    warning("No matching genotype data set found for tag: ", paste(genTags[is.na(m)], collapse=","));
+  }
 }
 
 # Sanity check
@@ -151,12 +157,17 @@ if (!exists("gcsDsList", mode="list")) {
   names <- sapply(names, FUN=paste, collapse=",");
   names(gcsDsList) <- names;
 
-  gcsDsList <- gcsDsList[genTags];
-
-  if (length(gcsDsList) == 0) {
-    # No genotypes confidence scores available
+  # keep those who match genTags
+  m <- match(genTags, names);
+  gcsDsList <- gcsDsList[genTags[which(!is.na(m))]];
+  if (sum(is.na(m))) {
+    warning("No matching genotype call data set found for tag: ", paste(genTags[is.na(m)], collapse=","));
   }
 }
+if (length(gcsDsList) == 0) {
+    # No genotypes confidence scores available
+}
+
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Coerce genotype calls and confidence scores into a list
