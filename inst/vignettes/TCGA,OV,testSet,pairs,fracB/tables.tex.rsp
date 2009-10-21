@@ -19,9 +19,27 @@ testName <- c("ks", "t")[2]
 testFUN <- eval(as.name(sprintf("%s.test", testName)))
 testLabel <- ifelse(testName=="ks", "Kolmogorov-Smirnov", "Student")
 
+doB <- TRUE;
+B <- 100;
+pmTag <- "@plusOrMinus@";
+
 output <- c("statistic", "p.value")[1]
-fixedNbPoints <- (testName=="t") ## constrain the nb of point to be the same across regions
-minNbPoints <- 250 ## used when fixedNbPoints is TRUE
+fixedNbPointsAcrossRegions <- (testName=="t") ## constrain the nb of point to be the same across regions
+minNbPoints <- 250 ## used when fixedNbPointsAcrossRegions is TRUE
+
+fixedNbPointsAcrossMethods <- c(TRUE, FALSE)[1];
+## a combination not implemented yet:
+if (!fixedNbPointsAcrossMethods) {
+  if (fixedNbPointsAcrossRegions) {
+    warning("Allowing number of points to vary across methods *and* regions");
+    fixedNbPointsAcrossRegions <- FALSE;
+  }
+  doB <- FALSE;
+  B <- 1;
+}
+
+evalSignals <- c("fracB", "abs(fracB-1/2)")[2];
+probeTypes <- c("all SNPs", "Het SNPs")[2];
 
 keepAllCombinations <- c(TRUE, FALSE)[2];
 figPath <- "figures/col/";
@@ -134,14 +152,16 @@ getNbLociPerState <- function(object) {
 
 <%
 test <- function(fracB, testFUN, output=c("statistic")) {
-  states <- getStates(fracB)
-  us <- na.omit(getUniqueStates(fracB))
-  testFUN(getSignals(fracB)[states==us[1]], getSignals(fracB)[states==us[2]])[[output]]
+  states <- getStates(fracB);
+  us <- na.omit(getUniqueStates(fracB));
+  testFUN(getSignals(fracB)[states==us[1]], getSignals(fracB)[states==us[2]])[[output]];
 }
 %>
 
 <% 
-tstRes <- NULL;
+allTstMeans <- NULL;
+allTstSds <- NULL;
+pcns <- NULL;
 %>
 
 
@@ -154,6 +174,9 @@ firstRegion <- (region==regions[1]);
 print(region);
 region <- parseRegion(region);
 print(region);
+
+## PCN states
+pcns <- c(pcns, attr(region$params$s, "src"));
 %>
 %%%%%%%%
 %% TCN
@@ -167,65 +190,78 @@ cn <- cnList[[1]];
 
 <% tstCol <- c(); %>
 
-<% for (what in c("fracB", "abs(fracB-1/2)")) { %>
-<% for (hetsOnly in c(FALSE, TRUE)) { %>
+<% for (what in evalSignals) { %>
+<% for (probeType in probeTypes) { %>
 <% 
-fracBList <- getFracBList(fracBDsList, what=what, pattern=methodPattern);
+signalList <- getFracBList(fracBDsList, what=what, pattern=methodPattern);
 
 ## remove NAs
-fracBList <- lapply(fracBList, FUN=function(fracB) {
+signalList <- lapply(signalList, FUN=function(fracB) {
   isNA <- is.na(getSignals(fracB))
   fracB <- extractSubset(fracB, whichVector(!isNA))
 })
 
-fracBList[["TCN"]] <- cn ## Add TCN
-fracBList[["TCN"]]$unit <- fracBList[[1]]$unit;
+signalList[["TCN"]] <- cn ## Add TCN
+signalList[["TCN"]]$unit <- signalList[[1]]$unit;
 
-whom <- ifelse(hetsOnly, "Hets", "All SNPs")
-
-if (hetsOnly) {
-  fracBList <- sapply(genTags, FUN=function(genTag) {
-    extractHeterozygous(fracBList, gcDsList[[genTag]], gcsDsList[[genTag]], confQuantile=confQuantile)
+if (probeType=="Het SNPs") {
+  signalList <- sapply(genTags, FUN=function(genTag) {
+    extractHeterozygous(signalList, gcDsList[[genTag]], gcsDsList[[genTag]], confQuantile=confQuantile)
   });
 
-  dn <- dimnames(fracBList)
+  dn <- dimnames(signalList)
   nms <- sapply(dn[[2]], FUN=function(nm) sprintf("%s,%s", dn[[1]], nm));
   nms <- as.character(nms)
 
   patts <- c("raw", sprintf("%s,%s", dn[[2]], dn[[2]]), "TCN")
   keep <- unlist(sapply(patts, FUN=grep, nms));
-  fracBList <- fracBList[keep]
-  names(fracBList) <- nms[keep]
+  signalList <- signalList[keep]
+  names(signalList) <- nms[keep]
 
   ## Add TCN
-  fracBList[["TCN,SNP+CN"]] <- cn
-  snps <- whichVector(!is.na(fracBList[[1]]$y))
-  fracBList[["TCN,SNP"]] <- extractSubset(cn, snps)
+  signalList[["TCN,SNP+CN"]] <- cn
+  snps <- whichVector(!is.na(signalList[[1]]$y))
+  signalList[["TCN,SNP"]] <- extractSubset(cn, snps)
 
   ## keep only some combinations for the evaluation
   if (!keepAllCombinations) {
-    keep <- grep(rocCurvesPattern, names(fracBList))
-    fracBList <- fracBList[keep];
+    keep <- grep(rocCurvesPattern, names(signalList))
+    signalList <- signalList[keep];
   }
 }
-str(fracBList);
+str(signalList);
 
-if (!fixedNbPoints) {
-minNbPoints <- min(sapply(fracBList, FUN=function(fracB) {
+if (!fixedNbPointsAcrossRegions && fixedNbPointsAcrossMethods) {
+minNbPoints <- min(sapply(signalList, FUN=function(fracB) {
   table(getStates(fracB));
 }));
 }
-fracBList <- lapply(fracBList, FUN=getBalancedRegions, minNbPoints);
 %>
 
 <%
-tst <- sapply(fracBList, FUN=test, testFUN=testFUN, output=output)
-names(tst) <- names(fracBList)
-tstRes[[what]][[whom]] <- cbind(tstRes[[what]][[whom]], tst) 
+tstB <- sapply(1:B, function(x) {
+  cat(verbose, "b=", x);
+  if (fixedNbPointsAcrossMethods) {
+    signalListB <- lapply(signalList, FUN=getBalancedRegions, minNbPoints);
+  } else {
+    signalListB <- signalList;
+  }
+  tst <- sapply(signalListB, FUN=test, testFUN=testFUN, output=output)
+})
+if (output=="p.value") {
+  tstB <- -log(tstB)
+}
+tstB <- abs(tstB);
 
+tstMeans <- rowMeans(tstB);
+tstSds <- rowSds(tstB);
+
+names(tstMeans) <- names(signalList);
+allTstMeans[[what]][[probeType]] <- cbind(allTstMeans[[what]][[probeType]], tstMeans);
+allTstSds[[what]][[probeType]] <- cbind(allTstSds[[what]][[probeType]], tstSds);
 %>
 
-<%   } ## for (hetsOnly ...%>
+<%   } ## for (probeType ...%>
 <% } ## for (what ...%>
 
 <% } # for (region in regions) %>
@@ -235,22 +271,34 @@ tstRes[[what]][[whom]] <- cbind(tstRes[[what]][[whom]], tst)
 
 <%
 if (require(xtable)) {
-for (what in c("fracB", "abs(fracB-1/2)")) {
-for (hetsOnly in c(FALSE, TRUE)) {
-
-  whom <- ifelse(hetsOnly, "Hets", "All SNPs")
-  tab <- tstRes[[what]][[whom]];
-  if (output=="p.value") 
-    tab <- -log(tab)
-  tab <- abs(tab)
-  tab <- round(tab, 2)
+for (what in evalSignals) {
+for (probeType in probeTypes) {
+  tstMeans <- allTstMeans[[what]][[probeType]];
+  tstSds <- allTstSds[[what]][[probeType]];
+  stopifnot(all.equal(dim(tstMeans), dim(tstSds)));
+  if (doB) {
+    tab <- sprintf("%.2f%s%.2f", tstMeans, pmTag, tstSds);
+  } else {
+    tab <- sprintf("%.2f", tstMeans);    
+  }
+  tab <- matrix(tab, nrow(tstMeans), ncol(tstMeans));
+  rownames(tab) <- names(signalList);
+  colnames(tab) <- pcns;
   what2 <- ifelse(what=="fracB","beta", "rho")
   output2 <- ifelse(output=="statistic", "test statistics", "p-value")
-  caption <- sprintf("%s %s of the null hypothesis of equal distribution before and after each ASCN change point (%s): raw or TumorBoost-normalized %s, and total copy number (last line). The larger value, the more different the distributions are. N: normal; G: gain; NL: copy number neutral LOH; D: deletion.", testLabel, output2, whom, what2)
-  label <- sprintf("tab%s%s%s", testName, what2, toCamelCase(whom))
+  txtB <- "";
+  if (doB) {
+    txtB <-sprintf("Mean %s standard deviation of %s subsamplings of the original data set. ", pmTag, B);
+  } 
+   caption <- sprintf("%s %s of the null hypothesis of equal mean before and after each PCN change point (%s): raw or TumorBoost-normalized %s, and total copy number (last line). %sThe larger value, the more different the distributions are.", testLabel, output2, probeType, what2, txtB)
+  label <- sprintf("tab%s%s%s", testName, what2, toCamelCase(probeType))
+  xt <- xtable(tab, caption=caption, label=label);
+  buf <- capture.output(print(xt));
+  buf <- sprintf("%s\n", buf);
+  tabStr <- gsub(pmTag, "$\\pm$", buf, fixed=TRUE);
 %>
-<%=print(xtable(tab, caption=caption, label=label)) %>
-<%   } ## for (hetsOnly ...%>
+<%=print(tabStr) %>
+<%   } ## for (probeType ...%>
 <% } ## for (what ...%>
 <% } %>
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
