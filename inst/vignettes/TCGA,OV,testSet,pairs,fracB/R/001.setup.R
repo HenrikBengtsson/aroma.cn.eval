@@ -6,7 +6,8 @@ rootPath <- "totalAndFracBData"
 dataSets <- c(
   "TCGA,OV,testSet,pairs,Broad,ismpolish",
   "TCGA,OV,testSet,pairs,Broad,ACC,ra,-XY,BPN,-XY,AVG,FLN,-XY",
-  "TCGA,OV,testSet,pairs,Stanford,BeadStudio"
+  "TCGA,OV,testSet,pairs,Stanford,BeadStudio",
+  "TumorBoostPaper,Broad,CRMAv2"
 );
 
 flavors <- c("v1", "v2", "v3", "v4", "v5");
@@ -47,10 +48,13 @@ regions <- c(
              "TCGA-23-1027:Chr10@80-109,cp=94+/-0.5,s=0/2", ## deletion
 ##              "TCGA-23-1027:Chr10@106.4-113.6,cp=110+/-0.25,s=2/3", ## deletion -> CN LOH
              "TCGA-23-1027:Chr10@106.5-113.5,cp=110+/-0.5,s=2/3", ## deletion -> CN LOH
-             "TCGA-23-1027:Chr2@55.0-75.0,cp=65.0+/-0.5,s=0/1" ## "FALSE BREAKPOINT #2"
+             "TCGA-23-1027:Chr2@55.0-75.0,cp=65.0+/-0.5,s=0/1", ## "FALSE BREAKPOINT #2"
+             "TCGA-04-1335:Chr5@0.70-140.0,cp=105.0+/-18.0,s=0/1",
+             "TCGA-12-0620:Chr17@0-50.0,cp=23.0+/-2.0,s=0/3"
              );
 
 ## regions <- regions[1:5]
 ## regions <- regions[9]
-regions <- regions[c(3:4, 8:9)]
-regions <- regions[4]
+## regions <- regions[c(3:4, 8:9)]
+## regions <- regions[4]
+regions <- regions[12];

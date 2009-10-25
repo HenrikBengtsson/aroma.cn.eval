@@ -33,8 +33,8 @@ trackAspect <- 0.22;
 trackWidth <- 0.9;
 
 binCounts <- c(1, 1.25, 1.5, 2, 3, 4); rocCols <- 2;
-## binCounts <- binCounts[c(1, 4:6)];
-binCounts <- binCounts[union(1, length(binCounts))];
+binCounts <- binCounts[c(1, 4:6)];
+## binCounts <- binCounts[union(1, length(binCounts))];
 
 byCount <- c(TRUE, FALSE)[1];
 
@@ -51,7 +51,7 @@ if (regexpr("ismpolish", dataSet) != -1) {
   docTags <- "ismpolish";
   genTags <- c("Birdseed", "NGC");
   rocCurvesPattern <- "^(raw|TCN),Birdseed$|^TBN";
-} else if (regexpr("ACC,ra,-XY,BPN,-XY,AVG,FLN,-XY", dataSet) != -1) {
+} else if (regexpr("(ACC,ra,-XY,BPN,-XY,AVG,FLN,-XY|CRMAv2)", dataSet) != -1) {
   docTags <- "CRMAv2";
   genTags <- c("Birdseed", "NGC");
   rocCurvesPattern <- "^(raw|TCN),Birdseed$|^TBN";
