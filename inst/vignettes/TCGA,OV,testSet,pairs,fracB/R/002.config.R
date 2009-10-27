@@ -9,7 +9,7 @@ addSdEst <- FALSE;
 
 addBinTrack <- TRUE;
 doRocCurves <- TRUE;
-plotAllRocCurves <- FALSE;
+plotAllRocCurves <- c(TRUE, FALSE)[2];
 doFracB <- c(TRUE, FALSE)[1];
 plotTracks <- c(TRUE, FALSE)[1];
 
@@ -26,8 +26,10 @@ kappaMain <- 0.5;
 if (!tumorPurify) {
    kappaMain <- 1;
 };
-
-
+useFixedNbrOfPoints <- TRUE;
+fixedNbrOfPoints <- 100000; ## not used if useFixedNbrOfPoints
+useFixedSeed <- FALSE;
+seed <- 1; ## not used if !useFixedSeed
 
 trackAspect <- 0.22;
 trackWidth <- 0.9;

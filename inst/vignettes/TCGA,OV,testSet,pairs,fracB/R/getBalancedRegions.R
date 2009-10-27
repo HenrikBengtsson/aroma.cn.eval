@@ -1,6 +1,6 @@
-################################################################################
-# sample data (w/o replacement) to get the same number of points in each state
-################################################################################
+##############################################################
+# sample data to get the same number of points in each state
+##############################################################
 setMethodS3("getBalancedRegions", "SegmentedGenomicSignalsInterface", function(this, minNbP=NULL, ..., verbose=FALSE) {
   
   if (is.null(minNbP)) {
@@ -14,7 +14,7 @@ setMethodS3("getBalancedRegions", "SegmentedGenomicSignalsInterface", function(t
     thisByState <- extractSubsetByState(this, state)
     nbUnits <- length(thisByState$y)
     if (!is.na(state)) {
-      thisByState <- extractSubset(thisByState, sample(nbUnits, minNbP))
+      thisByState <- extractSubset(thisByState, sample(nbUnits, minNbP, ...))
     }
     if (is.null(res)) {
       res <- thisByState
@@ -29,6 +29,8 @@ setMethodS3("getBalancedRegions", "SegmentedGenomicSignalsInterface", function(t
 
 ############################################################################
 # HISTORY:
+# 2009-10-26
+# o Resampling with replacement now allowed (implicitly through '...').
 # 2009-06-30
 # o Created.
 ############################################################################

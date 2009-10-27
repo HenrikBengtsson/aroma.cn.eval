@@ -66,7 +66,7 @@ Then we can assess how well we can detect this changepoint given the two sets of
 Allele~B fractions cannot be easily segmented along the genome "as is", because their distribution in any given region has several modes.  However, if we assume normal genotypes are known and focus on loci that are heterozygous, then $\rho = \vert \beta - 1/2 \vert$ has only one mode and can be segmented easily.
 Here we will use normal genotype calls to identify a set of loci that are heterozygous. We focus on the SNPs in which we are the most confident that they are heterozygous: the evaluation will involve the <%=100*confQuantile%>\% SNPs with highest genotype confidence scores.
 
-Whenever we compare different sets of data we constrain the number of data points to be the same for all data sets by sampling without replacement the minimum number of data points from each data set. Thus we know that we are actually comparing things at the same resolution.
+Whenever we compare different sets of data we constrain the number of data points to be the same for all data sets by sampling the minimum number of data points from each data set. Thus we know that we are actually comparing things at the same resolution.
 
 \subsection{Receiver Operator Characteristic performance}
 One approach is to use Receiver Operator Characteristic (ROC) analysis analogously to what is done in the (single-sample) evaluation method presented in \citet{BengtssonH_etal_2009b}.
@@ -240,10 +240,17 @@ signalList <- lapply(signalList, FUN=function(signal) {
 signalList[["TCN"]] <- cn ## Add TCN
 
 if (byCount) {
-   minNbPoints <- min(sapply(signalList, FUN=function(signal) {
-     table(getStates(signal));
-     }));
-     signalList <- lapply(signalList, FUN=getBalancedRegions, minNbPoints);
+  minNbrOfPoints <- min(sapply(signalList, FUN=function(signal) {
+    table(getStates(signal));
+  }));
+  if (!useFixedNbrOfPoints) {
+    minNbrOfPoints <- fixedNbrOfPoints;
+  }
+
+  if (useFixedSeed) {
+     set.seed(seed);
+   }    
+   signalList <- lapply(signalList, FUN=getBalancedRegions, minNbrOfPoints, replace=TRUE);
 }
 %>
 
@@ -386,10 +393,17 @@ snps <- whichVector(!is.na(signal$y));
 signalList[["TCN,SNP"]] <- extractSubset(cn, snps);
 
 if (byCount) {
-  minNbPoints <- min(sapply(signalList, FUN=function(signal) {
+  minNbrOfPoints <- min(sapply(signalList, FUN=function(signal) {
     table(getStates(signal));
   }));
-  signalList <- lapply(signalList, FUN=getBalancedRegions, minNbPoints);
+  if (!useFixedNbrOfPoints) {
+   binCounts <-  binCounts* fixedNbrOfPoints/minNbrOfPoints;
+    minNbrOfPoints <- fixedNbrOfPoints;
+  }
+  if (useFixedSeed) {
+     set.seed(seed);
+  }    
+  signalList <- lapply(signalList, FUN=getBalancedRegions, minNbrOfPoints, replace=TRUE);
 }
 
 cols <- c(cols,  rep("darkgreen", 2));
@@ -569,7 +583,8 @@ Smoothing is done using the <%=binFFracB%> function.
 
 <%
 binWidths <- binCounts;
-if (!byCount) {
+if (byCount) {
+} else {     
   binWidths <- round(diff(xRange(signalList[[1]]))/(nbrOfLoci(signalList[[1]], na.rm=TRUE)-1)*binWidths)
 }
 %>
@@ -614,7 +629,7 @@ if (!byCount) {
         names(signalSList) <- names(signalList)
 
        if (byCount) {
-         binLabel <- sprintf("Bin size: %g", binWidth);
+         binLabel <- sprintf("Bin size: %g", round(binWidth));
        } else {
          binLabel <- sprintf("Bin width %g kb", binWidth/1e3);
       }
