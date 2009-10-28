@@ -249,8 +249,8 @@ if (byCount) {
 
   if (useFixedSeed) {
      set.seed(seed);
-   }    
-   signalList <- lapply(signalList, FUN=getBalancedRegions, minNbrOfPoints, replace=TRUE);
+   }
+  signalList <- lapply(signalList, FUN=getBalancedRegions, minNbrOfPoints, replace=TRUE);
 }
 %>
 
@@ -472,6 +472,7 @@ row.names(df) <- labels;
 <%
 rhoLim <- c(0, 0.4);
 rhoLab <- expression(rho);
+rhoLabT <- expression(tilde(rho));
 
 cnLim <- c(0, 5);
 cnLab <- expression(C == 2*(theta[T]/theta[N]));
@@ -503,8 +504,12 @@ for (kk in seq(along=signalList)) {
     figTag <- "minorCn";
   } else {
     ylim <- rhoLim;
-    ylab <- rhoLab;
-    figTag <- "MBAF"
+    if (length(grep("TBN", name))) {
+      ylab <- rhoLabT;
+    } else {
+      ylab <- rhoLab;
+    }
+    figTag <- "MBAF";
   }
 
  setStateColorMap(signal,fullResColorMap);
@@ -617,7 +622,11 @@ if (byCount) {
          signalS;
        }
 
-       figName <- sprintf("%s,ROC,%s,%s,binWidth=%s,kappa=%s", region$label, what, robustStr, binWidth, kappaMain);
+       if (kappaMain != 1) {
+         figName <- sprintf("%s,ROC,%s,binWidth=%s,kappa=%s", region$label, robustStr, binWidth, kappaMain);
+       } else {
+         figName <- sprintf("%s,ROC,%s,binWidth=%s", region$label, robustStr, binWidth);
+       }
        if (fig <- figDev(figName, aspect=1, scale=0.5)) {
          ##   layout(matrix(seq(along=binWidths), ncol=rocCols, byrow=TRUE));
          par(mar=c(2.5,2.4,1.3,1)+0.1, mgp=c(1.4,0.3,0), tcl=-0.3, cex=cex);

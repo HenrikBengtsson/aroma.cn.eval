@@ -28,7 +28,7 @@ if (!tumorPurify) {
 };
 useFixedNbrOfPoints <- TRUE;
 fixedNbrOfPoints <- 100000; ## not used if useFixedNbrOfPoints
-useFixedSeed <- FALSE;
+useFixedSeed <- FALSE; ## not implemented satisfactorily yet
 seed <- 1; ## not used if !useFixedSeed
 
 trackAspect <- 0.22;

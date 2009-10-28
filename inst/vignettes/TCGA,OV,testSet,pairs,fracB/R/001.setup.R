@@ -55,8 +55,16 @@ regions <- c(
              "TCGA-12-0620:Chr17@0-50.0,cp=23.0+/-2.0,s=0/3"
              );
 
-## regions <- regions[1:5]
-## regions <- regions[9]
-regions <- regions[c(3:4, 8:9, 5)]
+## regions <- regions[c(3:4, 8:9, 5)]
 ## regions <- regions[4];
 ## regions <- regions[12];
+
+regions <- c(
+             "TCGA-23-1027:Chr2@108-140,cp=124+/-0.5,s=0/1",
+             "TCGA-23-1027:Chr2@125.0-157.0,cp=141.0+/-0.5,s=1/3",
+             "TCGA-23-1027:Chr10@80-109,cp=94+/-0.5,s=0/2", ## deletion
+             "TCGA-23-1027:Chr10@106.5-113.5,cp=110+/-0.5,s=2/3", ## deletion -> CN LOH
+             "TCGA-23-1027:Chr2@55-75.0,cp=65.0+/-0.5,s=0/1" ## "FALSE BREAKPOINT"
+             );
+
+regions <- regions[4];
