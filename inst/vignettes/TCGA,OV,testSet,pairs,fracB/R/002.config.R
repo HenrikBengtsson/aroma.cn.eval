@@ -15,9 +15,9 @@ plotTracks <- c(TRUE, FALSE)[1];
 
 ## options for for plotsByState
 addTrueBetaLines <- FALSE;
-addLinearRegressionLines <- FALSE;
+addLinearRegressionLines <- TRUE;
 addTrueBetaPoints <- FALSE;
-addDiagHorizLines <- FALSE;
+addDiagHorizLines <- TRUE;
 kappasPbs <- c(0.55, 1);
 
 ## options for main
@@ -46,7 +46,7 @@ fpLim <- c(0,0.5);
 robust <- c(FALSE, TRUE)[1];
 robustStr <- ifelse(robust, "median", "mean");
 binFFracB <- ifelse(robust, "median", "mean"); 
-confQuantile <- 1;
+confQuantile <- 0.9;
 
 # Infer document tags
 if (regexpr("ismpolish", dataSet) != -1) {

@@ -161,7 +161,7 @@ if (!exists("gcsDsList", mode="list")) {
   m <- match(genTags, names);
   gcsDsList <- gcsDsList[genTags[which(!is.na(m))]];
   if (sum(is.na(m))) {
-    warning("No matching genotype call data set found for tag: ", paste(genTags[is.na(m)], collapse=","));
+    warning("No matching genotype confidence score data set found for tag: ", paste(genTags[is.na(m)], collapse=","));
   }
 }
 if (length(gcsDsList) == 0) {

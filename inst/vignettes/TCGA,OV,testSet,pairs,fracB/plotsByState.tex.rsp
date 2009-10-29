@@ -565,10 +565,10 @@ for (ss in seq(along=ustates)) {
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % References
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\clearpage
-\bibliography{bioinformatics-journals-abbr,hb-at-maths.lth.se}
+%\clearpage
+%\bibliography{bioinformatics-journals-abbr,hb-at-maths.lth.se}
 %\bibliographystyle{plain}
-\bibliographystyle{natbib}
+%\bibliographystyle{natbib}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

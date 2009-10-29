@@ -67,4 +67,4 @@ regions <- c(
              "TCGA-23-1027:Chr2@55-75.0,cp=65.0+/-0.5,s=0/1" ## "FALSE BREAKPOINT"
              );
 
-regions <- regions[4];
+## regions <- regions[4];
