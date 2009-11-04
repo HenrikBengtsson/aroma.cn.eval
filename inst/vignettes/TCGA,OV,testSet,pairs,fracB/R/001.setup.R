@@ -8,7 +8,8 @@ dataSets <- c(
   "TCGA,GBM,onePair,Broad,ismpolish",
   "TCGA,OV,testSet,pairs,Broad,ismpolish",
   "TCGA,OV,testSet,pairs,Broad,ACC,ra,-XY,BPN,-XY,AVG,FLN,-XY",
-  "TCGA,OV,testSet,pairs,Stanford,BeadStudio",
+  "TCGA,OV,testSet,pairs,Stanford,BeadStudio,XY",
+  "TCGA,OV,testSet,pairs,Stanford,BeadStudio,BAF",
   "TumorBoostPaper,Broad,CRMAv2"
 );
 

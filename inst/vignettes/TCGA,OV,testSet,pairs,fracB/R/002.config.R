@@ -65,7 +65,7 @@ if (regexpr("ismpolish", dataSet) != -1) {
   throw("Cannot infer ('docTags', 'genTags') from 'dataSet': ", dataSet);
 }
 
-genTag <- genTags[2];
+genTag <- genTags[length(genTags)];
 
 
 docPath <- sprintf("doc-%s", docTags);
