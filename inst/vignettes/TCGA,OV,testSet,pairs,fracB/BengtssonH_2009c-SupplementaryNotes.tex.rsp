@@ -17,8 +17,21 @@
 verbose && enter(verbose, "Setup");
 sourceDirectory("R/");
 
+fpLim <- c(0,0.6);
 addLegend <- TRUE;
 addSdEst <- FALSE;
+trackWidth <- 0.9;
+
+doB <- TRUE;
+B <- 100;
+pmTag <- "@plusOrMinus@";
+
+fixedNbPointsAcrossMethods <- c(TRUE, FALSE)[1];
+
+output <- c("statistic", "p.value")[1];
+
+# used when fixedNbPointsAcrossRegions is TRUE
+minNbPoints <- 250;
 
 figForce <- 1;
 
@@ -38,7 +51,12 @@ smoothedColorMap <- c("*" = "#6666FF", "NA" = "#999999");
 homCol <- 2;
 hetCol <- 1;
 
-# regions <- regions[1];
+evalSignals <- c("fracB", "abs(fracB-1/2)")[2];
+probeTypes <- c("all SNPs", "Het SNPs")[2];
+
+keepAllCombinations <- c(TRUE, FALSE)[2];
+
+#regions <- regions[1:2];
 %>
 
 
@@ -138,8 +156,9 @@ df <- getFile(fracBDsList[[1]],1);
 tumorName <- getName(df);
 normalName <- sub("ref=", "", getTags(df)[1]);
 pairName <- paste(tumorName, normalName, sep=" / ");
+chipTypeEsc <- gsub("_", "\\_", chipType, fixed=TRUE);
 %>
-The evaluation is this report is based on the tumor/normal pair (<%=tumorName%>,<%=normalName%>) for individual <%=tumorName%> in the data set <%=dataSet%>.  The data was generated on the <%=platform%> <%=chipType%> chip type.  
+The evaluation is this report is based on the tumor/normal pair (<%=tumorName%>,<%=normalName%>) for individual <%=tumorName%> in the data set <%=dataSet%>.  The data was generated on the <%=platform%> <%=chipTypeEsc%> chip type.  
 
 <% if (platform == "Affymetrix") { %>
 For Affymetrix, there is one CEL file per hybridization.  Each CEL file was preprocessed separately using CRMAv2~\cite{BengtssonH_etal_2009b}, without relying neither on reference samples nor prior estimates.
@@ -191,6 +210,7 @@ Chr & Region & Change point & Margin & Before & After \\
 \hline
 <% for (region in regions) { %>
 <%
+firstRegion <- (region==regions[1]);
 region <- parseRegion(region);
 str(region);
 sample <- region$name;
@@ -261,6 +281,10 @@ test <- function(signal, testFUN, output=c("statistic")) {
   us <- na.omit(getUniqueStates(signal));
   testFUN(getSignals(signal)[states==us[1]], getSignals(signal)[states==us[2]])[[output]];
 } # test()
+
+allTstMeans <- NULL;
+allTstSds <- NULL;
+pcns <- NULL;
 %>
 
 
@@ -314,7 +338,6 @@ colnames(testStat) <- "ks";
 display <- c("s", rep("fg", ncol(testStat)));
 %>
 
-<% if (require(xtable)) { %>
 \subsection{Test statistics: <%=what%>}
 <%=print(xtable(testStat, caption=caption, display=display)) %>
 
@@ -332,7 +355,6 @@ colnames(df) <- names(tbl);
 colnames(df)[colnames(df) == ""] <- "Safety Margin";
 %>
 <%=print(xtable(df, caption=caption)) %>
-<% } ## if (require(xtable)) { %>
 
 <%
 exit(verbose);
@@ -395,7 +417,7 @@ str(signalList);
 
 
 ## Number of het calls for each genotyping method, genome-wide.
-## lapply(gcDsList, function(ds) {
+## lapply(gcDsList, FUN=function(ds) {
 ##     df <- getFile(ds, 1); 
 ##     gens <- extractGenotypes(df); 
 ##     table(gens);
@@ -474,18 +496,31 @@ tbl <- sapply(signalList, FUN=getNbLociPerState);
 tbl <- tbl[, 1];
 %>
 
-<% if (require(xtable)) { %>
-
 \subsection{Test statistics: <%=what%>}
 
 <%
-testNames <- c("t", "ks");
+testNames <- c("Student"="t", "Kolmogorov-Smirnov"="ks");
 testStat <- NULL;
-for (testName in testNames) {
+for (testLabel in names(testNames)) {
+  testName <- testNames[testLabel];
   fcnName <- sprintf("%s.test", testName);
   testFUN <- get(fcnName, mode="function");
   testStat <- rbind(testStat, sapply(signalList, FUN=test, testFUN=testFUN));
-}
+  rm(testFUN);
+
+  ## constrain the nb of point to be the same across regions?
+  fixedNbPointsAcrossRegions <- (testName == "t");
+
+  ## a combination not implemented yet:
+  if (!fixedNbPointsAcrossMethods) {
+    if (fixedNbPointsAcrossRegions) {
+      warning("Allowing number of points to vary across methods *and* regions");
+      fixedNbPointsAcrossRegions <- FALSE;
+    }
+    doB <- FALSE;
+    B <- 1;
+  }
+} # for (testName ...)
 colnames(testStat) <- names(signalList);
 rownames(testStat) <- testNames;
 
@@ -507,8 +542,6 @@ colnames(df)[colnames(df)==""] <- "Safety Margin";
 row.names(df) <- labels;
 %>
 <%=print(xtable(df, caption=caption)) %>
-
-<% } ## if (require(xtable)) { %>
 
 <% if (plotTracks) { %>
 \clearpage
@@ -543,10 +576,10 @@ for (kk in seq(along=signalList)) {
     addStateLabels <- TRUE;
     ylab <- cnLab;
     figTag <- "ratios"
-  } else if (evalSignal=="majorCn") {
+  } else if (evalSignal == "majorCn") {
     ylab <- expression(C[2]);
     figTag <- "majorCn";
-  } else if (evalSignal=="minorCn") {
+  } else if (evalSignal == "minorCn") {
     ylab <- expression(C[3]);
     figTag <- "minorCn";
   } else {
@@ -723,8 +756,8 @@ if (byCount) {
      } else {
        lines(roc, lwd=3, col=cols[kk], lty=ltys[kk]);
      }
-     pcns <- sapply(states, getRegionPcns);
-     pcnTxt <- apply(pcns, 2, function(x) sprintf("(%s,%s)", x[1], x[2]));
+     pcns <- sapply(states, FUN=getRegionPcns);
+     pcnTxt <- apply(pcns, MARGIN=2, FUN=function(x) sprintf("(%s,%s)", x[1], x[2]));
      pcnTxt <- paste(pcnTxt, collapse=" vs ");
      stext(side=3, pos=0, pcnTxt, line=0, col="#999999", cex=0.8*cex);
      stext(side=4, pos=0, what, col="#999999", line=-0.4);
@@ -744,7 +777,6 @@ if (byCount) {
 \end{figure}
 
 <% 
-if (require(xtable)) {
   ltyLgds <- rep("solid", length(ltys))
   ltyLgds[ltys==2] <- "dashed"
   ltyLgds[ltys==3] <- "dotted"
@@ -757,7 +789,6 @@ if (require(xtable)) {
   caption <- sprintf("Legend of Figure \\ref{fig%s}.", figName)
 %>
 <%=print(xtable(lgd, caption=caption)) %>
-<% } ## if (require(xtable)) %>
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -796,8 +827,8 @@ nbrOfSources <- length(fracBList);
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 %>
 <%
-tbl <- sapply(fracBList, getNbLociPerState)
-stopifnot(all(rowSds(tbl)==0))
+tbl <- sapply(fracBList, FUN=getNbLociPerState);
+stopifnot(all(rowSds(tbl) == 0));
 tbl <- tbl[, 1]
 %>
 <%  for (kk in seq(along=fracBList)) { %>
@@ -840,7 +871,7 @@ tbl <- tbl[, 1]
         if (addDiagHorizLines) {	
           as <- seq(-1.5, 1.5, by=.1);
           b <- ifelse(name == "raw", 1, 0);
-          la <- lapply(as, function(x) abline(a=x, b=b, col="#999999", lty=1, lwd=1));
+          la <- lapply(as, FUN=function(x) abline(a=x, b=b, col="#999999", lty=1, lwd=1));
 	}
 
         ## boxes
@@ -888,14 +919,12 @@ tbl <- tbl[, 1]
           lmBelow <- lm(betaT[wBelow]~betaN[wBelow]);
           lmAbove <- lm(betaT[wAbove]~betaN[wAbove]);
 
-          if (require(MASS)) {
-            ##           lmBelow <- rlm(betaT[wBelow]~betaN[wBelow], weights=abs(betaN[wBelow]-1/2));
-            ##           lmBelow <- rlm(betaT[wBelow]~betaN[wBelow]);
-            lmBelow <- rlm(yyBelow~xxBelow);
-            ##           lmAbove <- rlm(betaT[wAbove]~betaN[wAbove], weights=abs(betaN[wAbove]-1/2));
-            ##           lmAbove <- rlm(betaT[wAbove]~betaN[wAbove]);
-            lmAbove <- rlm(yyAbove~xxAbove);
-          }
+          ##           lmBelow <- rlm(betaT[wBelow]~betaN[wBelow], weights=abs(betaN[wBelow]-1/2));
+          ##           lmBelow <- rlm(betaT[wBelow]~betaN[wBelow]);
+          lmBelow <- rlm(yyBelow~xxBelow);
+          ##           lmAbove <- rlm(betaT[wAbove]~betaN[wAbove], weights=abs(betaN[wAbove]-1/2));
+          ##           lmAbove <- rlm(betaT[wAbove]~betaN[wAbove]);
+          lmAbove <- rlm(yyAbove~xxAbove);
 
           xb <- 1/2;
           abline(lmBelow, lwd=9, col="white");
@@ -1111,9 +1140,9 @@ nbrOfSources <- length(fracBList);
 %>
 
 <%
-tbl <- sapply(fracBList, getNbLociPerState)
-stopifnot(all(rowSds(tbl)==0))
-tbl <- tbl[, 1]
+tbl <- sapply(fracBList, FUN=getNbLociPerState);
+stopifnot(all(rowSds(tbl) == 0));
+tbl <- tbl[, 1];
 %>
 
 <%  for (kk in seq(along=fracBList)) { %>
@@ -1190,6 +1219,173 @@ tbl <- tbl[, 1]
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
+\clearpage
+\section{Bootstrap estimates of test statistics for all regions}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% BEGIN Regions of interest
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+<% for (testLabel in names(testNames)) { %>
+
+<% 
+allTstMeans <- NULL;
+allTstSds <- NULL;
+pcns <- NULL;
+%>
+
+<% for (region in regions) { %>
+<%
+firstRegion <- (region == regions[1]);
+print(region);
+region <- parseRegion(region);
+print(region);
+%>
+%%%%%%%%
+%% TCN
+%%%%%%%%
+<%
+cnList <- NULL;
+# Extract total CNs 
+cnList <- getCnList(cnDsList, cnList=cnList, what="ratios", force=(figForce > 2));
+cn <- cnList[[1]];
+%>
+
+<%
+## PCN states
+pcns <- c(pcns, attr(region$params$s, "src"));
+%>
+
+<% 
+for (what in evalSignals) { 
+  for (probeType in probeTypes) { 
+
+    signalList <- getFracBList(fracBDsList, what=what, pattern=methodPattern);
+
+    ## remove NAs
+    signalList <- lapply(signalList, FUN=function(fracB) {
+      isNA <- is.na(getSignals(fracB));
+      fracB <- extractSubset(fracB, whichVector(!isNA));
+    });
+
+    signalList[["TCN"]] <- cn; ## Add TCN
+    signalList[["TCN"]]$unit <- signalList[[1]]$unit;
+
+    if (probeType == "Het SNPs") {
+      signalList <- sapply(genTags, FUN=function(genTag) {
+        extractHeterozygous(signalList, gcDsList[[genTag]], gcsDsList[[genTag]], confQuantile=confQuantile);
+      });
+
+      dn <- dimnames(signalList);
+      nms <- sapply(dn[[2]], FUN=function(nm) sprintf("%s,%s", dn[[1]], nm));
+      nms <- as.character(nms);
+
+      patts <- c("raw", sprintf("%s,%s", dn[[2]], dn[[2]]), "TCN");
+      keep <- unlist(sapply(patts, FUN=grep, nms));
+      signalList <- signalList[keep];
+      names(signalList) <- nms[keep];
+
+      ## Add TCN
+      signalList[["TCN,SNP+CN"]] <- cn;
+      snps <- whichVector(!is.na(signalList[[1]]$y))
+      signalList[["TCN,SNP"]] <- extractSubset(cn, snps)
+
+      ## keep only some combinations for the evaluation
+      if (!keepAllCombinations) {
+        keep <- grep(rocCurvesPattern, names(signalList))
+        signalList <- signalList[keep];
+      }
+    } # if (probeType == "Het SNPs")
+    str(signalList);
+
+    if (!fixedNbPointsAcrossRegions && fixedNbPointsAcrossMethods) {
+      minNbPoints <- min(sapply(signalList, FUN=function(fracB) {
+        table(getStates(fracB));
+      }));
+    }
+
+    testName <- testNames[testLabel];
+    fcnName <- sprintf("%s.test", testName);
+    testFUN <- get(fcnName, mode="function");
+
+    width <- getOption("width")-2;
+    pb <- ProgressBar(max=width, stepLength=width/B);
+    reset(pb);
+    tstB <- sapply(1:B, FUN=function(x) {
+      if (fixedNbPointsAcrossMethods) {
+        signalListB <- lapply(signalList, FUN=getBalancedRegions, minNbPoints);
+      } else {
+        signalListB <- signalList;
+      }
+      tst <- sapply(signalListB, FUN=test, testFUN=testFUN, output=output);
+      increase(pb);
+      tst;
+    });
+    cat("\n");
+
+    if (output == "p.value") {
+      tstB <- -log(tstB);
+    }
+    tstB <- abs(tstB);
+
+    tstMeans <- rowMeans(tstB);
+    tstSds <- rowSds(tstB);
+   
+    names(tstMeans) <- names(signalList);
+    allTstMeans[[what]][[probeType]] <- cbind(allTstMeans[[what]][[probeType]], tstMeans);
+    allTstSds[[what]][[probeType]] <- cbind(allTstSds[[what]][[probeType]], tstSds);
+  } ## for (probeType ...)
+} ## for (what ...)
+%>
+
+<% } # for (region in regions) %>
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% END Regions of interest
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+<%
+for (what in evalSignals) {
+  for (probeType in probeTypes) {
+    tstMeans <- allTstMeans[[what]][[probeType]];
+    tstSds <- allTstSds[[what]][[probeType]];
+    # Sanity check
+    stopifnot(all.equal(dim(tstMeans), dim(tstSds)));
+  
+    # Bootstrap results?
+    if (doB) {
+      tab <- sprintf("%.3f%s%.3f", tstMeans, pmTag, tstSds);
+    } else {
+      tab <- sprintf("%.3f", tstMeans);    
+    }
+  
+    tab <- matrix(tab, nrow=nrow(tstMeans), ncol=ncol(tstMeans));
+    rownames(tab) <- names(signalList);
+    colnames(tab) <- pcns;
+    what2 <- ifelse(what == "fracB", "beta", "rho");
+    output2 <- ifelse(output == "statistic", "test statistics", "p-value");
+
+    if (doB) {
+      txtB <- sprintf("Mean %s standard deviation of %s subsamplings of the original data set. ", pmTag, B);
+    } else {
+      txtB <- "";
+    }
+
+    caption <- sprintf("%s %s of the null hypothesis of equal mean before and after each PCN change point (%s): raw or TumorBoost-normalized %s, and total copy number (last line). %sThe larger value, the more different the distributions are.", testLabel, output2, probeType, what2, txtB);
+
+    label <- sprintf("tab%s%s%s", testName, what2, toCamelCase(probeType));
+
+    xt <- xtable(tab, caption=caption, label=label);
+    buf <- capture.output(print(xt));
+    buf <- sprintf("%s\n", buf);
+    tabStr <- gsub(pmTag, "$\\pm$", buf, fixed=TRUE);
+    %><%=print(tabStr)%><%
+   } ## for (probeType ...)
+} ## for (what ...)
+%>
+
+<% } # for (testLabel ...) %>
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1233,6 +1429,7 @@ This report was automatically generated using the R.rsp package.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % HISTORY:
 % 2009-11-24 [HB]
+% o Merged with tables.tex.rsp too.
 % o Merged main.tex.rsp and plotByStates.tex.rsp.
 % 2009-10-06 [PN]
 % o ?
