@@ -1,6 +1,7 @@
 library("aroma.cn.eval");
 library("xtable");
 library("MASS");
+library("RColorBrewer");
 
 setOption(aromaSettings, "output/checksum", TRUE);
 setOption(aromaSettings, "output/path", FALSE);

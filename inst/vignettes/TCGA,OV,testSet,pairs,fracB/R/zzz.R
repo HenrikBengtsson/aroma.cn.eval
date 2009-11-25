@@ -91,6 +91,7 @@ if (length(cnDsList) == 0) {
 ds <- cnDsList[[1]];
 platform <- getPlatform(ds);
 chipType <- getChipType(ds);
+chipTypeEsc <- gsub("_", "\\_", chipType, fixed=TRUE);
 
 # - - - - - - - - - - - - - - - - - - - 
 # Setting up normal genotype data set
@@ -177,6 +178,46 @@ if (length(gcsDsList) == 0) {
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Sanity checks
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Assert that only one sample is studied
+regionsList <- lapply(regions, FUN=parseRegion);
+sampleNames <- sapply(regionsList, FUN=function(x) x$name);
+sampleName <- sampleNames[1];
+stopifnot(all(sampleNames == sampleName));
+
+# Infer the tumor and normal type
+df <- getFile(cnDsList[[1]], 1);
+tags <- getTags(df);
+tags <- grep("^[0-9]{2}[A-Z]$", tags, value=TRUE);
+tags <- sort(tags);
+tumorType <- tags[1];
+normalType <- tags[2];
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Document path
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+docTags <- c(platform, chipType, docTags);
+if (confQuantile < 1) {
+  docTags <- c(docTags, confQuantileTag);
+}
+docTags <- paste(docTags, collapse=",");
+docPath <- sprintf("doc,%s", docTags);
+docPath <- Arguments$getWritablePath(docPath);
+docName <- sprintf("BengtssonH_2009c-SupplementaryNotes,%s", docTags);
+
+pdfName <- sprintf("%s.pdf", docName);
+pdfPathname <- filePath(docPath, pdfName);
+
+figPath <- file.path(docPath, "figures", "col");
+figForce <- 3;
+figDev <- function(..., force=(figForce > 0)) { epsDev(..., path=figPath, force=force) }
+figDev <- function(..., force=(figForce > 0)) { pngDev(..., device=png, path=figPath, force=force) }
+
+docTags <- strsplit(docTags, split=",", fixed=TRUE)[[1]];
 
 ############################################################################
 # HISTORY:

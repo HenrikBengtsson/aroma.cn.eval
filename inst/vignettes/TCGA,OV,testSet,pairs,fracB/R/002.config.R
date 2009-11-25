@@ -47,6 +47,8 @@ robust <- c(FALSE, TRUE)[1];
 robustStr <- ifelse(robust, "median", "mean");
 binFFracB <- ifelse(robust, "median", "mean"); 
 confQuantile <- 0.9;
+confQuantile <- 1.0;
+confQuantileTag <- sprintf("conf=%.0f", 100*confQuantile);
 
 # Infer document tags
 if (regexpr("ismpolish", dataSet) != -1) {
@@ -58,7 +60,7 @@ if (regexpr("ismpolish", dataSet) != -1) {
   genTags <- c("Birdseed", "NGC");
   rocCurvesPattern <- "^(raw|TCN),Birdseed$|^TBN";
 } else if (regexpr("BeadStudio", dataSet) != -1) {
-  docTags <- "BeadStudio";
+  docTags <- gsub(".*,(BeadStudio,[^,]+).*", "\\1", dataSet);
   genTags <- c("NGC");
   rocCurvesPattern <- "^(raw|TCN),NGC$|^TBN";
 } else {
@@ -66,16 +68,3 @@ if (regexpr("ismpolish", dataSet) != -1) {
 }
 
 genTag <- genTags[length(genTags)];
-
-
-docPath <- sprintf("doc-%s", docTags);
-docPath <- Arguments$getWritablePath(docPath);
-docName <- sprintf("main,%s", docTags);
-
-pdfName <- sprintf("%s.pdf", docName);
-pdfPathname <- filePath(docPath, pdfName);
-
-figPath <- file.path(docPath, "figures", "col");
-figForce <- 3;
-figDev <- function(..., force=(figForce > 0)) { epsDev(..., path=figPath, force=force) }
-figDev <- function(..., force=(figForce > 0)) { pngDev(..., device=png, path=figPath, force=force) }
