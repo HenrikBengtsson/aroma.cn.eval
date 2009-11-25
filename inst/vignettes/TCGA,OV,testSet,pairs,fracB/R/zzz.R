@@ -88,6 +88,9 @@ if (length(cnDsList) == 0) {
   throw("No matching data sets found.");
 }
 
+ds <- cnDsList[[1]];
+platform <- getPlatform(ds);
+chipType <- getChipType(ds);
 
 # - - - - - - - - - - - - - - - - - - - 
 # Setting up normal genotype data set
