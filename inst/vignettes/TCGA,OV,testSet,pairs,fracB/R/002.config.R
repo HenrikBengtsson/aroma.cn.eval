@@ -46,7 +46,7 @@ fpLim <- c(0,0.5);
 robust <- c(FALSE, TRUE)[1];
 robustStr <- ifelse(robust, "median", "mean");
 binFFracB <- ifelse(robust, "median", "mean"); 
-confQuantile <- 0.9;
+confQuantile <- 1;
 confQuantile <- 1.0;
 confQuantileTag <- sprintf("conf=%.0f", 100*confQuantile);
 

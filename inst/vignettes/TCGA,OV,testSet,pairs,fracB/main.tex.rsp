@@ -58,7 +58,7 @@ smoothedColorMap <- c("*" = "#6666FF", "NA" = "#999999");
 This report provides a single-sample approach to assess the performance of the TumorBoost method.  The results presented herein are intended to complement the results presented in the main manuscript.
 
 \section{Method}
-Consider a local genomic region with loci where there exists exactly one change point in the distribution of the allele B fraction (fracB, or $\beta$) at position $x_0$ and that the true distribution at each side of the changepoint is constant.
+Consider a local genomic region with loci where there exists exactly one change point in the distribution of the allele B fraction (fracB, or $\beta$) at position $x_0$.
 
 Assume that we can (visually) identify this changepoint and with very high confidence locate it to be within $[x_0-\delta, x_0+\delta)$ where we refer to $\delta$ as the safety margin on each side of the changepoint.
 Then we can assess how well we can detect this changepoint given the two sets of data points one each side of changepoint with the safety margin excluded.
@@ -129,7 +129,7 @@ getQuantStates <- function(states, evalSignal=c("TCN", "abs(fracB-1/2)", "minorC
 }
 %>
 
-\subsection{List of change points}
+\subsection*{List of change points}
 For this data set, we have selected a few regions for which one safely can assume there exists a single changepoint and for which the fracB distribution looks constant.  This selection was done visually.  For each region we chose large enough safety margin such that the risk for the two sets $\mathcal{J}_A$ and $\mathcal{J}_B$ to contain loci from the other set is extremely small.  
 
 \begin{table}[htp]

@@ -545,7 +545,7 @@ for (ss in seq(along=ustates)) {
     } # if (figDev(...)) 
     %>\resizebox{0.49\textwidth}{!}{\includegraphics{<%=figPath%>/<%=fig$fullname%>}}
   \end{center}
-  \caption{<%=names(tbl)[ss]%>.}
+  \caption{Density of raw (dashed lines) and TumorBoost-normalized (solid lines) allele B fractions.}
   \label{fig<%=figName%>}
   \end{figure}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
