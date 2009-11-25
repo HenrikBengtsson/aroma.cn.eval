@@ -60,10 +60,10 @@ This report provides a single-sample approach to assess the performance of the T
 \section{Method}
 Consider a local genomic region with loci where there exists exactly one change point in the distribution of the allele B fraction (fracB, or $\beta$) at position $x_0$ and that the true distribution at each side of the changepoint is constant.
 
-Assume that we can identify this changepoint and with very high confidence locate it to be within $[x_0-\delta, x_0+\delta)$ where we refer to $\delta$ as the safety margin on each side of the changepoint.
+Assume that we can (visually) identify this changepoint and with very high confidence locate it to be within $[x_0-\delta, x_0+\delta)$ where we refer to $\delta$ as the safety margin on each side of the changepoint.
 Then we can assess how well we can detect this changepoint given the two sets of data points one each side of changepoint with the safety margin excluded.
 
-Allele~B fractions cannot be easily segmented along the genome "as is", because their distribution in any given region has several modes.  However, if we assume normal genotypes are known and focus on loci that are heterozygous, then $\rho = \vert \beta - 1/2 \vert$ has only one mode and can be segmented easily.
+Allele~B fractions cannot be easily segmented along the genome "as is", because their distribution in any given region has several modes.  However, if we assume normal genotypes are known and focus on loci that are heterozygous, then $\rho = \vert \beta - 1/2 \vert$ has only one mode and can be segmented easily~\cite{StaafJ_etal_2008}.
 Here we will use normal genotype calls to identify a set of loci that are heterozygous. We focus on the SNPs in which we are the most confident that they are heterozygous: the evaluation will involve the <%=100*confQuantile%>\% SNPs with highest genotype confidence scores.
 
 Whenever we compare different sets of data we constrain the number of data points to be the same for all data sets by sampling the minimum number of data points from each data set. Thus we know that we are actually comparing things at the same resolution.
@@ -73,13 +73,11 @@ One approach is to use Receiver Operator Characteristic (ROC) analysis analogous
 Given the changepoint and excluding all loci within the safety margin, the remaining $J$ loci are split up in two data sets $\mathcal{J}_A = \{x_j \leq x_0 - \delta; j=1,\ldots,J\}$ and $\mathcal{J}_B = \{x_j > x_0 + \delta; j=1,\ldots,J\}$, where $x_j$ is the position of locus $j$ and $J$ is the total number of loci.  
 Continuing, let $\mathcal{P}_s = \{\rho_j; j \in \mathcal{J}_s\}$ denote the (full-resolution) $\rho$ estimates of set $s \in \{A,B\}$ obtained by one of the preprocessing methods of interest.
 
-Without loss of generality, assume the loci in $\mathcal{J}_A$ correspond to a balanced normal region PSCN=(1,1) and the ones in $\mathcal{J}_B$ correspond to a deletion: PSCN=(1,0).
+Without loss of generality, assume the loci in $\mathcal{J}_A$ correspond to a balanced normal region PCN=(1,1) and the ones in $\mathcal{J}_B$ correspond to a deletion: PCN=(1,0).
 By using a (global) threshold/cutoff $\tau$ we can then call the state for each locus.  We say that locus $j$ belongs to the state $B$ if $\rho_j \leq \tau$. Let $\mathcal{J}_{+} = \{\rho_j \leq \tau; j=1,\ldots,J\}$ be all such loci.  Let $\mathcal{J}_{-} = \{\rho_j > \tau; j=1,\ldots,J\}$ be the remaining loci, which are said to belong to state $A$. 
 %%  As above, let $J_{+}$ and $J_{-}$ be the number of loci in each of these sets.
 Then $\mathcal{J}_{+|B} = \mathcal{J}_{+} \cap \mathcal{J}_{B}$ represents the set of true positives (true deletions correctly called deletions) and $\mathcal{J}_{+|A} = \mathcal{J}_{+} \cap \mathcal{J}_{A}$ represents the set of false positives (true copy neutral loci incorrectly called deletions).
 Finally, with $|\mathcal{J}|$ denoting the cardinality of the set $\mathcal{J}$, we define $\gamma = \gamma(\tau) = |\mathcal{J}_{+|B}| / |\mathcal{J}_{B}| \in [0,1]$ and $\alpha = \alpha(\tau) = |\mathcal{J}_{+|A}| / |\mathcal{J}_{A}| \in [0,1]$ to be the true-positive (TP) rate and the false-positive (FP) rate, respectively.  The Receiver Operator Characteristic (ROC) performance is defined by the ROC curve $R(\tau): \tau \rightarrow (\alpha,\gamma) \in [0,1]^2$.
-
-\paragraph{\bf Note:} Too many $\beta$ here.
 
 
 \subsection{Performance at different levels of resolution}
