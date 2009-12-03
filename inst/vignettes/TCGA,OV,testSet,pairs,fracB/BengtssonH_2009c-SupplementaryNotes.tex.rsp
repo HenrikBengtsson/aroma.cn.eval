@@ -43,6 +43,7 @@ palette <- brewer.pal(n=9, name="Set1");
 
 doB <- TRUE;
 B <- 100;
+B <- 5;
 pmTag <- "@plusOrMinus@";
 
 fixedNbPointsAcrossMethods <- c(TRUE, FALSE)[1];
@@ -56,7 +57,10 @@ minNbPoints <- 250;
 figForce <- FALSE;
 #figForce <- 5;
 
-title <- sprintf("Assessment of the TumorBoost method based on tumor/normal pair %s in the %s %s data set '%s'", sampleName, platform, chipTypeEsc, dataSet);
+title <- sprintf("Supplementary Note: Assessment of TumorBoost based on tumor/normal pair %s in the %s %s data set %s", sampleName, platform, chipTypeEsc, dataSet);
+if (confQuantile < 1) {
+  title <- sprintf("%s using the SNPs with %.0f\\%% highest confidence scores", title, 100*confQuantile);
+}
 authors <- "Henrik Bengtsson, Pierre Neuvial, Terence P. Speed";
 verbose && exit(verbose);
 %>
@@ -127,51 +131,16 @@ keepAllCombinations <- c(TRUE, FALSE)[2];
 This report, which is automatically generated, assess the performance of the TumorBoost method based on a few chane points in a particular tumor/normal pair.
 
 
-\section{Method}
-Consider a local genomic region with loci where there exists exactly one change point in the distribution of the allele B fraction (fracB, or $\beta$) at position $x_0$.
-
-Assume that we can identify this changepoint and with very high confidence locate it to be within $[x_0-\delta, x_0+\delta)$ where we refer to $\delta$ as the safety margin on each side of the changepoint.
-Then we can assess how well we can detect this changepoint given the two sets of data points one each side of changepoint with the safety margin excluded.
-
-Allele~B fractions cannot be easily segmented along the genome "as is", because their distribution in any given region has several modes.  However, if we assume normal genotypes are known and focus on loci that are heterozygous, then $\rho = \vert \beta - 1/2 \vert$ has only one mode and can be segmented easily.
-Here we will use genotype calls (always from the normal sample) to identify a set of loci that are heterozygous.
-We focus on the SNPs in which we are the most confident that they are heterozygous: the evaluation will involve the <%=100*confQuantile%>\% SNPs with highest genotype confidence scores.
-
-Whenever we compare different sets of data we constrain the number of data points to be the same for all data sets by sampling the minimum number of data points from each data set. Thus we know that we are actually comparing things at the same resolution.
-
-\subsection{Receiver Operator Characteristic performance}
-One approach is to use Receiver Operator Characteristic (ROC) analysis analogously to what is done in the (single-sample) evaluation method presented in \citet{BengtssonH_etal_2009b}.
-Given the changepoint and excluding all loci within the safety margin, the remaining $J$ loci are split up in two data sets $\mathcal{J}_A = \{x_j \leq x_0 - \delta; j=1,\ldots,J\}$ and $\mathcal{J}_B = \{x_j > x_0 + \delta; j=1,\ldots,J\}$, where $x_j$ is the position of locus $j$ and $J$ is the total number of loci.  
-Continuing, let $\mathcal{P}_s = \{\rho_j; j \in \mathcal{J}_s\}$ denote the (full-resolution) $\rho$ estimates of set $s \in \{A,B\}$ obtained by one of the preprocessing methods of interest.
-
-Without loss of generality, assume the loci in $\mathcal{J}_A$ correspond to a balanced normal region PSCN=(1,1) and the ones in $\mathcal{J}_B$ correspond to a deletion: PSCN=(1,0).
-By using a (global) threshold/cutoff $\tau$ we can then call the state for each locus.  We say that locus $j$ belongs to the state $B$ if $\rho_j \leq \tau$. Let $\mathcal{J}_{+} = \{\rho_j \leq \tau; j=1,\ldots,J\}$ be all such loci.  Let $\mathcal{J}_{-} = \{\rho_j > \tau; j=1,\ldots,J\}$ be the remaining loci, which are said to belong to state $A$. 
-%%  As above, let $J_{+}$ and $J_{-}$ be the number of loci in each of these sets.
-Then $\mathcal{J}_{+|B} = \mathcal{J}_{+} \cap \mathcal{J}_{B}$ represents the set of true positives (true deletions correctly called deletions) and $\mathcal{J}_{+|A} = \mathcal{J}_{+} \cap \mathcal{J}_{A}$ represents the set of false positives (true copy neutral loci incorrectly called deletions).
-Finally, with $|\mathcal{J}|$ denoting the cardinality of the set $\mathcal{J}$, we define $\gamma = \gamma(\tau) = |\mathcal{J}_{+|B}| / |\mathcal{J}_{B}| \in [0,1]$ and $\alpha = \alpha(\tau) = |\mathcal{J}_{+|A}| / |\mathcal{J}_{A}| \in [0,1]$ to be the true-positive (TP) rate and the false-positive (FP) rate, respectively.  The Receiver Operator Characteristic (ROC) performance is defined by the ROC curve $R(\tau): \tau \rightarrow (\alpha,\gamma) \in [0,1]^2$.
-
-\paragraph{\bf Note:} Too many $\beta$ here.
-
-
-\subsection{Performance at different levels of resolution}
-By smoothing the data points in each set ($s = \{A,B\}$) by binning the loci in non-overlapping bins of width $h$, we can generate a new set of smoothed $\rho$ on which we can do ROC analysis.  Since the smoothed estimates are less noisy, the TP rate will increase at any given FP rate.  The price for achieving this is that the resolution at which we can detect change points decreases.
-
-
-\subsection{Comparing methods}
-For each method $p \in \{\textnormal{raw}; \textnormal{TBN,NGC}; \textnormal{TBN,Birdseed}\}$ we will obtain one ROC curve $R_{p}(\cdot)$. 
-With standard ROC analysis we can then compare the relative performance of the different preprocessing methods.
-
-
-%%For the case where there are two changepoints $x_A$ and $x_B$, we assume (where it is visually "obvious") that they divide up the local region into two similar data sets.  The region within the two breakpoints define the $\mathcal{J}_B$ set and the ones outside the $\mathcal{J}_A$ set.  
-
-
 %=====================================================================
 % Description of data set studied
 %=====================================================================
-\clearpage
+% \clearpage
 \section{Data set}
 
-The evaluation is this report is based on the tumor/normal pair (<%=tumorType%>,<%=normalType%>) for individual <%=sampleName%> in the data set <%=dataSet%>.  The data was generated on the <%=platform%> <%=chipTypeEsc%> chip type.  
+The evaluation is this report is based on the tumor/normal pair (<%=tumorType%>,<%=normalType%>) for individual <%=sampleName%> in the data set <%=dataSet%>. 
+
+\subsection{Preprocessing methods}
+The data was generated on the <%=platform%> <%=chipTypeEsc%> chip type.  
 
 <% if (platform == "Affymetrix") { %>
   For Affymetrix, there is one CEL file per hybridization.
@@ -222,10 +191,18 @@ getQuantStates <- function(states, evalSignal=c("TCN", "abs(fracB-1/2)", "minorC
 %>
 
 
+\subsection{Stratification on genotype confidence scores}
+<% if (confQuantile < 1) { %>
+We focus on the SNPs in which we are the most confident that they are heterozygous: the evaluation will involve the <%=100*confQuantile%>\% SNPs with highest genotype confidence scores.
+<% } else { %>
+  No stratification on genotype confidence scores is done.  All SNPs are used in this evaluation.
+<% } %>
+
+
 %=====================================================================
 % Description of change points studied
 %=====================================================================
-\subsection*{List of change points}
+\subsection{List of change points}
 For this data set, we have selected a few regions for which one safely can assume there exists a single changepoint and for which the fracB distribution looks constant.  This selection was done visually.  For each region we chose large enough safety margin such that the risk for the two sets $\mathcal{J}_A$ and $\mathcal{J}_B$ to contain loci from the other set is extremely small.  
 
 \begin{table}[htb]
@@ -265,7 +242,6 @@ We now compare the  raw, TBN-NGC, and TBN-Birdseed methods using the afformentio
 \clearpage
 \section{Region: <%=region$src%>}
 
-
 <%
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Count the number of loci with each state
@@ -302,8 +278,6 @@ test <- function(signal, testFUN, output=c("statistic")) {
   res[[output]];
 } # test()
 
-allTstMeans <- NULL;
-allTstSds <- NULL;
 pcns <- NULL;
 %>
 
@@ -315,75 +289,10 @@ cnList <- getCnList(cnDsList, cnList=cnList, what="ratios");
 cn <- cnList[[1]];
 %>
 
-
-%%%%%%%%%%%%
-% fracB
-%%%%%%%%%%%%
-
-<% if (doFracB) { %>
-
-<%
-what <- "fracB";
-enter(verbose, what);
-signalList <- getFracBList(fracBDsList, what=what, pattern=methodPattern);
-
-## remove NAs
-signalList <- lapply(signalList, FUN=function(signal) {
-  isNA <- is.na(getSignals(signal));
-  signal <- extractSubset(signal, whichVector(!isNA));
-})
-
-signalList[["TCN"]] <- cn; ## Add TCN
-
-if (byCount) {
-  minNbrOfPoints <- min(sapply(signalList, FUN=function(signal) {
-    table(getStates(signal));
-  }));
-  if (!useFixedNbrOfPoints) {
-    minNbrOfPoints <- fixedNbrOfPoints;
-  }
-
-  if (useFixedSeed) {
-    set.seed(seed);
-  }
-  signalList <- lapply(signalList, FUN=getBalancedRegions, minNbrOfPoints, replace=TRUE);
-} # if (byCount)
-%>
-
-<%
-caption <- sprintf("Test of the null hypothesis of equal distribution of %s before and after the breakpoint: Kolmogorov-Smirnov test statistic. The larger value, the more different the distributions are.", what);
-testStat <- as.matrix(sapply(signalList, FUN=test, testFUN=ks.test));
-rownames(testStat) <- names(signalList);
-colnames(testStat) <- "ks";
-display <- c("s", rep("fg", ncol(testStat)));
-%>
-
-\subsection{Test statistics: <%=what%>}
-<%=print(xtable(testStat, caption=caption, display=display), table.placement="htb!") %>
-
-Note that the number of loci in each state is constrained to be the same for all methods:
-<%
-tbl <- sapply(signalList, FUN=getNbLociPerState);
-## stopifnot(all(rowSds(tbl) == 0));
-tbl <- tbl[, 1];
-
-caption <- "Number of loci in each state.";
-df <- t(sapply(signalList, FUN=function(signal) {
-  table(getStates(signal), exclude=NULL);
-}));
-colnames(df) <- names(tbl);
-colnames(df)[colnames(df) == ""] <- "Safety Margin";
-%>
-<%=print(xtable(df, caption=caption), table.placement="htb!") %>
-
-<%
-exit(verbose);
-%>
-
-<% } ## if (doFracB) { %>
-
 <%
 what <- ifelse(evalSignal == "abs(fracB-1/2)", "mBAF", evalSignal);
+whatStr <- what;
+if (whatStr == "mBAF") whatStr <- "Level of Heterozygosity (LH)";
 %>
 
 %%%%%%%%%%%%
@@ -510,67 +419,15 @@ if (!plotAllRocCurves) {
 } # if (!plotAllRocCurves)
 %>
 
-<%
-tbl <- sapply(signalList, FUN=getNbLociPerState);
-## stopifnot(all(rowSds(tbl) == 0));
-tbl <- tbl[, 1];
-%>
-
-\subsection{Test statistics: <%=what%>}
-
-<%
-testNames <- c("Student"="t", "Kolmogorov-Smirnov"="ks");
-testStat <- NULL;
-for (testLabel in names(testNames)) {
-  testName <- testNames[testLabel];
-  fcnName <- sprintf("%s.test", testName);
-  testFUN <- get(fcnName, mode="function");
-  testStat <- rbind(testStat, sapply(signalList, FUN=test, testFUN=testFUN));
-  rm(testFUN);
-
-  ## constrain the nb of point to be the same across regions?
-  fixedNbPointsAcrossRegions <- (testName == "t");
-
-  ## a combination not implemented yet:
-  if (!fixedNbPointsAcrossMethods) {
-    if (fixedNbPointsAcrossRegions) {
-      warning("Allowing number of points to vary across methods *and* regions");
-      fixedNbPointsAcrossRegions <- FALSE;
-    }
-    doB <- FALSE;
-    B <- 1;
-  }
-} # for (testName ...)
-colnames(testStat) <- names(signalList);
-rownames(testStat) <- testNames;
-
-caption <- sprintf("Significance of the breakpoint in the distributions of %s for heterozygous SNPs:Kolmogorov-Smirnov (equality of the distribution before and after the breakpoint) and Student (equal mean before and after the breakpoint) test statistics. The larger in absolute value, the more significant the breakpoint is.", what);
-display <- c("s", rep("fg", nrow(testStat)));
-%>
-
-<%=print(xtable(t(testStat), caption=caption, display=display), table.placement="htb!") %>
-
-Note that the number of loci in each state is constrained to be the same for all methods:
-
-<%
-caption <- "Number of loci in each state";
-df <- t(sapply(signalList, FUN=function(signal) {
-  table(getStates(signal), exclude=NULL);
-}));
-colnames(df) <- names(tbl);
-colnames(df)[colnames(df) == ""] <- "Safety Margin";
-row.names(df) <- labels;
-%>
-<%=print(xtable(df, caption=caption), table.placement="htb!") %>
 
 <% if (plotTracks) { %>
-\clearpage
-\subsection{<%=what%> tracks}
+%\clearpage
+\subsection{<%=whatStr%> and total copy-number tracks}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % BEGIN FIGURE: eval tracks
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 <%
-rhoLim <- c(0, 0.4);
+rhoLim <- c(0, 1);
 rhoLab <- expression(rho);
 rhoLabT <- expression(tilde(rho));
 
@@ -612,7 +469,7 @@ for (kk in seq(along=signalList)) {
     figTag <- "MBAF";
   }
 
- setStateColorMap(signal,fullResColorMap);
+ setStateColorMap(signal, fullResColorMap);
   
 
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -670,7 +527,7 @@ for (kk in seq(along=signalList)) {
   \resizebox{\trackWidth}{!}{\includegraphics{<%=figPath%>/<%=fig$fullname%>}}
   <% } %>
  \end{center}
- \caption{<%=what%> for region <%=region$src%>. Only heterozygous SNPs are plotted. There are <%=tbl[1]%> loci of state <%=names(tbl)[1]%> ("negatives") and
+ \caption{<%=whatStr%> and total copy numbers for region <%=region$src%>. Only heterozygous SNPs are plotted. There are <%=tbl[1]%> loci of state <%=names(tbl)[1]%> ("negatives") and
   <%=tbl[2]%> loci of state <%=names(tbl)[2]%> ("positives"), where the
   latter are highlighted with a solid bar beneath. 
   In total <%=tbl[3]%> loci within the safety margin were excluded.
@@ -683,7 +540,7 @@ for (kk in seq(along=signalList)) {
 <% } ## if (plotTracks) { %>
 
 %\clearpage
-\subsection{Density plots}
+\subsection{Allele B fraction density plots}
 <%
 verbose && enter(verbose, "Plotting densities");
 what <- "fracB";
@@ -747,7 +604,7 @@ for (ss in seq(along=ustates)) {
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 <%  } # for (ss ...) %>
  \end{center}
- \caption{Density of raw (dashed lines) and TumorBoost-normalized (solid lines) allele B fractions.}
+ \caption{Density of raw (dashed lines) and TumorBoost-normalized (solid lines) allele B fractions for region <%=region$src%>.}
  \label{fig<%=figName%>}
 \end{figure}
 
@@ -756,9 +613,6 @@ for (ss in seq(along=ustates)) {
 
 \clearpage
 \subsection{ROC curves}
-% We focus on heterozygous SNP as called by <%=genTag%>. 
-Smoothing is done using the <%=binFFracB%> function.
-
 <%
 signal <- signalList[[1]];
 nbrOfLoci <- sum(is.finite(signal$y), na.rm=TRUE);
@@ -867,8 +721,7 @@ if (byCount) {
   \resizebox{0.45\textwidth}{!}{\includegraphics{<%=figPath%>/<%=fig$fullname%>}}
 <% } # for (ww ...) %>
 \end{center}
- \caption{(<%=region$src%>) ROC curves for each preprocessing method at the full resolution as well as <%=length(binWidths)-1%> different amounts of smoothing (using the <%=binFFracB%> function).
-}
+ \caption{ROC curves for each preprocessing method at the full resolution as well as <%=length(binWidths)-1%> different amounts of smoothing (using the <%=binFFracB%>() function) for region <%=region$src%>.}
  \label{fig<%=figName%>}
 \end{figure}
 
@@ -1073,7 +926,7 @@ tbl <- tbl[, 1];
       \resizebox{0.34\textwidth}{!}{\includegraphics{<%=figPath%>/<%=fig$fullname%>}}
       <%  } # for (ss ...) %>
     \end{center}
-    \caption{<%=txt%>.}
+    \caption{<%=txt%> for region <%=region$src%>.}
     \label{fig<%=figName%>}
     \end{figure}
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
@@ -1134,7 +987,7 @@ tbl <- tbl[, 1];
       \resizebox{0.34\textwidth}{!}{\includegraphics{<%=figPath%>/<%=fig$fullname%>}}
       <%  } # for (ss ...) %>
     \end{center}
-    \caption{<%=txt%>.}
+    \caption{<%=txt%> for region <%=region$src%>.}
     \label{fig<%=figName%>}
     \end{figure}
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
@@ -1241,7 +1094,7 @@ tbl <- tbl[, 1];
       \resizebox{0.34\textwidth}{!}{\includegraphics{<%=figPath%>/<%=fig$fullname%>}}
  <% } # for (ss ...) %>
     \end{center}
-    \caption{<%=txt%>.}
+    \caption{<%=txt%> for region <%=region$src%>.}
     \label{fig<%=figName%>}
     \end{figure}
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
@@ -1446,7 +1299,7 @@ for (what in evalSignals) {
 \clearpage
 \appendix
 \section{Data files}
-\begin{Verbatim}[fontfamily=helvetica]
+\begin{Verbatim}[fontfamily=helvetica,fontsize=\small]
 <%={x <- capture.output(print(fracBDsList));x <- gsub(": .*/(totalAndFracBData/)", ": \\1", x);paste(x, collapse="\n");}%>
 \end{Verbatim}
 
