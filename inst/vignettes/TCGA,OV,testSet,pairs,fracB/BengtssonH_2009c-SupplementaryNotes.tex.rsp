@@ -43,7 +43,6 @@ palette <- brewer.pal(n=9, name="Set1");
 
 doB <- TRUE;
 B <- 100;
-B <- 5;
 pmTag <- "@plusOrMinus@";
 
 fixedNbPointsAcrossMethods <- c(TRUE, FALSE)[1];
