@@ -28,8 +28,10 @@ if (!tumorPurify) {
 };
 useFixedNbrOfPoints <- TRUE;
 fixedNbrOfPoints <- 100000; ## not used if useFixedNbrOfPoints
-useFixedSeed <- FALSE; ## not implemented satisfactorily yet
-seed <- 1; ## not used if !useFixedSeed
+
+# Use a fixed random seed?
+fixedSeed <- NULL;
+fixedSeed <- 0xbeef;
 
 trackAspect <- 0.22;
 trackWidth <- 0.9;
@@ -46,9 +48,6 @@ fpLim <- c(0,0.5);
 robust <- c(FALSE, TRUE)[1];
 robustStr <- ifelse(robust, "median", "mean");
 binFFracB <- ifelse(robust, "median", "mean"); 
-confQuantile <- 1;
-confQuantile <- 1.0;
-confQuantileTag <- sprintf("conf=%.0f", 100*confQuantile);
 
 # Infer document tags
 if (regexpr("ismpolish", dataSet) != -1) {

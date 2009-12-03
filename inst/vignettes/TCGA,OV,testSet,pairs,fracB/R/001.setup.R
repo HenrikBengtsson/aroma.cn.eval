@@ -18,11 +18,17 @@ flavors <- c("v1", "v2", "v3", "v4", "v5");
 if (interactive()) {
   require("R.menu") || throw("Package not loaded: R.menu");
   dataSet <- textMenu(dataSets, title="Data set:", value=TRUE);
-  flavor <- textMenu(flavors, title="TumorBoost normalization flavor:", value=TRUE);
+  flavor <- "v4";
+#  flavor <- textMenu(flavors, title="TumorBoost normalization flavor:", value=TRUE);
+  confQuantiles <- c(1.0, 0.9);
+  confQuantile <- textMenu(confQuantiles, title="Genotype confidence score threshold:", value=TRUE);
 } else {
   dataSet <- dataSets[4];
   flavor <- "v4";
+  confQuantile <- 1.0;
 }
+
+confQuantileTag <- sprintf("conf=%.0f", 100*confQuantile);
 
 
 # Infer chip type for data set directory
