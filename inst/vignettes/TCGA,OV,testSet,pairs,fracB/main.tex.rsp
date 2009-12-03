@@ -242,12 +242,12 @@ if (byCount) {
     table(getStates(signal));
   }));
   if (!useFixedNbrOfPoints) {
+    binCounts <-  binCounts * fixedNbrOfPoints/minNbrOfPoints;
     minNbrOfPoints <- fixedNbrOfPoints;
   }
-
-  if (useFixedSeed) {
-     set.seed(seed);
-   }
+  if (!is.null(fixedSeed)) {
+    set.seed(fixedSeed);
+  }    
   signalList <- lapply(signalList, FUN=getBalancedRegions, minNbrOfPoints, replace=TRUE);
 }
 %>
@@ -395,11 +395,11 @@ if (byCount) {
     table(getStates(signal));
   }));
   if (!useFixedNbrOfPoints) {
-   binCounts <-  binCounts* fixedNbrOfPoints/minNbrOfPoints;
+    binCounts <-  binCounts* fixedNbrOfPoints/minNbrOfPoints;
     minNbrOfPoints <- fixedNbrOfPoints;
   }
-  if (useFixedSeed) {
-     set.seed(seed);
+  if (!is.null(fixedSeed)) {
+    set.seed(fixedSeed);
   }    
   signalList <- lapply(signalList, FUN=getBalancedRegions, minNbrOfPoints, replace=TRUE);
 }
