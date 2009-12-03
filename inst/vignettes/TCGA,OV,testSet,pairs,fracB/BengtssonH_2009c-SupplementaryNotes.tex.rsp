@@ -137,8 +137,14 @@ output <- c("statistic", "p.value")[1];
 
 fixedNbPointsAcrossMethods <- c(TRUE, FALSE)[1];
 fixedNbPointsAcrossRegions <- c(TRUE, FALSE)[2];
-# Used when fixedNbPointsAcrossRegions is TRUE
-minNbPoints <- 250;
+
+## a combination not implemented yet:
+if (!fixedNbPointsAcrossMethods) {
+  if (fixedNbPointsAcrossRegions) {
+    throw("Not supported yet: fixedNbPointsAcrossRegions == TRUE when fixedNbPointsAcrossMethods == FALSE.");
+  }
+  B <- 1;
+}
 
 verbose && exit(verbose);
 %>
@@ -364,7 +370,7 @@ labels <- strsplit(nms, split="\n", fixed=TRUE);
 labels <- sapply(labels, FUN=function(s) s[1]);
  
 patts <- c("raw", sprintf("%s,%s", dn[[2]], dn[[2]]), "TCN");
-keep <- unlist(sapply(patts, FUN=grep, nms));
+keep <- unlist(sapply(patts, FUN=grep, nms), use.names=FALSE);
 ##    keep <- seq(nms);
 signalList <- signalList[keep];
 names(signalList) <- nms[keep];
@@ -1186,7 +1192,7 @@ for (what in evalSignals) {
       nms <- as.character(nms);
 
       patts <- c("raw", sprintf("%s,%s", dn[[2]], dn[[2]]), "TCN");
-      keep <- unlist(sapply(patts, FUN=grep, nms));
+      keep <- unlist(sapply(patts, FUN=grep, nms), use.names=FALSE);
       signalList <- signalList[keep];
       names(signalList) <- nms[keep];
 
@@ -1203,14 +1209,23 @@ for (what in evalSignals) {
     } # if (probeType == "Het SNPs")
     str(signalList);
 
+    # Explain?!? /HB 2009-12-03
     if (!fixedNbPointsAcrossRegions && fixedNbPointsAcrossMethods) {
       minNbPoints <- min(sapply(signalList, FUN=function(fracB) {
         table(getStates(fracB));
       }));
+    } else {
+      # Not working for CRMAv2 and 90% conf score (=> 219 data points!)?!?
+      minNbPoints <- 250;
+      minNbPoints <- 219;
     }
 
     fcnName <- sprintf("%s.test", testName);
     testFUN <- get(fcnName, mode="function");
+
+    if (!is.null(fixedSeed)) {
+      set.seed(fixedSeed);
+    }
 
     width <- getOption("width")-2;
     pb <- ProgressBar(max=width, stepLength=width/B);
