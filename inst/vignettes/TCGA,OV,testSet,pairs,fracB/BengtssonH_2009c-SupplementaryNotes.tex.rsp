@@ -27,6 +27,10 @@
 %=====================================================================
 <%
 verbose && enter(verbose, "Setup");
+
+# Fix the random seed to get numerically reproducible results
+set.seed(0xbeef);
+
 sourceDirectory("R/");
 
 #regionsList <- regionsList[1];
