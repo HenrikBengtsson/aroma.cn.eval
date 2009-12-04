@@ -38,6 +38,7 @@ setMethodS3("extractListOfFracB", "list", function(this, name, chromosome, regio
     if (!is.null(fracBList)) {
       verbose && cat(verbose, "Found cached results");
       verbose && exit(verbose);
+      stop("SANITY CHECK; WE SHOULD HAVE TURNED OFF ALL MEMOIZATION.");
       return(fracBList);
     }
   }

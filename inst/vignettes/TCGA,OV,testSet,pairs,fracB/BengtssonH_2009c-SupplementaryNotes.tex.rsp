@@ -1209,15 +1209,17 @@ for (what in evalSignals) {
     } # if (probeType == "Het SNPs")
     str(signalList);
 
-    # Explain?!? /HB 2009-12-03
-    if (!fixedNbPointsAcrossRegions && fixedNbPointsAcrossMethods) {
-      minNbPoints <- min(sapply(signalList, FUN=function(fracB) {
-        table(getStates(fracB));
-      }));
-    } else {
-      # Not working for CRMAv2 and 90% conf score (=> 219 data points!)?!?
-      minNbPoints <- 250;
-      minNbPoints <- 219;
+    if (fixedNbPointsAcrossMethods) {
+      if (!fixedNbPointsAcrossRegions) {
+        minNbPoints <- min(sapply(signalList, FUN=function(fracB) {
+          table(getStates(fracB));
+        }));
+      } else {
+        # Now we resample with replacement (for practical purposes)
+        # 100% SNPs => 250 loci, 90% SNPs => 225 loci
+        minNbPoints <- round(confQuantile*250);
+      }
+      verbose && cat(verbose, "Number of points sampled (with replacement) per bootstrap sample: ", minNbPoints);
     }
 
     fcnName <- sprintf("%s.test", testName);
@@ -1232,7 +1234,7 @@ for (what in evalSignals) {
     reset(pb);
     tstB <- sapply(1:B, FUN=function(x) {
       if (fixedNbPointsAcrossMethods) {
-        signalListB <- lapply(signalList, FUN=getBalancedRegions, minNbPoints);
+        signalListB <- lapply(signalList, FUN=getBalancedRegions, minNbPoints, replace=TRUE);
       } else {
         signalListB <- signalList;
       }

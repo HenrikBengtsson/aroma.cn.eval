@@ -20,7 +20,7 @@ if (interactive()) {
   dataSet <- textMenu(dataSets, title="Data set:", value=TRUE);
   flavor <- "v4";
 #  flavor <- textMenu(flavors, title="TumorBoost normalization flavor:", value=TRUE);
-  confQuantiles <- c(1.0, 0.9);
+  confQuantiles <- c(1.00, 0.95, 0.90);
   confQuantile <- textMenu(confQuantiles, title="Genotype confidence score threshold:", value=TRUE);
 } else {
   dataSet <- dataSets[4];

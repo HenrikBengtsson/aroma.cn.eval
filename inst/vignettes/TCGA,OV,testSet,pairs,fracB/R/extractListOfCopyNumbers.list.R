@@ -38,6 +38,7 @@ setMethodS3("extractListOfCopyNumbers", "list", function(this, name, chromosome,
     if (!is.null(cnList)) {
       verbose && cat(verbose, "Found cached results");
       verbose && exit(verbose);
+      stop("SANITY CHECK; WE SHOULD HAVE TURNED OFF ALL MEMOIZATION.");
       return(cnList);
     }
   }
