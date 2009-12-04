@@ -1,7 +1,7 @@
 ############################################################################
 #
 ############################################################################
-setMethodS3("extractListOfCopyNumbers", "list", function(this, name, chromosome, region=NULL, targetChipType=NULL, truth=NULL, what=what, ..., force=TRUE, verbose=FALSE) {
+setMethodS3("extractListOfCopyNumbers", "list", function(this, name, chromosome, region=NULL, targetChipType=NULL, truth=NULL, what=what, ..., force=TRUE, cache=FALSE, verbose=FALSE) {
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # Validate arguments
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -91,8 +91,10 @@ setMethodS3("extractListOfCopyNumbers", "list", function(this, name, chromosome,
     stopifnot(length(unique(nbrOfUnits)) == 1);
   }
 
-  # Save cache
-  saveCache(cnList, key=key, dirs=dirs);
+  # Save cache?
+  if (cache) {
+    saveCache(cnList, key=key, dirs=dirs);
+  }
 
   verbose && exit(verbose);
 

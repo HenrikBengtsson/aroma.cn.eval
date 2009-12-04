@@ -93,8 +93,7 @@ test <- function(signal, testFUN, output=c("statistic")) {
 # Graphical settings
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # BUG: figForce must be TRUE
-figForce <- FALSE;
-#figForce <- 5;
+figForce <- TRUE;
 
 palette <- brewer.pal(n=9, name="Set1");
 
@@ -116,7 +115,6 @@ trackWidth <- 0.9;
 addDiagHorizLines <- TRUE;
 plotSmoothScatter <- FALSE;
 
-#regionsList <- regionsList[1];
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Misc.
@@ -145,6 +143,9 @@ if (!fixedNbPointsAcrossMethods) {
   }
   B <- 1;
 }
+
+#regionsList <- regionsList[2];
+#B <- 5;
 
 verbose && exit(verbose);
 %>
@@ -1321,14 +1322,33 @@ for (what in evalSignals) {
 \bibliographystyle{natbib}
 
 
+
 %=====================================================================
 % Data files
 %=====================================================================
 \clearpage
 \appendix
 \section{Data files}
+\section{Total copy numbers}
 \begin{Verbatim}[fontfamily=helvetica,fontsize=\small]
-<%={x <- capture.output(print(fracBDsList));x <- gsub(": .*/(totalAndFracBData/)", ": \\1", x);paste(x, collapse="\n");}%>
+<%
+dsList <- getCnList(cnDsList, what="ratios");
+x <- capture.output(print(dsList));
+x <- gsub(": .*/(totalAndFracBData/)", ": \\1", x);
+x <- paste(x, collapse="\n");
+%>
+<%=x%>
+\end{Verbatim}
+
+\section{Allele B fractions}
+\begin{Verbatim}[fontfamily=helvetica,fontsize=\small]
+<%
+dsList <- getFracBList(fracBDsList, what="fracB", pattern=methodPattern);
+x <- capture.output(print(dsList));
+x <- gsub(": .*/(totalAndFracBData/)", ": \\1", x);
+x <- paste(x, collapse="\n");
+%>
+<%=x%>
 \end{Verbatim}
 
 

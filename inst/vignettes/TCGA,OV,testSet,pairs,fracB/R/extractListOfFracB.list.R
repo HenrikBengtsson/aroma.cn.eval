@@ -1,7 +1,7 @@
 ############################################################################
 #
 ############################################################################
-setMethodS3("extractListOfFracB", "list", function(this, name, chromosome, region=NULL, targetChipType=NULL, truth=NULL, what=NULL, ..., force=TRUE, verbose=FALSE) {
+setMethodS3("extractListOfFracB", "list", function(this, name, chromosome, region=NULL, targetChipType=NULL, truth=NULL, what=NULL, ..., force=TRUE, cache=FALSE, verbose=FALSE) {
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # Validate arguments
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -94,8 +94,10 @@ setMethodS3("extractListOfFracB", "list", function(this, name, chromosome, regio
     stopifnot(length(unique(nbrOfUnits)) == 1);
   }
 
-  # Save cache
-  saveCache(fracBList, key=key, dirs=dirs);
+  # Save cache?
+  if (cache) {
+    saveCache(fracBList, key=key, dirs=dirs);
+  }
 
   verbose && exit(verbose);
 
