@@ -177,8 +177,6 @@ if (length(gcsDsList) == 0) {
 # Coerce genotype calls and confidence scores into a list
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-
-
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Sanity checks
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -188,6 +186,37 @@ sampleNames <- sapply(regionsList, FUN=function(x) x$name);
 sampleName <- sampleNames[1];
 stopifnot(all(sampleNames == sampleName));
 
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Filter out the data sets matching the method pattern
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+if (!is.null(methodPattern)) {
+  verbose && cat(verbose, "Method pattern: ", methodPattern);
+
+  dsList <- fracBDsList;
+  verbose && print(verbose, names(dsList));
+  keep <- (regexpr(methodPattern, names(dsList)) != -1);
+  verbose && print(verbose, keep);
+  dsList <- dsList[keep];
+  # Sanity check
+  if (length(dsList) == 0) {
+    throw("No data sets remaining after name pattern filtering.");
+  }
+  fracBDsList <- dsList;
+}
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Drop all samples but the one of interest
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+cnDsList <- lapply(cnDsList, FUN=function(ds) {
+  ds <- extract(ds, indexOf(ds, sampleName));
+});
+print(cnDsList);
+fracBDsList <- lapply(fracBDsList, FUN=function(ds) {
+  ds <- extract(ds, indexOf(ds, sampleName));
+});
+print(fracBDsList);
+
 # Infer the tumor and normal type
 df <- getFile(cnDsList[[1]], 1);
 tags <- getTags(df);
@@ -195,6 +224,7 @@ tags <- grep("^[0-9]{2}[A-Z]$", tags, value=TRUE);
 tags <- sort(tags);
 tumorType <- tags[1];
 normalType <- tags[2];
+
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -221,6 +251,8 @@ docTags <- strsplit(docTags, split=",", fixed=TRUE)[[1]];
 
 ############################################################################
 # HISTORY:
+# 2009-12-04
+# o Now only one sample per data set is kept.
 # 2009-06-18
 # o Now use 'loadAllDataSets' to retrieve genotype calls and confidence scores.
 # 2009-06-18
