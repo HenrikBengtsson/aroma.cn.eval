@@ -207,8 +207,8 @@ authors <- "Henrik Bengtsson, Pierre Neuvial, Terence P. Speed";
 % Introduction
 %=====================================================================
 \section{Introduction}
-This report, which is automatically generated, assess the performance of the TumorBoost method based on a few chane points in a particular tumor/normal pair.
-For more details on the evaluation methods, see the main TumorBoost manuscript and the Supplementary Note 'Methods for assessing the performance of the TumorBoost normalization method'.
+This report, which is automatically generated, assesses the performance of the TumorBoost method based on a few change points in a particular tumor/normal pair.
+For more details on the evaluation methods, see the main TumorBoost manuscript.
 
 
 
@@ -222,9 +222,8 @@ The evaluation is this report is based on the tumor/normal pair (<%=tumorType%>,
 
 \subsection{Preprocessing methods}
 The data was generated on the <%=platform%> <%=chipTypeEsc%> chip type.  
-
 <% if (platform == "Affymetrix") { %>
-  For Affymetrix, there is one CEL file per hybridization.
+  There is one CEL file per hybridization.
   <% if (is.element("CRMAv2", docTags)) { %>%
   Each CEL file was preprocessed separately using CRMAv2~\cite{BengtssonH_etal_2009b}, without relying neither on reference samples nor prior estimates.
   <% } %>%
@@ -233,10 +232,10 @@ The data was generated on the <%=platform%> <%=chipTypeEsc%> chip type.
   <% } %>%
 <% } else if (platform == "Illumina") { %>%
   <% if (is.element("XY", docTags)) { %>%
-  Each Illumina array was preprocessed separately using Birdseed's "XY-normalization" method, which is principle is a single-array method that relies neither on reference samples nor prior estimates.
+  Each array was preprocessed separately using Birdseed's "XY-normalization" method, which is principle is a single-array method that relies neither on reference samples nor prior estimates.
   <% } %>%
   <% if (is.element("BAF", docTags)) { %>%
-  Each Illumina array was preprocessed using Birdseed's "BAF" normalization method~\cite{PeifferD_etal_2006}, which is a multi-array (population-based) method.
+  Each array was preprocessed using Birdseed's "BAF" normalization method~\cite{PeifferD_etal_2006}, which is a multi-array (population-based) method.
   <% } %>%
 <% } %>
 
@@ -246,7 +245,7 @@ The data was generated on the <%=platform%> <%=chipTypeEsc%> chip type.
 <% if (confQuantile < 1) { %>
 We focus on the SNPs in which we are the most confident that they are heterozygous: the evaluation will involve the <%=100*confQuantile%>\% SNPs with highest genotype confidence scores.
 <% } else { %>
-  No stratification on genotype confidence scores is done.  All SNPs are used in this evaluation.
+  No stratification on genotype confidence scores is done.  All heterozygous SNPs are used in this evaluation.
 <% } %>
 
 
@@ -254,7 +253,7 @@ We focus on the SNPs in which we are the most confident that they are heterozygo
 % Description of change points studied
 %=====================================================================
 \subsection{List of change points}
-For this data set, we have selected a few regions for which one safely can assume there exists a single changepoint and for which the fracB distribution looks constant.  This selection was done visually.  For each region we chose large enough safety margin such that the risk for the two sets $\mathcal{J}_A$ and $\mathcal{J}_B$ to contain loci from the other set is extremely small.  
+For this data set, we have selected a few regions for which one can safely assume that there exists a single copy number change point. By definition, each change point separates two sets of genomic loci such that the true Level of Heterozygosity (LH) is the same within one set of loci but differs between the two sets.  These regions were selected visually. For each region we chose a large enough safety margin to make our evaluation independent of the uncertainty on the true location of the change point.
 
 \begin{table}[htb]
 \begin{center}
@@ -276,7 +275,7 @@ for (region in regionsList) {
 \label{tblRegions}
 \end{table}
 
-We next compare the  raw, TBN-NGC, and TBN-Birdseed methods using the afformentioned ROC analysis at the full resolution as well as smoothed resolution with bin sizes $h=\{<%=paste(binCounts, collapse=", ")%>\}$.
+We next compare the  raw, TBN-NGC, and TBN-Birdseed methods using the ROC analysis described in the main TumorBoost manuscript at the full resolution as well as smoothed resolution with bin sizes $h=\{<%=paste(binCounts, collapse=", ")%>\}$.
 
 
 
@@ -417,7 +416,6 @@ if (!plotAllRocCurves) {
 } # if (!plotAllRocCurves)
 %>
 
-
 <% if (plotTracks) { %>
 %\clearpage
 \subsection{<%=whatStr%> and total copy-number tracks}
@@ -535,7 +533,7 @@ for (kk in seq(along=signalList)) {
  \label{fig<%=figName%>}
 \end{figure}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% END FIGURE: rho tracks
+% END FIGURE: eval tracks
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 <% } ## if (plotTracks) { %>
 
@@ -601,7 +599,7 @@ for (ss in seq(along=ustates)) {
    \resizebox{0.34\textwidth}{!}{\includegraphics{<%=figPathname%>}}%
   } % \subfloat{}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-% END Figure
+% END Figure: betaT densities for state <%=ustates[ss]%>
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 <%  } # for (ss ...) %>
  \end{center}
@@ -627,7 +625,7 @@ if (byCount) {
 %>
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% BEGIN Figure
+% BEGIN Figure: ROC curves
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 <%
@@ -744,7 +742,7 @@ if (byCount) {
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% END Figure
+% END Figure: ROC curves
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 <%
 exit(verbose);
@@ -1142,6 +1140,10 @@ testNames <- c("Student"="t", "Kolmogorov-Smirnov"="ks");
 
 <% 
 testName <- testNames[testLabel];
+testParam <- "mean";
+if (testName=="ks") {
+  testParam <- "distribution";
+}
 allTstMeans <- NULL;
 allTstSds <- NULL;
 pcns <- NULL;
@@ -1153,9 +1155,6 @@ fixedNbPointsAcrossRegions <- (testName == "t");
 <%
 print(region);
 %>
-%%%%%%%%
-%% TCN
-%%%%%%%%
 <%
 # Extract total CNs 
 cnList <- getCnList(cnDsList, what="ratios");
@@ -1275,7 +1274,7 @@ for (what in evalSignals) {
     # Bootstrap results?
     if (B > 1) {
       tab <- sprintf("%.3f%s%.3f", tstMeans, pmTag, tstSds);
-      txtB <- sprintf("Mean %s standard deviation of %s subsamplings of the original data set. ", pmTag, B);
+      txtB <- sprintf("Mean %s standard deviation across %s samplings of %s points (for each PCN state) from the original data set", pmTag, minNbPoints, B);
     } else {
       tab <- sprintf("%.3f", tstMeans);    
       txtB <- "";
@@ -1287,7 +1286,7 @@ for (what in evalSignals) {
     what2 <- ifelse(what == "fracB", "beta", "rho");
     output2 <- ifelse(output == "statistic", "test statistics", "p-value");
 
-    caption <- sprintf("%s %s of the null hypothesis of equal mean before and after each PCN change point (%s): raw or TumorBoost-normalized %s, and total copy number (last line). %sThe larger value, the more different the distributions are.", testLabel, output2, probeType, what2, txtB);
+    caption <- sprintf("%s %s of the null hypothesis of equal %s before and after each PCN change point (%s): raw or TumorBoost-normalized %s, and total copy number (last line). %s. The larger value, the more different the true %ss are.", testLabel, output2, testParam, probeType, what2, txtB, testParam);
 
     label <- sprintf("tab%s%s%s", testName, what2, toCamelCase(probeType));
 
@@ -1328,7 +1327,7 @@ for (what in evalSignals) {
 \clearpage
 \appendix
 \section{Data files}
-\section{Total copy numbers}
+\subsection{Total copy numbers}
 \begin{Verbatim}[fontfamily=helvetica,fontsize=\small]
 <%
 x <- capture.output(print(cnDsList));
@@ -1338,7 +1337,7 @@ x <- paste(x, collapse="\n");
 <%=x%>
 \end{Verbatim}
 
-\section{Allele B fractions}
+\subsection{Allele B fractions}
 \begin{Verbatim}[fontfamily=helvetica,fontsize=\small]
 <%
 x <- capture.output(print(fracBDsList));
