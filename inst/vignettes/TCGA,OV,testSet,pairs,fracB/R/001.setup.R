@@ -23,11 +23,21 @@ if (interactive()) {
   confQuantiles <- c(1.00, 0.95, 0.90);
   confQuantile <- textMenu(confQuantiles, title="Genotype confidence score threshold:", value=TRUE);
 } else {
-  dataSet <- dataSets[4];
+  dataSet <- args$dataSet;
+  if (is.null(dataSet)) {
+    throw("Command line argument --dataSet not given.");
+  }
+
+  confQuantile <- args$confQuantile;
+  if (is.null(confQuantile)) {
+    cat("Command line argument --confQuantile not given. Defaults to 1.0.\n");
+    confQuantile <- 1.0;
+  }
+
   flavor <- "v4";
-  confQuantile <- 1.0;
 }
 
+confQuantile <- Arguments$getDouble(confQuantile, range=c(0,1));
 confQuantileTag <- sprintf("conf=%.0f", 100*confQuantile);
 
 

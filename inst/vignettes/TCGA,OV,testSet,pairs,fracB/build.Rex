@@ -12,3 +12,10 @@ rsptex(filenameRsp, envir=globalenv(), pdf=TRUE, force=TRUE, verbose=-5);
 pathnameTeX <- gsub(".pdf", ".tex", pdfPathname, fixed=TRUE);
 file.copy(filenameTeX, pathnameTeX, overwrite=TRUE);
 file.copy(filenamePDF, pdfPathname, overwrite=TRUE);
+
+filenameLOG <- "build.log";
+pathnameLOG <- gsub(".pdf", ".log", pdfPathname, fixed=TRUE);
+if (isFile(filenameLOG)) {
+  file.copy(filenameLOG, pathnameLOG, overwrite=TRUE);
+}
+
