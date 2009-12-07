@@ -42,8 +42,15 @@ if (!exists("fracBDsList", mode="list")) {
   verbose && enter(verbose, "Updating data set names");
   names <- names(fracBDsList);
   names <- sapply(names, FUN=strsplit, split=",", fixed=TRUE);
-  commonTags <- Reduce(intersect, names);
-  names <- sapply(names, FUN=setdiff, commonTags);
+  while(TRUE) {
+    ns <- sapply(names, FUN=length);
+    if (any(ns == 0))
+      break;
+    first <- unname(sapply(names, FUN=function(x) x[1]));
+    if (length(unique(first)) > 1)
+      break;
+    names <- lapply(names, FUN=function(x) x[-1]);
+  }
   names <- sapply(names, FUN=paste, collapse=",");
   names[names == ""] <- "raw";
   names(fracBDsList) <- names;
@@ -113,9 +120,12 @@ if (!exists("gcDsList", mode="list")) {
   # Set names
   names <- names(gcDsList);
   names <- sapply(names, FUN=strsplit, split=",", fixed=TRUE);
-  commonTags <- Reduce(intersect, names);
-  commonTags <- setdiff(commonTags, genTags);
-  names <- lapply(names, FUN=setdiff, commonTags);
+  while(length(names[[1]]) > 0 && length(names[[2]]) > 0) {
+    if (names[[1]][1] != names[[2]][1])
+      break;
+    names[[1]] <- names[[1]][-1];
+    names[[2]] <- names[[2]][-1];
+  }
   names <- sapply(names, FUN=paste, collapse=",");
   names(gcDsList) <- names;
 
@@ -152,14 +162,19 @@ if (!exists("gcsDsList", mode="list")) {
     ds;
   });
 
-  # Set names
-  names <- names(gcsDsList);
-  names <- sapply(names, FUN=strsplit, split=",", fixed=TRUE);
-  commonTags <- Reduce(intersect, names);
-  commonTags <- setdiff(commonTags, genTags);
-  names <- sapply(names, FUN=setdiff, commonTags);
-  names <- sapply(names, FUN=paste, collapse=",");
-  names(gcsDsList) <- names;
+  if (length(gcsDsList) > 0) {
+    # Set names
+    names <- names(gcsDsList);
+    names <- sapply(names, FUN=strsplit, split=",", fixed=TRUE);
+    while(length(names[[1]]) > 0 && length(names[[2]]) > 0) {
+      if (names[[1]][1] != names[[2]][1])
+        break;
+      names[[1]] <- names[[1]][-1];
+      names[[2]] <- names[[2]][-1];
+    }
+    names <- sapply(names, FUN=paste, collapse=",");
+    names(gcsDsList) <- names;
+  }
 
   # keep those who match genTags
   m <- match(genTags, names);
@@ -169,7 +184,7 @@ if (!exists("gcsDsList", mode="list")) {
   }
 }
 if (length(gcsDsList) == 0) {
-    # No genotypes confidence scores available
+  # No genotypes confidence scores available
 }
 
 
@@ -251,6 +266,8 @@ docTags <- strsplit(docTags, split=",", fixed=TRUE)[[1]];
 
 ############################################################################
 # HISTORY:
+# 2009-12-06
+# o Updated to also handle BeadStudio genotype calls.
 # 2009-12-04
 # o Now only one sample per data set is kept.
 # 2009-06-18

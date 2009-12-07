@@ -390,13 +390,13 @@ nbrOfSets <- length(nms);
 cols <- rep("#000000", times=nbrOfSets);
 cols[regexpr("raw", nms) != -1] <- "#000000";
 cols[regexpr("TCN", nms) != -1] <- palette[3];
-cols[regexpr("TBN(,v[0-9]|),Birdseed", nms) != -1] <- palette[2];
+cols[regexpr("TBN(,v[0-9]|),(BeadStudio|Birdseed)", nms) != -1] <- palette[2];
 cols[regexpr("TBN(,v[0-9]|),NGC", nms) != -1] <- palette[1];
 
 ltys <- rep(1, times=nbrOfSets);
 ltys[regexpr("raw", nms) != -1] <- 2;  # dot-dashed
 ltys[regexpr("TCN", nms) != -1] <- 3;  # dotted
-ltys[regexpr("TBN(,v[0-9]|),Birdseed", nms) != -1] <- 4; # dashed
+ltys[regexpr("TBN(,v[0-9]|),(BeadStudio|Birdseed)", nms) != -1] <- 4; # dashed
 
 labels <- strsplit(nms, split="\n", fixed=TRUE);
 labels <- sapply(labels, FUN=function(s) s[1]);

@@ -60,7 +60,7 @@ if (regexpr("ismpolish", dataSet) != -1) {
   rocCurvesPattern <- "^(raw|TCN),Birdseed$|^TBN";
 } else if (regexpr("BeadStudio", dataSet) != -1) {
   docTags <- gsub(".*,(BeadStudio,[^,]+).*", "\\1", dataSet);
-  genTags <- c("NGC");
+  genTags <- c("BeadStudio", "NGC");
   rocCurvesPattern <- "^(raw|TCN),NGC$|^TBN";
 } else {
   throw("Cannot infer ('docTags', 'genTags') from 'dataSet': ", dataSet);
