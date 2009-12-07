@@ -308,9 +308,31 @@ for (region in regionsList) {
 \label{tblRegions}
 \end{table}
 
-We next compare the  raw, TBN-NGC, and TBN-Birdseed methods using the ROC analysis described in the main TumorBoost manuscript at the full resolution as well as smoothed resolution with bin sizes $h=\{<%=paste(binCounts, collapse=", ")%>\}$.
+% We next compare the  raw, TBN-NGC, and TBN-Birdseed methods using the ROC analysis described in the main TumorBoost manuscript at the full resolution as well as smoothed resolution with bin sizes $h=\{<%=paste(binCounts, collapse=", ")%>\}$.
 
 
+We next compare how well each of these change points is detected using
+the above preprocessed signals followed or not by TumorBoost
+normalization using the ROC analysis described in the main TumorBoost
+manuscript at the full resolution as well as smoothed resolution with
+bin sizes $h=\{<%=paste(binCounts, collapse=", ")%>\}$.
+
+<%
+nms <- names(fracBDsList);
+descs <- character(length(nms));
+descs[nms=="raw"] <- "preprocessed signals without TumorBoost normalization";
+for (gg in genTags) {
+ descs[grep(gg, nms)] <- sprintf("preprocessed signals followed by
+TumorBoost normalization using %s genotype calls", gg);
+}%>
+Specifically, we compare the following three methods:
+\begin{description}
+<%for (ii in seq(nms)) {%>
+\item[``<%=nms[ii]%>":] <%=descs[ii]%>
+<%} ## for (ii in ... ) %>
+\end{description}
+
+For completeness we also include an evaluation of Total copy numbers (TCN).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% BEGIN Regions of interest
@@ -1307,7 +1329,7 @@ for (what in evalSignals) {
     # Bootstrap results?
     if (B > 1) {
       tab <- sprintf("%.3f%s%.3f", tstMeans, pmTag, tstSds);
-      txtB <- sprintf("Mean %s standard deviation across %s samplings of %s points (for each PCN state) from the original data set", pmTag, minNbPoints, B);
+      txtB <- sprintf("Mean %s standard deviation across %s samplings of %s points (for each PCN state) from the original data set", pmTag, B, minNbPoints);
     } else {
       tab <- sprintf("%.3f", tstMeans);    
       txtB <- "";
