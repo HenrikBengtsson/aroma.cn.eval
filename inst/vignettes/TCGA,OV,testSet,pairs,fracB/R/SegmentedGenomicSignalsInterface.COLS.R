@@ -11,7 +11,7 @@ setMethodS3("getStateColorMap", "SegmentedGenomicSignalsInterface", function(thi
     );
   }
   colorMap;
-})
+}, conflict="quiet")
 
 ############################################################################
 # HISTORY:

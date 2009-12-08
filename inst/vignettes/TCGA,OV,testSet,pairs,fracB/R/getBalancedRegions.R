@@ -2,28 +2,30 @@
 # sample data to get the same number of points in each state
 ##############################################################
 setMethodS3("getBalancedRegions", "SegmentedGenomicSignalsInterface", function(this, minNbP=NULL, ..., verbose=FALSE) {
-  
   if (is.null(minNbP)) {
-    minNbP <- table(getStates(this))
+    states <- getStates(this);
+    minNbP <- table(states);
   }
 
-  res <- NULL
-  states <- getUniqueStates(this)
-  for (ss in seq(states)) {
-    state <- states[ss]
-    thisByState <- extractSubsetByState(this, state)
-    nbUnits <- length(thisByState$y)
+  res <- NULL;
+  states <- getUniqueStates(this);
+  # Sanity check
+  for (ss in seq(along=states)) {
+    state <- states[ss];
+    thisByState <- extractSubsetByState(this, state);
+    nbUnits <- length(thisByState$y);
     if (!is.na(state)) {
-      thisByState <- extractSubset(thisByState, sample(nbUnits, minNbP, ...))
+      subset <- sample(nbUnits, minNbP, ...);
+      thisByState <- extractSubset(thisByState, subset);
     }
     if (is.null(res)) {
-      res <- thisByState
+      res <- thisByState;
+    } else {
+      append(res, thisByState);
     }
-    else {
-      append(res, thisByState)
-    }
-  }
-  res
+  } # for (ss ...)
+
+  res;
 })
 
 

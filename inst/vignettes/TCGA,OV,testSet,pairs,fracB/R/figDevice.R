@@ -37,18 +37,8 @@ setMethodS3("figDevice", "default", function(label, width, height=aspect*width, 
 }, protected=TRUE) # figDevice()
 
 
-pngDev <- function(..., width=840, device=findPngDevice()) {
-  figDevice(..., width=width, device=device, extension="png");
-} # pngDev()
-
-pdfDev <- function(..., width=840, device=grDevices::pdf) {
-  figDevice(..., width=width, device=device, scale=1/100, extension="pdf");
-} # pdfDev()
-
 ############################################################################
 # HISTORY:
-# 2009-12-03
-# o Added pdfDev.
 # 2009-07-03
 # o Added argument 'scale' to figDevice() to make argument 'width' be
 #   device independent.

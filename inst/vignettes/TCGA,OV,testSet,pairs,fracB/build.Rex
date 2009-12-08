@@ -18,4 +18,3 @@ pathnameLOG <- gsub(".pdf", ".log", pdfPathname, fixed=TRUE);
 if (isFile(filenameLOG)) {
   file.copy(filenameLOG, pathnameLOG, overwrite=TRUE);
 }
-

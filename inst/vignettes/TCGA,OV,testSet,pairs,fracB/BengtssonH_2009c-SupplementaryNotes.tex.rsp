@@ -2,7 +2,7 @@
 % Authors: Henrik Bengtsson, hb@stat.berkeley.edu
 %          Pierre Neuvial, pierre@stat.berkeley.edu
 % Created on: 2009-02-23
-% Modified on: 2009-12-03
+% Modified on: 2009-12-08
 %
 % Usage:
 <%-- (RSP comment)
@@ -26,31 +26,31 @@
   --confQuantile=<numeric in [0,1]>
 
   Example:
-  R --file=build.Rex --args --dataSet=TCGA,OV,testSet,pairs,Broad,ismpolish
+  R --file=build.Rex --args --dataSet=TCGA,OV,ismpolish
 
   # Data sets for the TumorBoost paper:
-  TCGA,OV,testSet,pairs,Broad,ismpolish
-  TCGA,OV,testSet,pairs,Broad,ACC,ra,-XY,BPN,-XY,AVG,FLN,-XY
-  TCGA,OV,testSet,pairs,Stanford,BeadStudio,XY
-  TCGA,OV,testSet,pairs,Stanford,BeadStudio,BAF
+  TCGA,OV,ismpolish
+  TCGA,OV,CRMAv2
+  TCGA,OV,BeadStudio,XY
+  TCGA,OV,BeadStudio,BAF
 
   # Send both stdout and stderr to a log file
 
-  Rterm --file=build.Rex --args --dataSet=TCGA,OV,testSet,pairs,Broad,ismpolish --confQuantile=1.0 > build.log 2>&1
+  Rterm --file=build.Rex --args --dataSet=TCGA,OV,Birdseed,ismpolish > build.log 2>&1
 
-  Rterm --file=build.Rex --args --dataSet=TCGA,OV,testSet,pairs,Broad,ismpolish --confQuantile=0.9 > build.log 2>&1
+  Rterm --file=build.Rex --args --dataSet=TCGA,OV,Birdseed,ismpolish --confQuantile=0.9 > build.log 2>&1
 
-  Rterm --file=build.Rex --args --dataSet=TCGA,OV,testSet,pairs,Broad,ACC,ra,-XY,BPN,-XY,AVG,FLN,-XY --confQuantile=1.0 > build.log 2>&1
+  Rterm --file=build.Rex --args --dataSet=TCGA,OV,CRMAv2 > build.log 2>&1
 
-  Rterm --file=build.Rex --args --dataSet=TCGA,OV,testSet,pairs,Broad,ACC,ra,-XY,BPN,-XY,AVG,FLN,-XY --confQuantile=0.9 > build.log 2>&1
+  Rterm --file=build.Rex --args --dataSet=TCGA,OV,CRMAv2 --confQuantile=0.9 > build.log 2>&1
 
-  Rterm --file=build.Rex --args --dataSet=TCGA,OV,testSet,pairs,Stanford,BeadStudio,XY --confQuantile=1.0 > build.log 2>&1
+  Rterm --file=build.Rex --args --dataSet=TCGA,OV,BeadStudio,XY > build.log 2>&1
 
-  Rterm --file=build.Rex --args --dataSet=TCGA,OV,testSet,pairs,Stanford,BeadStudio,XY --confQuantile=0.9 > build.log 2>&1
+  Rterm --file=build.Rex --args --dataSet=TCGA,OV,BeadStudio,XY --confQuantile=0.9 > build.log 2>&1
 
-  Rterm --file=build.Rex --args --dataSet=TCGA,OV,testSet,pairs,Stanford,BeadStudio,BAF --confQuantile=1.0 > build.log 2>&1
+  Rterm --file=build.Rex --args --dataSet=TCGA,OV,BeadStudio,BAF > build.log 2>&1
 
-  Rterm --file=build.Rex --args --dataSet=TCGA,OV,testSet,pairs,Stanford,BeadStudio,BAF --confQuantile=0.9 > build.log 2>&1
+  Rterm --file=build.Rex --args --dataSet=TCGA,OV,BeadStudio,BAF --confQuantile=0.9 > build.log 2>&1
 
 --%>
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
@@ -64,89 +64,11 @@ verbose && enter(verbose, "Setup");
 sourceDirectory("R/");
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Local functions
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-getRegionLabels <- function(state) {
-  lab <- character(length=length(state));
-  lab[state == 0] <- "'normal' (1,1)";
-  lab[state == 1] <- "'gain' (1,2)";
-  lab[state == 2] <- "'deletion' (0,1)";
-  lab[state == 3] <- "'copy neutral LOH' (0,2)";
-  lab;
-} # getRegionLabels()
-
-getRegionPcns <- function(state) {
-  switch(state+1, c(1,1), c(1,2), c(0,1), c(0,2))
-} # getRegionPcns()
-
-getQuantStates <- function(states, evalSignal=c("TCN", "abs(fracB-1/2)", "minorCn", "majorCn")) {
-  match.arg(evalSignal);
-
-  pcns <- sapply(states, FUN=getRegionPcns);
-  qs <- switch(evalSignal, 
-    TCN = apply(pcns, MARGIN=2, FUN=sum),
-    "abs(fracB-1/2)" = states,
-    minorCn = pcns[1,],
-    majorCn = pcns[2,]
-  );
-
-  ## if ties then order by TCN
-  switch(length(unique(qs)), apply(pcns, MARGIN=2, FUN=sum), qs);
-} # getQuantStates()
-
-# Count the number of loci with each state
-getNbLociPerState <- function(object) {
-  states <- getStates(object);
-  tbl <- table(states, exclude=NULL);
-  uniqueStates <- as.integer(names(tbl));
-  o <- order(abs(uniqueStates));
-  tbl <- tbl[o];
-  names <- names(tbl);
-  sign <- as.integer(names);
-  names(tbl) <- getRegionLabels(sign);
-  tbl;
-} # getNbLociPerState()
-
-test <- function(signal, ...) {
-  testSeparation(signal, test="ks.test")$statistic;
-} # test()
-
-test <- function(signal, testFUN, output=c("statistic")) {
-  states <- getStates(signal);
-  us <- na.omit(getUniqueStates(signal));
-  # Sanity check
-  stopifnot(length(us) == 2);
-  signals <- getSignals(signal);
-  res <- testFUN(signals[states == us[1]], signals[states == us[2]]);
-  res[[output]];
-} # test()
-
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Graphical settings
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 figForce <- FALSE;
 
-palette <- brewer.pal(n=9, name="Set1");
-
 pch <- "."; cex <- 2.5;
-colorMap <- c("*"="#000000", "NA"="#999999", "1"=palette[1], "2"=palette[5], "3"=palette[2], "4"=palette[4]);
-
-fullResColorMap <- c("*" = "#000000", "NA" = "#999999");
-smoothedColorMap <- c("*" = "#6666FF", "NA" = "#999999");
-#smoothedColorMap <-  c("*" = "#000000", "NA" = "#999999");
-hetCol <- "#000000";
-homCol <- palette[1];
-homCol <- "#999999";
-
-# Plot annotation settings
-fpLim <- c(0,0.6);
-addLegend <- FALSE;
-addSdEst <- FALSE;
-trackWidth <- 0.9;
-addDiagHorizLines <- TRUE;
-plotSmoothScatter <- FALSE;
-
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Misc.
@@ -158,7 +80,7 @@ pmTag <- "@plusOrMinus@";
 # Analysis settings
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 evalSignals <- c("fracB", "abs(fracB-1/2)")[2];
-probeTypes <- c("all SNPs", "Het SNPs")[2];
+probeTypes <- c("all SNPs", "heterozygous SNPs")[2];
 keepAllCombinations <- c(TRUE, FALSE)[2];
 
 # Number of bootstrap iterations (use B <- 1 for no bootstrapping)
@@ -175,9 +97,6 @@ if (!fixedNbPointsAcrossMethods) {
   }
   B <- 1;
 }
-
-#regionsList <- regionsList[2];
-#B <- 5;
 
 verbose && exit(verbose);
 %>
@@ -302,36 +221,30 @@ for (region in regionsList) {
   regionLabels <- getRegionLabels(region$params$s);
 %><%=chr%> & <%=reg[1]%>-<%=reg[2]%> & <%=cp%> & <%=delta%> & <%=regionLabels[1]%> & <%=regionLabels[2]%> \\ \hline
 <% } # for (region ...) %>
+<% rm(chr, reg, cp, delta, regionLabels, region); %>%
 \end{tabular}
 \end{center}
 \caption{Regions in <%=sampleName%> used for the evaluation and that each contain a single changepoint.  All positions and lengths are in units of Mb.}
 \label{tblRegions}
 \end{table}
 
-% We next compare the  raw, TBN-NGC, and TBN-Birdseed methods using the ROC analysis described in the main TumorBoost manuscript at the full resolution as well as smoothed resolution with bin sizes $h=\{<%=paste(binCounts, collapse=", ")%>\}$.
-
-
 We next compare how well each of these change points is detected using
 the above preprocessed signals followed or not by TumorBoost
 normalization using the ROC analysis described in the main TumorBoost
 manuscript at the full resolution as well as smoothed resolution with
 bin sizes $h=\{<%=paste(binCounts, collapse=", ")%>\}$.
-
+%
 <%
 nms <- names(fracBDsList);
 descs <- character(length(nms));
-descs[nms=="raw"] <- "preprocessed signals without TumorBoost normalization";
+descs[nms == "raw"] <- "preprocessed signals without TumorBoost normalization";
 for (gg in genTags) {
- descs[grep(gg, nms)] <- sprintf("preprocessed signals followed by
-TumorBoost normalization using %s genotype calls", gg);
-}%>
+  descs[grep(gg, nms)] <- sprintf("preprocessed signals followed by TumorBoost normalization using %s genotype calls", gg);
+} # for (gg ...) %>%
 Specifically, we compare the following three methods:
-\begin{description}
-<%for (ii in seq(nms)) {%>
-\item[``<%=nms[ii]%>":] <%=descs[ii]%>
-<%} ## for (ii in ... ) %>
-\end{description}
-
+<% for (ii in seq(along=nms)) {%>%
+  (<%=ii%>) \textbf{``<%=nms[ii]%>"}: <%=descs[ii]%>. 
+<% } ## for (ii in ... ) %>%
 For completeness we also include an evaluation of Total copy numbers (TCN).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -342,79 +255,87 @@ For completeness we also include an evaluation of Total copy numbers (TCN).
 \section{Region: <%=region$src%>}
 
 <%
+enter(verbose, evalSignal);
+
 pcns <- NULL;
 
-# Extract total CNs 
+# Extracting allele-specific signals
+what <- evalSignal;
+signalList <- getFracBList(fracBDsList, what=what, pattern=methodPattern);
+signalN <- getFracBList(list(dsN), what=what)[[1]];
+
+# Extracting total CNs 
 cnList <- getCnList(cnDsList, what="ratios");
 cn <- cnList[[1]];
-%>
+cn$unit <- signalN$unit;
+addLocusFields(cn, "unit");
 
-<%
-what <- ifelse(evalSignal == "abs(fracB-1/2)", "mBAF", evalSignal);
-whatStr <- what;
-if (whatStr == "mBAF") whatStr <- "Level of Heterozygosity (LH)";
-%>
-
-%%%%%%%%%%%%
-% <%=what%>
-%%%%%%%%%%%%
-
-
-<% ## setup
-
-signalList <- getFracBList(fracBDsList, what="fracB", pattern=methodPattern);
-signalN <- getFracBList(list(dsN), what="fracB")[[1]];
-
-enter(verbose, what);
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-# TumorPurifier
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-enter(verbose, "TumorPurifier");
-signalList <- lapply(signalList, FUN=function(signal) {
-  signal$y <- (signal$y*cn$y-2*(1-kappaMain)*1/2) / (cn$y-2*(1-kappaMain));
-  signal$y <- 2*abs(signal$y-1/2);
-  signal;
-});
-exit(verbose);
-
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-# Calculating (C1,C2); C1 <= C2
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-if (evalSignal == "minorCn" || evalSignal == "majorCn") {
-  direction <- ifelse(evalSignal == "minorCn", -1, 1);
-  enter(verbose, "Calculating minor/major CNs");
-  signalList <- lapply(signalList, FUN=function(signal) {
-    signal$y <- cn$y*(1/2 + direction*signal$y);
-    signal;
-  });
-  exit(verbose);  
-}
-
-cn$y <- (cn$y-2*(1-kappaMain)) / kappaMain;
-
-signal <- signalList[[1]];
 signalList[["TCN"]] <- cn;
-signalList[["TCN"]]$unit <- signalList[[1]]$unit;
- 
-signalList <- sapply(genTags, FUN=function(genTag) {
-  extractHeterozygous(signalList, gcDsList[[genTag]], gcsDsList[[genTag]], confQuantile=confQuantile);
-});
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+# Keeping only heterozygous signals
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+if (confQuantile < 1) { 
+  signalList <- sapply(genTags, FUN=function(genTag) {
+    extractHeterozygous(signalList, gcDsList[[genTag]], 
+       gcsDsList[[genTag]], confQuantile=confQuantile);
+  });
+} else {
+  signalList <- sapply(genTags, FUN=function(genTag) {
+    extractHeterozygous(signalList, gcDsList[[genTag]]);
+  });
+}
 str(signalList);
+
 
 
 dn <- dimnames(signalList);
 nms <- sapply(dn[[2]], FUN=function(nm) sprintf("%s,%s", dn[[1]], nm));
 nms <- as.character(nms);
 
-nbrOfSets <- length(nms);
+# Keep only certain data sets of interest 
+patts <- c("raw", sprintf("%s,%s", dn[[2]], dn[[2]]), "TCN");
+keep <- unlist(sapply(patts, FUN=grep, nms), use.names=FALSE);
+nms <- nms[keep];
+signalList <- signalList[keep];
+names(signalList) <- nms;
+rm(patts, keep);
+
+## keep only some combinations for the evaluation
+if (!plotAllRocCurves) {
+  keep <- grep(rocCurvesPattern, names(signalList));
+  signalList <- signalList[keep];
+  rm(keep);
+} # if (!plotAllRocCurves)
+
+# Balance the left and the right regions?
+if (byCount) {
+  minNbrOfPoints <- min(sapply(signalList, FUN=function(signals) {
+    min(table(getStates(signals)));
+  }));
+  if (is.null(fixedNbrOfPoints)) {
+    binCounts <- binCounts * fixedNbrOfPoints/minNbrOfPoints;
+    minNbrOfPoints <- fixedNbrOfPoints;
+  }
+  if (!is.null(fixedSeed)) {
+    set.seed(fixedSeed);
+  }    
+  signalList <- lapply(signalList, FUN=getBalancedRegions, 
+                            minNbrOfPoints, replace=TRUE);
+} # if (byCount)
+
+nbrOfSets <- length(signalList);
+nms <- names(signalList);
+
+# ROC curve colors
 cols <- rep("#000000", times=nbrOfSets);
 cols[regexpr("raw", nms) != -1] <- "#000000";
 cols[regexpr("TCN", nms) != -1] <- palette[3];
 cols[regexpr("TBN(,v[0-9]|),(BeadStudio|Birdseed)", nms) != -1] <- palette[2];
 cols[regexpr("TBN(,v[0-9]|),NGC", nms) != -1] <- palette[1];
 
+# ROC curve line types
 ltys <- rep(1, times=nbrOfSets);
 ltys[regexpr("raw", nms) != -1] <- 2;  # dot-dashed
 ltys[regexpr("TCN", nms) != -1] <- 3;  # dotted
@@ -422,57 +343,18 @@ ltys[regexpr("TBN(,v[0-9]|),(BeadStudio|Birdseed)", nms) != -1] <- 4; # dashed
 
 labels <- strsplit(nms, split="\n", fixed=TRUE);
 labels <- sapply(labels, FUN=function(s) s[1]);
- 
-patts <- c("raw", sprintf("%s,%s", dn[[2]], dn[[2]]), "TCN");
-keep <- unlist(sapply(patts, FUN=grep, nms), use.names=FALSE);
-##    keep <- seq(nms);
-signalList <- signalList[keep];
-names(signalList) <- nms[keep];
-
-cols <- cols[keep];
-ltys <- ltys[keep];
-labels <- labels[keep];
-nms <- nms[keep];
 %>
 
-<%  ## Add TCN
-signalList[["TCN,SNP+CN"]] <- cn;
-snps <- whichVector(!is.na(signal$y));
-signalList[["TCN,SNP"]] <- extractSubset(cn, snps);
-
-if (byCount) {
-  minNbrOfPoints <- min(sapply(signalList, FUN=function(signal) {
-    table(getStates(signal));
-  }));
-  if (!useFixedNbrOfPoints) {
-    binCounts <-  binCounts * fixedNbrOfPoints/minNbrOfPoints;
-    minNbrOfPoints <- fixedNbrOfPoints;
-  }
-  if (!is.null(fixedSeed)) {
-    set.seed(fixedSeed);
-  }    
-  signalList <- lapply(signalList, FUN=getBalancedRegions, minNbrOfPoints, replace=TRUE);
-} # if (byCount)
-
-cols <- c(cols,  rep(palette[3], 2));
-ltys <- c(ltys,  2, 3);
-nms <- names(signalList);
-labels <- c(labels, "TCN,SNP+CN", "TCN,SNP");
-%>
-
-<% ## keep only some combinations for the evaluation
-if (!plotAllRocCurves) {
-  keep <- grep(rocCurvesPattern, names(signalList));
-  signalList <- signalList[keep];
-  cols <- cols[keep];
-  ltys <- ltys[keep];
-  nms <- nms[keep];
-  labels <- labels[keep];
-} # if (!plotAllRocCurves)
-%>
 
 <% if (plotTracks) { %>
 %\clearpage
+<%
+if (evalSignal  == "abs(fracB-1/2)") {
+  whatStr <- "Level of Heterozygosity (LH)";
+} else {
+  whatStr <- evalSignal;
+}
+%>
 \subsection{<%=whatStr%> and total copy-number tracks}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % BEGIN FIGURE: eval tracks
@@ -504,12 +386,6 @@ for (kk in seq(along=signalList)) {
     addStateLabels <- TRUE;
     ylab <- cnLab;
     figTag <- "ratios"
-  } else if (evalSignal == "majorCn") {
-    ylab <- expression(C[2]);
-    figTag <- "majorCn";
-  } else if (evalSignal == "minorCn") {
-    ylab <- expression(C[3]);
-    figTag <- "minorCn";
   } else {
     ylim <- rhoLim;
     if (length(grep("TBN", name))) {
@@ -546,39 +422,48 @@ for (kk in seq(along=signalList)) {
       rect(xs[2],ys[1],xlim[2],ys[1]+dy, col="#999999");
     }
     rect(xs[1],ys[1],xs[2],ys[2], density=10, col="#999999");
-##     stext(side=4, pos=1, line=-0.7, cex=cex, name, las=3);
-  if (addSdEst) {
+    rm(ys, dy);
+##  stext(side=4, pos=1, line=-0.7, cex=cex, name, las=3);
+
+    # Display stddev estimate
+    if (addSdEst) {
       sd <- estimateStandardDeviation(signal);
       stext(side=4, pos=1, line=-0.7, cex=0.8*cex, sprintf("SD=%.3g", sd));
     }
+
+    # Add smoothed track?
     if (addBinTrack) {
       binWidths <- binCounts;
       binWidth <- binWidths[length(binWidths)];
       if (!byCount) {
         binWidth <- round(diff(xRange(signal))/(nbrOfLoci(signal, na.rm=TRUE)-1)*binWidth)
       }
-    signalS <- binnedSmoothingByState(signal, from=xRange[1], to=xRange[2], by=binWidth, FUN=binFFracB, byCount=byCount);
+      signalS <- binnedSmoothingByState(signal, from=xRange[1], to=xRange[2], by=binWidth, FUN=binFFracB, byCount=byCount);
       setStateColorMap(signalS, smoothedColorMap);
       lines(signalS, lty=1, lwd=2, col="white", xScale=xScale);
       points(signalS, pch=19, cex=0.7, col="white", xScale=xScale);
       lines(signalS, lty=3, lwd=1, xScale=xScale);
       points(signalS, pch=19, cex=0.5, xScale=xScale);
+      rm(signalS);
     }
 
- ##   ts <- signif(test(signal, testFUN=ks.test), digits=2);
- ##   stext(side=4, pos=0, line=-0.7, cex=0.8*cex, sprintf("KS = %s",ts), las=3)
-
-   devDone(figName);
+    devDone(figName);
   } # if (fig <- figDev(...))
   figList[[kk]] <- fig;
 } # for (kk ...)
 %>
 
+\captionsetup{position=top}
 \begin{figure}[htb]
  \begin{center}
   <% for (fig in figList) { %>%
-  <% figPathname <- file.path(figPath, fig$fullname, fsep="/"); %>%
-  \resizebox{\trackWidth}{!}{\includegraphics{<%=figPathname%>}}
+  <% 
+    figPathname <- file.path(figPath, fig$fullname, fsep="/"); 
+    label <- gsub(".*,track,", "", fig$fullname);
+  %>%
+  \subfloat[<%=label%>.]{
+   \resizebox{\trackWidth}{!}{\includegraphics{<%=figPathname%>}}
+  }\\
   <% } %>
  \end{center}
  \caption{
@@ -587,12 +472,19 @@ for (kk in seq(along=signalList)) {
  }
  \label{fig<%=figName%>}
 \end{figure}
+\captionsetup{position=bottom}
+<%
+rm(fig, label, figName, figPathname);
+%>
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % END FIGURE: eval tracks
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 <% } ## if (plotTracks) { %>
 
-%\clearpage
+
+
+\clearpage
 \subsection{Allele B fraction density plots}
 <%
 verbose && enter(verbose, "Plotting densities");
@@ -637,7 +529,7 @@ for (ss in seq(along=ustates)) {
   betaT <- sapply(fracBStateList, FUN=getSignals);
 %>%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-% BEGIN Figure: betaT densities for state <%=ustates[ss]%>
+% BEGIN Figure: {betaT} densities for state <%=ustates[ss]%>
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
   \subfloat[<%=names(tbl)[ss]%>.]{
     <% 
@@ -665,7 +557,7 @@ for (ss in seq(along=ustates)) {
 <% verbose && exit(verbose); %>
 
 
-\clearpage
+%\clearpage
 \subsection{ROC curves}
 <%
 signal <- signalList[[1]];
@@ -673,8 +565,7 @@ nbrOfLoci <- sum(is.finite(signal$y), na.rm=TRUE);
 fullRes <- (diff(xRange(signal))+1) / (nbrOfLoci-1);
 
 binWidths <- binCounts;
-if (byCount) {
-} else {
+if (!byCount) {
   binWidths <- round(fullRes*binWidths);
 }
 %>
@@ -682,10 +573,21 @@ if (byCount) {
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % BEGIN Figure: ROC curves
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 <%
   rocRows <- ceiling(length(binCounts)/rocCols); 
   aspect <- rocRows/rocCols;
+
+  ltyLgds <- rep("solid", length(ltys));
+  ltyLgds[ltys == 2] <- "dashed";
+  ltyLgds[ltys == 3] <- "dotted";
+  ltyLgds[ltys == 4] <- "dash-dotted";
+
+  legends <- sprintf("%s (%s; %s)", nms, ltyLgds, gsub("#", "\\\\#", cols));
+  seps <- rep(", ", length(legends)-1);
+  seps[length(seps)] <- " and ";
+  legends <- insert(legends, ats=2:length(legends), values=seps);
+  legends <- paste(legends, collapse="");
+  rm(seps);
   
   xRange <- range(sapply(signalList, FUN=xRange));
   states <- na.omit(getUniqueStates(signal));
@@ -693,6 +595,7 @@ if (byCount) {
 
 \begin{figure}[htb]
  \begin{center}
+ \parbox{0.96\textwidth}{
 <%
      for (ww in seq(along=binWidths)) {
        binWidth <- binWidths[ww];
@@ -704,11 +607,7 @@ if (byCount) {
          signalS;
        }
 
-       if (kappaMain != 1) {
-         figName <- sprintf("%s,ROC,%s,binWidth=%s,kappa=%s", region$label, robustStr, binWidth, kappaMain);
-       } else {
-         figName <- sprintf("%s,ROC,%s,binWidth=%s", region$label, robustStr, binWidth);
-       }
+       figName <- sprintf("%s,ROC,%s,binWidth=%s", region$label, robustStr, binWidth);
        if (fig <- figDev(figName, aspect=1, scale=0.5)) {
          ##   layout(matrix(seq(along=binWidths), ncol=rocCols, byrow=TRUE));
          par(mar=c(2.5,2.4,1.3,1)+0.1, mgp=c(1.4,0.3,0), tcl=-0.3, cex=cex);
@@ -746,7 +645,7 @@ if (byCount) {
     } # for (ss ...)
     names(fits) <- names(signalSList);     
   
-   for (kk in seq(fits)) {
+   for (kk in seq(along=fits)) {
      doLgd <- ((kk == 1) && (ww == length(binWidths)) && (ww > 1));
      fit <- fits[[kk]];
      roc <- fit$roc;
@@ -762,9 +661,6 @@ if (byCount) {
      pcnTxt <- paste(pcnTxt, collapse=" vs ");
      stext(side=3, pos=0, pcnTxt, line=0, col="#999999", cex=0.8*cex);
 #     stext(side=4, pos=0, what, col="#999999", line=-0.4);
-     if (kappaMain != 1) {
-       stext(side=4, pos=1, sprintf("k=%s", kappaMain), col="#999999", line=-0.4, cex=0.8*cex);
-     }
 
      if (addLegend && doLgd) {
        legend("bottomright", col=cols, lwd=2, lty=ltys, labels, cex=0.4, bty="n");
@@ -776,24 +672,11 @@ if (byCount) {
   %>%
   \resizebox{0.45\textwidth}{!}{\includegraphics{<%=figPathname%>}}
 <% } # for (ww ...) %>%
+ } % \parbox{...}
 \end{center}
- \caption{ROC curves for each preprocessing method at the full resolution as well as <%=length(binWidths)-1%> different amounts of smoothing (using the <%=binFFracB%>() function) for region <%=region$src%>.}
+ \caption{ROC curves for each preprocessing method at the full resolution as well as <%=length(binWidths)-1%> different amounts of smoothing (using the <%=binFFracB%>() function) for region <%=region$src%>. Legend: <%=legends%>.}
  \label{fig<%=figName%>}
 \end{figure}
-
-<% 
-  ltyLgds <- rep("solid", length(ltys))
-  ltyLgds[ltys == 2] <- "dashed"
-  ltyLgds[ltys == 3] <- "dotted"
-  ltyLgds[ltys == 4] <- "dash-dotted"
-  
-  lgd <- cbind(ltyLgds, cols)
-  rownames(lgd) <- nms
-  colnames(lgd) <- c("line type", "color")
-  
-  caption <- sprintf("Legend of Figure \\ref{fig%s}.", figName)
-%>
-<%=print(xtable(lgd, caption=caption), table.placement="htb!") %>
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -865,7 +748,7 @@ tbl <- tbl[,1, drop=TRUE];
       txt <- sprintf("%s,%s", name, gTag);
       
       col <- rep(homCol, length(isHet));
-      col[isHet] <-hetCol;
+      col[isHet] <- hetCol;
 
       figName <- sprintf("%s,betaNvsBetaT,%s,%s,%s,state=%s", region$label, what, name, gTag, ustates[ss]);
       if (fig <- figDev(figName)) {
@@ -877,13 +760,13 @@ tbl <- tbl[,1, drop=TRUE];
 
         if (addDiagHorizLines) {	
           if(name == "raw") {
-            ys <- seq(0.0, 1.0, by=0.1);
+            ys <- seq(from=0.0, to=1.0, by=0.1);
             for (y in ys) {
               lines(x=c(0,1-y), y=c(y,1), col="#999999", lty=1, lwd=1);
               lines(x=c(1,y), y=c(1-y,0), col="#999999", lty=1, lwd=1);
             }
           } else { 
-            ys <- seq(0.0, 1.0, by=0.1);
+            ys <- seq(from=0.0, to=1.0, by=0.1);
             for (y in ys) {
               lines(x=c(0,1), y=c(y,y), col="#999999", lty=1, lwd=1);
             }
@@ -899,25 +782,6 @@ tbl <- tbl[,1, drop=TRUE];
 
         points(betaN, betaT, pch=pch, col=col, cex=cex);
 
-        if ((addTrueBetaLines) && (name == "raw")) {
-          ## slope: exploiting symmetries...
-          slopeDatAbove <- betaT/betaN;
-          slopeDatBelow <- (1-betaT)/(1-betaN);
-          slopeDat <- slopeDatAbove;
-          slopeDat[which(slopeDat>1)] <- slopeDatBelow[which(slopeDat>1)];
-          
-          hetSlope <- median(slopeDat[isHet], na.rm=TRUE);
-          
-          abline(a=0, b=1, lty=2, lwd=2, col="#999999");
-          x0 <- rep(0, 2);
-          x1 <- rep(1, 2);
-          y0 <- c(0, 1-hetSlope);
-          y1 <- c(hetSlope, 1);
-          segments(x0, y0, x1, y1, lty=1, lwd=6, col="white");
-          segments(x0, y0, x1, y1, lty=1, lwd=4, col=hetCol);
-        }
-        
-##         if ((addLinearRegressionLines) && (name == "raw")) {
         if ((addLinearRegressionLines)) {
           
           if (name == "raw") {
@@ -953,31 +817,15 @@ tbl <- tbl[,1, drop=TRUE];
           abline(lmAbove, lwd=6, col=hetCol, lty=1);
           coef <- lmAbove$coefficients
           yb <- coef[1]+xb*coef[2];
-         points(xb, yb, col="white", cex=2.6, pch=20);
-         points(xb, yb, col=hetCol, cex=2, pch=20);
-         points(xb, yb, col=hetCol, cex=2, pch=1);
-       }
+          points(xb, yb, col="white", cex=2.6, pch=20);
+          points(xb, yb, col=hetCol, cex=2, pch=20);
+          points(xb, yb, col=hetCol, cex=2, pch=1);
+        }
         
-       nm <- names(tbl)[ss];
-       stext(side=3, pos=0, line=-0.3, cex=cex, nm);
+        nm <- names(tbl)[ss];
+        stext(side=3, pos=0, line=-0.3, cex=cex, nm);
 #       stext(side=4, pos=0, line=-0.8, cex=cex, txt, col="#999999");
 
-       if (addTrueBetaPoints) {         ## add points for true allele B fractions
-         for (kk in seq(along=kappasPbs)) {
-            kappa <- kappasPbs[kk];
-            tbc <- (3:5)[kk];
-            tbCex <- c(2, 1.5, 1)[kk];
-            points(0,0, col=tbc, cex=tbCex, pch=20);
-            points(1,1, col=tbc, cex=tbCex, pch=20);
-            trueBeta <- switch(nm,
-              "NORMAL (1,1)" = 1/2,
-              "GAIN (1,2)" = (1*kappa+(1-kappa))/(3*kappa+2*(1-kappa)),
-              "DELETION (0,1)" = (1-kappa)/(kappa+2*(1-kappa)),
-              "COPY NEUTRAL LOH (0,2)" = (1-kappa)/2);
-            points(1/2, trueBeta, col=tbc, cex=tbCex, pch=20)
-            points(1/2, 1-trueBeta, col=tbc, cex=tbCex, pch=20)
-          }
-        }
         devDone(figName);
       } # if (fig <- figDev(...))
       figPathname <- file.path(figPath, fig$fullname, fsep="/");
@@ -991,73 +839,6 @@ tbl <- tbl[,1, drop=TRUE];
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
     % END Figure
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-<%         if (plotSmoothScatter && name == "raw") { %>
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-% BEGIN Figure: (betaN, betaT) for each state separately: <%=names(fracBList)[kk]%>
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-\begin{figure}[htb]
-  \begin{center}
-<%
-    name <- names(fracBList)[kk];
-    fracB <- fracBList[[kk]];
-    ustates <- na.omit(getUniqueStates(fracB));
-
-    for (ss in seq(along=ustates)) {
-      fracBState <- extractSubsetByState(fracB, state=ustates[ss]);
-      fracBNState <- extractSubsetByState(fracBN, state=ustates[ss]);
-      betaN <- getSignals(fracBNState)
-      betaT <- getSignals(fracBState);
-
-      ## genotype calls
-      genName <- strsplit(name, split=",", fixed=TRUE);
-      genName <- unlist(genName, use.names=TRUE);
-      genName <- genName[length(genName)];
-      gTag <- ifelse(genName == "raw", genTag, genName);
-      gcN <- gcDsList[[gTag]]
-      idx <- indexOf(gcN, region$name);
-      gf <- getFile(gcN, idx);
-      isHet <- isHeterozygous(gf, units=fracBNState$unit, drop=TRUE);
-      txt <- sprintf("%s,%s --- smoothScatter version", name, gTag);
-      
-      col <- rep(homCol, length(isHet));
-      col[isHet] <-hetCol;
-
-      isBelowDiagonal <- (betaT<betaN);
-      xx <- median(betaN[isBelowDiagonal & isHet], na.rm=TRUE);
-      yy <- median(betaT[isBelowDiagonal & isHet], na.rm=TRUE);
-
-      figName <- sprintf("%s,betaNvsBetaT,%s,%s,%s,smoothScatter,state=%s", region$label, what, name, gTag, ustates[ss]);
-      if (fig <- figDev(figName)) {
-        par(mar=c(2.7,2.6,1.2,0)+0.1, mgp=c(1.4,0.3,0), tcl=-0.3, cex=cex, cex.axis=1.2, cex.lab=1.2);
-        smoothScatter(betaN, betaT, xlim=lim, ylim=lim, xlab=xlab, ylab=ylab, axes=FALSE)
-       axis(side=1, at=c(0,1/2,1));
-        axis(side=2, at=c(0,1/2,1));
-##        box();  # optional?
-
-        abline(a=0, b=yy/xx);
-        abline(v=xx);
-        abline(v=0.5);
-        abline(h=yy);
-        abline(h=yy/xx*0.5);
-
-        stext(side=3, pos=0, line=-0.3, cex=cex, names(tbl)[ss]);
-#        stext(side=4, pos=0, line=-0.8, cex=cex, txt, col="#999999");
-        devDone(figName);
-      } # if (fig <- figDev(...))
-      figPathname <- file.path(figPath, fig$fullname, fsep="/");
- %>%
-      \resizebox{0.34\textwidth}{!}{\includegraphics{<%=figPathname%>}}
-      <%  } # for (ss ...) %>
-    \end{center}
-    \caption{<%=txt%> for region <%=region$src%>.}
-    \label{fig<%=figName%>}
-    \end{figure}
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-    % END Figure
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-      <%  } # if (name ... %>
  <%  } # for (kk ...) %>
 
 
@@ -1188,17 +969,28 @@ tbl <- tbl[,1, drop=TRUE];
 % BEGIN Regions of interest
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 <%
-testNames <- c("Student"="t", "Kolmogorov-Smirnov"="ks");
+testNames <- c("Student"="t", "Kolmogorov-Smirnov"="ks")[1];
 %>
 
 <% for (testLabel in names(testNames)) { %>
 
 <% 
 testName <- testNames[testLabel];
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Get the test function
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+fcnName <- sprintf("%s.test", testName);
+testFUN <- get(fcnName, mode="function");
+rm(fcnName);
+
+# Setup test parameters
 testParam <- "mean";
-if (testName=="ks") {
+if (testName == "ks") {
   testParam <- "distribution";
 }
+
+
 allTstMeans <- NULL;
 allTstSds <- NULL;
 pcns <- NULL;
@@ -1210,11 +1002,6 @@ fixedNbPointsAcrossRegions <- (testName == "t");
 <%
 print(region);
 %>
-<%
-# Extract total CNs 
-cnList <- getCnList(cnDsList, what="ratios");
-cn <- cnList[[1]];
-%>
 
 <%
 ## PCN states
@@ -1224,22 +1011,46 @@ pcns <- c(pcns, attr(region$params$s, "src"));
 <% 
 for (what in evalSignals) { 
   for (probeType in probeTypes) { 
-
+    # Extract allele-specific signals
     signalList <- getFracBList(fracBDsList, what=what, pattern=methodPattern);
 
-    ## remove NAs
-    signalList <- lapply(signalList, FUN=function(fracB) {
-      isNA <- is.na(getSignals(fracB));
-      fracB <- extractSubset(fracB, whichVector(!isNA));
+    # Extract total CNs 
+    cnList <- getCnList(cnDsList, what="ratios");
+    cn <- cnList[[1]];
+
+    # Sanity check
+    lapply(signalList, FUN=function(signals) {
+      stopifnot(nbrOfLoci(signals) == nbrOfLoci(cn));
     });
 
+    # Sanity check
+    signal <- signalList[[1]];
+    cn$unit <- signal$unit;
+    addLocusFields(cn, "unit");
     signalList[["TCN"]] <- cn; ## Add TCN
-    signalList[["TCN"]]$unit <- signalList[[1]]$unit;
+    rm(signal);
 
-    if (probeType == "Het SNPs") {
-      signalList <- sapply(genTags, FUN=function(genTag) {
-        extractHeterozygous(signalList, gcDsList[[genTag]], gcsDsList[[genTag]], confQuantile=confQuantile);
-      });
+    # Remove NAs
+    signalList <- lapply(signalList, FUN=function(signals) {
+      isNA <- is.na(getSignals(signals));
+      extractSubset(signals, whichVector(!isNA));
+    });
+
+    if (probeType == "heterozygous SNPs") {
+      if (confQuantile < 1) {
+        signalList <- sapply(genTags, FUN=function(genTag) {
+          gcSet <- gcDsList[[genTag]];
+          gcsSet <- gcsDsList[[genTag]];
+          extractHeterozygous(signalList, gcSet, gcsSet,
+                                 confQuantile=confQuantile);
+        });
+      } else {
+        signalList <- sapply(genTags, FUN=function(genTag) {
+          print(genTags);
+          gcSet <- gcDsList[[genTag]];
+          extractHeterozygous(signalList, gcSet);
+        });
+      }
 
       dn <- dimnames(signalList);
       nms <- sapply(dn[[2]], FUN=function(nm) sprintf("%s,%s", dn[[1]], nm));
@@ -1247,26 +1058,22 @@ for (what in evalSignals) {
 
       patts <- c("raw", sprintf("%s,%s", dn[[2]], dn[[2]]), "TCN");
       keep <- unlist(sapply(patts, FUN=grep, nms), use.names=FALSE);
+      rm(patts);
       signalList <- signalList[keep];
       names(signalList) <- nms[keep];
-
-      ## Add TCN
-      signalList[["TCN,SNP+CN"]] <- cn;
-      snps <- whichVector(!is.na(signalList[[1]]$y));
-      signalList[["TCN,SNP"]] <- extractSubset(cn, snps);
 
       ## keep only some combinations for the evaluation
       if (!keepAllCombinations) {
         keep <- grep(rocCurvesPattern, names(signalList));
         signalList <- signalList[keep];
       }
-    } # if (probeType == "Het SNPs")
+    } # if (probeType == "heterozygous SNPs")
     str(signalList);
 
     if (fixedNbPointsAcrossMethods) {
       if (!fixedNbPointsAcrossRegions) {
-        minNbPoints <- min(sapply(signalList, FUN=function(fracB) {
-          table(getStates(fracB));
+        minNbPoints <- min(sapply(signalList, FUN=function(signals) {
+          min(table(getStates(signals)));
         }));
       } else {
         # Now we resample with replacement (for practical purposes)
@@ -1275,9 +1082,6 @@ for (what in evalSignals) {
       }
       verbose && cat(verbose, "Number of points sampled (with replacement) per bootstrap sample: ", minNbPoints);
     }
-
-    fcnName <- sprintf("%s.test", testName);
-    testFUN <- get(fcnName, mode="function");
 
     if (!is.null(fixedSeed)) {
       set.seed(fixedSeed);
@@ -1338,7 +1142,7 @@ for (what in evalSignals) {
     tab <- matrix(tab, nrow=nrow(tstMeans), ncol=ncol(tstMeans));
     rownames(tab) <- names(signalList);
     colnames(tab) <- pcns;
-    what2 <- ifelse(what == "fracB", "beta", "rho");
+    what2 <- ifelse(what == "fracB", "beta", "LH");
     output2 <- ifelse(output == "statistic", "test statistics", "p-value");
 
     caption <- sprintf("%s %s of the null hypothesis of equal %s before and after each PCN change point (%s): raw or TumorBoost-normalized %s, and total copy number (last line). %s. The larger value, the more different the true %ss are.", testLabel, output2, testParam, probeType, what2, txtB, testParam);
@@ -1403,6 +1207,29 @@ x <- paste(x, collapse="\n");
 \end{Verbatim}
 
 
+\subsection{Genotype calls}
+\begin{Verbatim}[fontfamily=helvetica,fontsize=\small]
+<%
+x <- capture.output(print(gcDsList));
+x <- gsub(": .*/(callData/)", ": \\1", x);
+x <- paste(x, collapse="\n");
+%>
+<%=x%>
+\end{Verbatim}
+
+<% if (confQuantile < 1 && length(gcsDsList) > 0) { %>
+\subsection{Genotype confidence scores}
+\begin{Verbatim}[fontfamily=helvetica,fontsize=\small]
+<%
+x <- capture.output(print(gcsDsList));
+x <- gsub(": .*/(callData/)", ": \\1", x);
+x <- paste(x, collapse="\n");
+%>
+<%=x%>
+\end{Verbatim}
+<% } # if (length(gcsDsList) > 0) %>
+
+
 %=====================================================================
 % Session information
 %=====================================================================
@@ -1417,6 +1244,9 @@ This report was automatically generated using the R.rsp package.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % HISTORY:
+% 2009-12-08 [HB]
+# o Clean out all non-LH evaluation code.
+% o Lots of code clean up before submission.
 % 2009-12-03 [HB]
 % o Now using a fixed seed by default.
 % o Made the axis labels greater for some plots.

@@ -5,16 +5,17 @@
 fntFUN <- function(names, ...) {
   pattern <- "^(TCGA-[0-9]{2}-[0-9]{4})-([0-9]{2}[A-Z])[-]*(.*)";
   gsub(pattern, "\\1,\\2,\\3", names);
-}; 
+};
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-# Setting up fracB data sets
+# 1. Setting up fracB data sets
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 if (!exists("fracBDsList", mode="list")) {
   verbose && enter(verbose, "Loading 'fracBDsList'");
 
   pattern <- sprintf("^%s(|,TBN.*)$", dataSet);
   fracBDsList <- loadAllDataSets(dataSet, chipType=chipType, pattern=pattern, type="fracB", rootPath=rootPath);
+  rm(pattern);
 
   fracBDsList <- lapply(fracBDsList, setFullNamesTranslator, fntFUN);
   verbose && print(verbose, fracBDsList);
@@ -25,6 +26,7 @@ if (!exists("fracBDsList", mode="list")) {
   keep <- grep("^1[01][A-Z]$", types);
   dsN <- extract(dsN0, keep);
   verbose && print(verbose, dsN);
+  rm(dsN0, types);
   verbose && exit(verbose);
 
   ## Keep only tumors
@@ -54,6 +56,7 @@ if (!exists("fracBDsList", mode="list")) {
   names <- sapply(names, FUN=paste, collapse=",");
   names[names == ""] <- "raw";
   names(fracBDsList) <- names;
+  rm(names, ns, first);
   verbose && exit(verbose);
 
   verbose && exit(verbose);
@@ -61,13 +64,35 @@ if (!exists("fracBDsList", mode="list")) {
 
 # Sanity check
 if (length(fracBDsList) == 0) {
-  rm(fracBDsList);
   throw("No matching data sets found.");
+}
+
+# Filter out the data sets matching the method pattern
+if (!is.null(methodPattern)) {
+  verbose && enter(verbose, "Filtering out data sets matching the method pattern");
+  verbose && cat(verbose, "Method pattern: ", methodPattern);
+  verbose && cat(verbose, "Before:");
+  verbose && print(verbose, fracBDsList);
+
+  dsList <- fracBDsList;
+  verbose && print(verbose, names(dsList));
+  keep <- (regexpr(methodPattern, names(dsList)) != -1);
+  verbose && print(verbose, keep);
+  dsList <- dsList[keep];
+  # Sanity check
+  if (length(dsList) == 0) {
+    throw("No data sets remaining after name pattern filtering.");
+  }
+  fracBDsList <- dsList;
+  rm(dsList);
+  verbose && cat(verbose, "After:");
+  verbose && print(verbose, fracBDsList);
+  verbose && exit(verbose);
 }
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-# Setting up total CN data set
+# 2. Setting up total CN data set
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 if (!exists("cnDsList", mode="list")) {
   if (!exists("acs") || !inherits(acs, "AromaUnitTotalCnBinarySet")) {
@@ -80,32 +105,30 @@ if (!exists("cnDsList", mode="list")) {
   
     acsN <- extract(acs0, isNormal);
     acsT <- extract(acs0, isTumor);
-    rm(acs0);
+    rm(acs0, types, isTumor, isNormal);
     
     exportTotalCnRatioSet(acsT, acsN, verbose=verbose);
+    rm(acsN, acsT);
   }
   
   pattern <- sprintf("^%s(|.lnk)$", dataSet)
   cnDsList <- loadAllDataSets(dataSet, chipType=chipType, pattern=pattern, type="total", rootPath="rawCnData", verbose=verbose);
+  rm(pattern);
 }
 
 # Sanity check
 if (length(cnDsList) == 0) {
-  rm(cnDsList);
   throw("No matching data sets found.");
 }
 
-ds <- cnDsList[[1]];
-platform <- getPlatform(ds);
-chipType <- getChipType(ds);
-chipTypeEsc <- gsub("_", "\\_", chipType, fixed=TRUE);
 
-# - - - - - - - - - - - - - - - - - - - 
-# Setting up normal genotype data set
-# - - - - - - - - - - - - - - - - - - - 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# 3. Setting up normal genotype data set
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 if (!exists("gcDsList", mode="list")) {
   pattern <- sprintf("^%s,", dataSet)
   gcDsList <- loadAllDataSets(dataSet, chipType=chipType, pattern=pattern, type="genotypes", rootPath="callData", verbose=verbose);
+  rm(pattern);
 
   gcDsList <- lapply(gcDsList, setFullNamesTranslator, fntFUN);
 
@@ -117,80 +140,97 @@ if (!exists("gcDsList", mode="list")) {
     ds;
   });
 
-  # Set names
+  # Set names by caller algorithm
   names <- names(gcDsList);
-  names <- sapply(names, FUN=strsplit, split=",", fixed=TRUE);
-  while(length(names[[1]]) > 0 && length(names[[2]]) > 0) {
-    if (names[[1]][1] != names[[2]][1])
-      break;
-    names[[1]] <- names[[1]][-1];
-    names[[2]] <- names[[2]][-1];
-  }
-  names <- sapply(names, FUN=paste, collapse=",");
+  names <- gsub(".*,", "", names);
   names(gcDsList) <- names;
+  rm(names);
 
   # keep those who match genTags and update genTags accordingly
-  m <- match(genTags, names);
-  genTags <- genTags[which(!is.na(m))];
-  gcDsList <- gcDsList[genTags];
+  m <- match(genTags, names(gcDsList));
   if (sum(is.na(m))) {
     warning("No matching genotype data set found for tag: ", paste(genTags[is.na(m)], collapse=","));
   }
+  genTags <- genTags[!is.na(m)];
+  gcDsList <- gcDsList[genTags];
+  rm(m);
 }
 
 # Sanity check
 if (length(gcDsList) == 0) {
-  rm(gcDsList);
   throw("No matching data sets found.");
 }
 
+
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Setting up normal genotype call confidence scores data set
+# 4. Setting up normal genotype call confidence scores data set
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-if (!exists("gcsDsList", mode="list")) {
-  pattern <- sprintf("^%s,", dataSet)
-  gcsDsList <- loadAllDataSets(dataSet, chipType=chipType, pattern=pattern, type="confidenceScores", rootPath="callData", verbose=verbose);
-
-  gcsDsList <- lapply(gcsDsList, setFullNamesTranslator, fntFUN);
-
-  ## Keep only normals
-  gcsDsList <- lapply(gcsDsList, function(ds) {
-    types <- sapply(ds, function(df) getTags(df)[1]);
-    keep <- grep("^1[01][A-Z]$", types);
-    ds <- extract(ds, keep);
-    ds;
-  });
-
-  if (length(gcsDsList) > 0) {
-    # Set names
+if (confQuantile < 1) {
+  if (!exists("gcsDsList", mode="list")) {
+    pattern <- sprintf("^%s,", dataSet)
+    gcsDsList <- loadAllDataSets(dataSet, chipType=chipType, pattern=pattern, type="confidenceScores", rootPath="callData", verbose=verbose);
+    rm(pattern);
+  
+    gcsDsList <- lapply(gcsDsList, setFullNamesTranslator, fntFUN);
+  
+    ## Keep only normals
+    gcsDsList <- lapply(gcsDsList, function(ds) {
+      types <- sapply(ds, function(df) getTags(df)[1]);
+      keep <- grep("^1[01][A-Z]$", types);
+      ds <- extract(ds, keep);
+      ds;
+    });
+  
+    # Set names by caller algorithm
     names <- names(gcsDsList);
-    names <- sapply(names, FUN=strsplit, split=",", fixed=TRUE);
-    while(length(names[[1]]) > 0 && length(names[[2]]) > 0) {
-      if (names[[1]][1] != names[[2]][1])
-        break;
-      names[[1]] <- names[[1]][-1];
-      names[[2]] <- names[[2]][-1];
-    }
-    names <- sapply(names, FUN=paste, collapse=",");
+    names <- gsub(".*,", "", names);
     names(gcsDsList) <- names;
+    rm(names);
+  
+    # keep those who match genTags
+    m <- match(genTags, names(gcsDsList));
+    gcsDsList <- gcsDsList[genTags[!is.na(m)]];
+    if (sum(is.na(m))) {
+      warning("No matching genotype confidence score data set found for tag: ", paste(genTags[is.na(m)], collapse=","));
+    }
+    rm(m);
+  }
+  
+  # Drop non existing confidence scores
+  gcsDsList <- gcsDsList[sapply(gcsDsList, FUN=length) > 0];
+  
+  # Sanity check
+  if (length(gcsDsList) == 0) {
+    throw("Stratification on genotype confidence scores is requests but there are no confidence score files available: ", confQuantile);
   }
 
-  # keep those who match genTags
-  m <- match(genTags, names);
-  gcsDsList <- gcsDsList[genTags[which(!is.na(m))]];
-  if (sum(is.na(m))) {
-    warning("No matching genotype confidence score data set found for tag: ", paste(genTags[is.na(m)], collapse=","));
+  # Drop incomplete cases
+  if (length(gcsDsList) > 0) {
+    keep <- intersect(names(gcDsList), names(gcsDsList));
+    gcDsList <- gcDsList[keep];
+    gcsDsList <- gcsDsList[keep];
+    rm(keep);
+
+    # Sanity check
+    if (length(gcDsList) == 0) {
+      throw("After matching genotypes with available confidence scores, there is no data.");
+    }
   }
-}
-if (length(gcsDsList) == 0) {
-  # No genotypes confidence scores available
-}
+} else {
+  # Empty dummy
+  gcsDsList <- list();
+} # if (confQuantile < 1)
 
 
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Coerce genotype calls and confidence scores into a list
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+genTags <- names(gcDsList);
+names <- names(fracBDsList);
+names <- strsplit(names, split=",", fixed=TRUE);
+keep <- sapply(names, FUN=function(tags) {
+  is.element("raw", tags) || any(is.element(genTags, tags))
+});
+fracBDsList <- fracBDsList[keep];
+rm(keep);
+
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Sanity checks
@@ -200,25 +240,9 @@ regionsList <- lapply(regions, FUN=parseRegion);
 sampleNames <- sapply(regionsList, FUN=function(x) x$name);
 sampleName <- sampleNames[1];
 stopifnot(all(sampleNames == sampleName));
+rm(regions, sampleNames);
 
 
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Filter out the data sets matching the method pattern
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-if (!is.null(methodPattern)) {
-  verbose && cat(verbose, "Method pattern: ", methodPattern);
-
-  dsList <- fracBDsList;
-  verbose && print(verbose, names(dsList));
-  keep <- (regexpr(methodPattern, names(dsList)) != -1);
-  verbose && print(verbose, keep);
-  dsList <- dsList[keep];
-  # Sanity check
-  if (length(dsList) == 0) {
-    throw("No data sets remaining after name pattern filtering.");
-  }
-  fracBDsList <- dsList;
-}
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Drop all samples but the one of interest
@@ -239,12 +263,18 @@ tags <- grep("^[0-9]{2}[A-Z]$", tags, value=TRUE);
 tags <- sort(tags);
 tumorType <- tags[1];
 normalType <- tags[2];
-
+rm(df, tags);
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Document path
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ds <- cnDsList[[1]];
+platform <- getPlatform(ds);
+chipType <- getChipType(ds);
+chipTypeEsc <- gsub("_", "\\_", chipType, fixed=TRUE);
+rm(ds);
+
 docTags <- c(platform, chipType, docTags);
 if (confQuantile < 1) {
   docTags <- c(docTags, confQuantileTag);
@@ -263,6 +293,13 @@ figDev <- function(..., force=(figForce > 0)) { epsDev(..., path=figPath, force=
 figDev <- function(..., force=(figForce > 0)) { pngDev(..., device=png, path=figPath, force=force) }
 
 docTags <- strsplit(docTags, split=",", fixed=TRUE)[[1]];
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# CLEAN UP
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+rm(fntFUN);
+
 
 ############################################################################
 # HISTORY:

@@ -1,49 +1,85 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Additional configurations
+# Options for reproducible research
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-what <- "fracB";
-evalSignal <- c("abs(fracB-1/2)", "minorCn", "majorCn")[1];
-
-addLegend <- TRUE;
-addSdEst <- FALSE;
-
-addBinTrack <- TRUE;
-doRocCurves <- TRUE;
-plotAllRocCurves <- c(TRUE, FALSE)[2];
-doFracB <- c(TRUE, FALSE)[1];
-plotTracks <- c(TRUE, FALSE)[1];
-
-## options for for plotsByState
-addTrueBetaLines <- FALSE;
-addLinearRegressionLines <- TRUE;
-addTrueBetaPoints <- FALSE;
-addDiagHorizLines <- TRUE;
-kappasPbs <- c(0.55, 1);
-
-## options for main
-tumorPurify <- c(FALSE, TRUE)[1];
-kappaMain <- 0.5;
-if (!tumorPurify) {
-   kappaMain <- 1;
-};
-useFixedNbrOfPoints <- TRUE;
-fixedNbrOfPoints <- 100000; ## not used if useFixedNbrOfPoints
-
-# Use a fixed random seed?
-fixedSeed <- NULL;
+# Use a fixed random seed? (if not, set to NULL)
 fixedSeed <- 0xbeef;
 
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Additional configurations
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+evalSignal <- "abs(fracB-1/2)";
+
+addLegend <- FALSE;
+addSdEst <- FALSE;	
+
+plotAllRocCurves <- c(TRUE, FALSE)[2];
+plotTracks <- c(TRUE, FALSE)[1];
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Color settings
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+palette <- brewer.pal(n=9, name="Set1");
+
+# Colors for different data sets/methods
+colorMap <- c(
+  "*"="#000000", 
+  "NA"="#999999", 
+  "1"=palette[1],
+  "2"=palette[5],
+  "3"=palette[2],
+  "4"=palette[4]
+);
+
+# Colors for heterozygous and homozygous SNPs
+hetCol <- "#000000";
+homCol <- "#999999";
+
+# Colors for full-resolution and smoothed signals
+fullResColorMap <- c("*" = "#000000", "NA" = "#999999");
+smoothedColorMap <- c("*" = "#6666FF", "NA" = "#999999");
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Options for (x, signal) plots
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 trackAspect <- 0.22;
 trackWidth <- 0.9;
 
-binCounts <- c(1, 1.25, 1.5, 2, 3, 4); rocCols <- 2;
-binCounts <- binCounts[c(1, 4:6)];
-## binCounts <- binCounts[union(1, length(binCounts))];
 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Options for (betaN, betaT) plots
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+## options for for plotsByState
+addLinearRegressionLines <- TRUE;
+addDiagHorizLines <- TRUE;
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+fixedNbrOfPoints <- 100000;
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Options for smoothing
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Bin by counts of genomic length?
 byCount <- c(TRUE, FALSE)[1];
 
-fpLim <- c(0,0.5);
-## fpLim <- c(0,1);
+# "Width" of each bin
+binCounts <- c(1, 2, 4);
+
+# Add smoothed track?
+addBinTrack <- TRUE;
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Options for ROC analysis
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+fpLim <- c(0, 0.6);
+# Number of different ROC colors
+rocCols <- 2;
+
+
 
 robust <- c(FALSE, TRUE)[1];
 robustStr <- ifelse(robust, "median", "mean");
@@ -61,7 +97,15 @@ if (regexpr("ismpolish", dataSet) != -1) {
 } else if (regexpr("BeadStudio", dataSet) != -1) {
   docTags <- gsub(".*,(BeadStudio,[^,]+).*", "\\1", dataSet);
   genTags <- c("BeadStudio", "NGC");
-  rocCurvesPattern <- "^(raw|TCN),NGC$|^TBN";
+  if (confQuantile < 1) {
+    rocCurvesPattern <- "^(raw|TCN),NGC$|^TBN";
+  } else {
+    # The BeadStudio genotype calls contains 4% NC:s, which need
+    # to be excluded from the evaluation.  However, if done, the
+    # comparison to naive genotype calls will no longer be objective.
+    # rocCurvesPattern <- "^(raw|TCN),BeadStudio$|^TBN";
+    rocCurvesPattern <- "^(raw|TCN),NGC$|^TBN";
+  }
 } else {
   throw("Cannot infer ('docTags', 'genTags') from 'dataSet': ", dataSet);
 }

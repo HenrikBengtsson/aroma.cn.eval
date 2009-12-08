@@ -81,6 +81,9 @@ loadAllDataSets <- function(dataSet, chipType="*", pattern=NULL, ..., rootPath="
   } # for (kk ...)
   verbose && exit(verbose);
 
+  # Drop empty data sets
+  dsList <- dsList[sapply(dsList, FUN=length) > 0];
+
   # Set the names
   names <- sapply(dsList, FUN=getFullName);
   names(dsList) <- names;

@@ -1,7 +1,7 @@
 ############################################################################
 #
 ############################################################################
-setMethodS3("extractListOfCopyNumbers", "list", function(this, name, chromosome, region=NULL, targetChipType=NULL, truth=NULL, what=what, ..., force=TRUE, cache=FALSE, verbose=FALSE) {
+setMethodS3("extractListOfCopyNumbers", "list", function(this, name, chromosome, region=NULL, targetChipType=NULL, truth=NULL, what=c("log2ratios", "ratios"), ..., force=TRUE, verbose=FALSE) {
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # Validate arguments
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -26,22 +26,6 @@ setMethodS3("extractListOfCopyNumbers", "list", function(this, name, chromosome,
 
 
   verbose && enter(verbose, "extractListOfCopyNumbers()");
-
-
-  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  # Check for cached results
-  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  key <- list(dataSets=list(fullnames=sapply(this, getFullName), chipTypes=sapply(this, getChipType), samples=lapply(this, getFullNames)), name=name, chromosome=chromosome, region=region, targetChipType=targetChipType, truth=truth, what=what, ...);
-  dirs <- c("aroma.cn.eval");
-  if (!force) {
-    cnList <- loadCache(key, dirs=dirs);
-    if (!is.null(cnList)) {
-      verbose && cat(verbose, "Found cached results");
-      verbose && exit(verbose);
-      stop("SANITY CHECK; WE SHOULD HAVE TURNED OFF ALL MEMOIZATION.");
-      return(cnList);
-    }
-  }
 
 
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -89,11 +73,6 @@ setMethodS3("extractListOfCopyNumbers", "list", function(this, name, chromosome,
   if (!is.null(targetChipType)) {
     nbrOfUnits <- sapply(cnList, FUN=nbrOfLoci);
     stopifnot(length(unique(nbrOfUnits)) == 1);
-  }
-
-  # Save cache?
-  if (cache) {
-    saveCache(cnList, key=key, dirs=dirs);
   }
 
   verbose && exit(verbose);

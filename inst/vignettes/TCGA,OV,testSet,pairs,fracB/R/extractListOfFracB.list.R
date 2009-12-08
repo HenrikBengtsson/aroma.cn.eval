@@ -1,7 +1,7 @@
 ############################################################################
 #
 ############################################################################
-setMethodS3("extractListOfFracB", "list", function(this, name, chromosome, region=NULL, targetChipType=NULL, truth=NULL, what=NULL, ..., force=TRUE, cache=FALSE, verbose=FALSE) {
+setMethodS3("extractListOfFracB", "list", function(this, name, chromosome, region=NULL, targetChipType=NULL, truth=NULL, what=NULL, ..., force=TRUE, verbose=FALSE) {
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # Validate arguments
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -26,23 +26,6 @@ setMethodS3("extractListOfFracB", "list", function(this, name, chromosome, regio
 
 
   verbose && enter(verbose, "extractListOfFracB()");
-
-
-  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  # Check for cached results
-  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  key <- list(dataSets=list(method="extractListOfFracB.list()", fullnames=sapply(this, getFullName), chipTypes=sapply(this, getChipType), samples=lapply(this, getFullNames)), name=name, chromosome=chromosome, region=region, targetChipType=targetChipType, truth=truth, what=what, ...);
-  dirs <- c("aroma.cn.eval");
-  if (!force) {
-    fracBList <- loadCache(key, dirs=dirs);
-    if (!is.null(fracBList)) {
-      verbose && cat(verbose, "Found cached results");
-      verbose && exit(verbose);
-      stop("SANITY CHECK; WE SHOULD HAVE TURNED OFF ALL MEMOIZATION.");
-      return(fracBList);
-    }
-  }
-
 
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # Extract FracBs
@@ -92,11 +75,6 @@ setMethodS3("extractListOfFracB", "list", function(this, name, chromosome, regio
   if (!is.null(targetChipType)) {
     nbrOfUnits <- sapply(fracBList, FUN=nbrOfLoci);
     stopifnot(length(unique(nbrOfUnits)) == 1);
-  }
-
-  # Save cache?
-  if (cache) {
-    saveCache(fracBList, key=key, dirs=dirs);
   }
 
   verbose && exit(verbose);
