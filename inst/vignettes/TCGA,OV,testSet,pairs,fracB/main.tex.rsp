@@ -103,32 +103,6 @@ This report is based on the data set <%=dataSet%>. All data is based on the Affy
 
 The two CEL files were preprocessed separately using CRMAv2 (without any reference arrays)
 
-<%
-getRegionLabels <- function(state) {
-  lab <- character(length=length(state));
-  lab[state==0] <- "normal (1,1)";
-  lab[state==1] <- "gain (1,2)";
-  lab[state==2] <- "deletion (0,1)";
-  lab[state==3] <- "copy neutral LOH (0,2)";
-  lab;
-}
-getRegionPcns <- function(state) {
-  switch(state+1, c(1,1), c(1,2), c(0,1), c(0,2))
-}
-
-getQuantStates <- function(states, evalSignal=c("TCN", "abs(fracB-1/2)", "minorCn", "majorCn")) {
-  match.arg(evalSignal);
-  pcns <- sapply(states, getRegionPcns);
-  qs <- switch(evalSignal, 
-    TCN = apply(pcns, 2, sum),
-    "abs(fracB-1/2)" = states,
-    minorCn = pcns[1,],
-    majorCn = pcns[2,]);
-  ## if ties then order by TCN
-  switch(length(unique(qs)), apply(pcns, 2, sum), qs);
-}
-%>
-
 \subsection*{List of change points}
 For this data set, we have selected a few regions for which one safely can assume there exists a single changepoint and for which the fracB distribution looks constant.  This selection was done visually.  For each region we chose large enough safety margin such that the risk for the two sets $\mathcal{J}_A$ and $\mathcal{J}_B$ to contain loci from the other set is extremely small.  
 
@@ -173,40 +147,6 @@ We now compare the  raw, TBN-NGC, and TBN-Birdseed methods using the afformentio
 print(region);
 region <- parseRegion(region);
 print(region);
-%>
-
-
-<%
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Count the number of loci with each state
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-getNbLociPerState <- function(object) {
-  states <- getStates(object);
-  tbl <- table(states, exclude=NULL);
-  uniqueStates <- as.integer(names(tbl));
-  o <- order(abs(uniqueStates));
-  tbl <- tbl[o];
-  names <- names(tbl);
-  sign <- as.integer(names);
-  names(tbl) <- getRegionLabels(sign);
-  tbl
-}
-%>
-
-
-
-
-
-<%
-test <- function(signal, ...) {
-  testSeparation(signal, test="ks.test")$statistic;
-} 
-
-test <- function(signal, testFUN, output=c("statistic")) {
-  states <- getStates(signal)
-  us <- na.omit(getUniqueStates(signal))
-  testFUN(getSignals(signal)[states==us[1]], getSignals(signal)[states==us[2]])[[output]]
-}
 %>
 
 

@@ -3,10 +3,10 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 getRegionLabels <- function(state) {
   lab <- character(length=length(state));
-  lab[state == 0] <- "'normal' (1,1)";
-  lab[state == 1] <- "'gain' (1,2)";
-  lab[state == 2] <- "'deletion' (0,1)";
-  lab[state == 3] <- "'copy neutral LOH' (0,2)";
+  lab[state == 0] <- "normal (1,1)";
+  lab[state == 1] <- "gain (1,2)";
+  lab[state == 2] <- "deletion (0,1)";
+  lab[state == 3] <- "copy neutral LOH (0,2)";
   lab;
 } # getRegionLabels()
 
@@ -55,5 +55,3 @@ test <- function(signal, testFUN, output=c("statistic")) {
   res <- testFUN(signals[states == us[1]], signals[states == us[2]]);
   res[[output]];
 } # test()
-
-
