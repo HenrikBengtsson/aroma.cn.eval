@@ -13,7 +13,7 @@ evalSignal <- "abs(fracB-1/2)";
 addLegend <- FALSE;
 addSdEst <- FALSE;	
 
-plotAllRocCurves <- c(TRUE, FALSE)[2];
+plotAllRocCurves <- c(TRUE, FALSE)[1];
 plotTracks <- c(TRUE, FALSE)[1];
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

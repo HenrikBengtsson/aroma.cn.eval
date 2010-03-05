@@ -81,7 +81,7 @@ pmTag <- "@plusOrMinus@";
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 evalSignals <- c("fracB", "abs(fracB-1/2)")[2];
 probeTypes <- c("all SNPs", "heterozygous SNPs")[2];
-keepAllCombinations <- c(TRUE, FALSE)[2];
+keepAllCombinations <- c(TRUE, FALSE)[1];
 
 # Number of bootstrap iterations (use B <- 1 for no bootstrapping)
 B <- 100;
