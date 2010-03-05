@@ -54,7 +54,7 @@ if (!exists("fracBDsList", mode="list")) {
     names <- lapply(names, FUN=function(x) x[-1]);
   }
   names <- sapply(names, FUN=paste, collapse=",");
-  names[names == ""] <- "raw";
+  names[(names == "") | sapply(names, length)==0] <- "raw";
   names(fracBDsList) <- names;
   rm(names, ns, first);
   verbose && exit(verbose);

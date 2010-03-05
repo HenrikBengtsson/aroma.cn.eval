@@ -92,11 +92,11 @@ if (regexpr("ismpolish", dataSet) != -1) {
   rocCurvesPattern <- "^(raw|TCN),Birdseed$|^TBN";
 } else if (regexpr("(ACC,ra,-XY,BPN,-XY,AVG,FLN,-XY|CRMAv2)", dataSet) != -1) {
   docTags <- "CRMAv2";
-  genTags <- c("Birdseed", "NGC");
+  genTags <- c("Birdseed", "NGC")[2];
   rocCurvesPattern <- "^(raw|TCN),Birdseed$|^TBN";
 } else if (regexpr("BeadStudio", dataSet) != -1) {
   docTags <- gsub(".*,(BeadStudio,[^,]+).*", "\\1", dataSet);
-  genTags <- c("BeadStudio", "NGC");
+  genTags <- c("BeadStudio", "NGC")[2];
   if (confQuantile < 1) {
     rocCurvesPattern <- "^(raw|TCN),NGC$|^TBN";
   } else {
