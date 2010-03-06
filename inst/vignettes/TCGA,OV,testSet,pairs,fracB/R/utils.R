@@ -7,11 +7,12 @@ getRegionLabels <- function(state) {
   lab[state == 1] <- "gain (1,2)";
   lab[state == 2] <- "deletion (0,1)";
   lab[state == 3] <- "copy neutral LOH (0,2)";
+  lab[state == 4] <- "gain (1,3)";
   lab;
 } # getRegionLabels()
 
 getRegionPcns <- function(state) {
-  switch(state+1, c(1,1), c(1,2), c(0,1), c(0,2))
+  switch(state+1, c(1,1), c(1,2), c(0,1), c(0,2), c(1,3))
 } # getRegionPcns()
 
 getQuantStates <- function(states, evalSignal=c("TCN", "abs(fracB-1/2)", "minorCn", "majorCn")) {

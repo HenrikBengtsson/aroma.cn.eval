@@ -36,7 +36,7 @@
 
   # Send both stdout and stderr to a log file
 
-  Rterm --file=build.Rex --args --dataSet=TCGA,OV,Birdseed,ismpolish > build.log 2>&1
+  Rterm --file=build.Rex --args --tumprType=OV --dataSet=TCGA,OV,Birdseed,ismpolish > build.log 2>&1
 
   Rterm --file=build.Rex --args --dataSet=TCGA,OV,Birdseed,ismpolish --confQuantile=0.9 > build.log 2>&1
 
