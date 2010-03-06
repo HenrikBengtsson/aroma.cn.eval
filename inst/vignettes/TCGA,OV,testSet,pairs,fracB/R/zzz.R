@@ -251,10 +251,16 @@ cnDsList <- lapply(cnDsList, FUN=function(ds) {
   ds <- extract(ds, indexOf(ds, sampleName));
 });
 print(cnDsList);
+
 fracBDsList <- lapply(fracBDsList, FUN=function(ds) {
   ds <- extract(ds, indexOf(ds, sampleName));
 });
 print(fracBDsList);
+
+gcDsList <- lapply(gcDsList, FUN=function(ds) {
+  ds <- extract(ds, indexOf(ds, sampleName));
+});
+print(gcDsList);
 
 # Infer the tumor and normal type
 df <- getFile(cnDsList[[1]], 1);
