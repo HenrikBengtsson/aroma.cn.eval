@@ -184,10 +184,10 @@ The data was generated on the <%=platform%> <%=chipTypeEsc%> chip type.
   <% } %>%
 <% } else if (platform == "Illumina") { %>%
   <% if (is.element("XY", docTags)) { %>%
-  Each array was preprocessed separately using Birdseed's "XY-normalization" method, which is principle is a single-array method that relies neither on reference samples nor prior estimates.
+  Each array was preprocessed separately using BeadStudio's "XY-normalization" method~\cite{Illumina_20061004}, which is principle is a single-array method that relies neither on reference samples nor prior estimates.
   <% } %>%
   <% if (is.element("BAF", docTags)) { %>%
-  Each array was preprocessed using Birdseed's "BAF" normalization method~\cite{PeifferD_etal_2006}, which is a multi-array (population-based) method.
+  Each array was preprocessed using BeadStudio's "BAF" normalization method~\cite{PeifferD_etal_2006}, which is a multi-array (population-based) method.
   <% } %>%
 <% } %>
 

@@ -6,6 +6,16 @@ filenameRsp <- sprintf("%s.tex.rsp", fullnameRsp);
 filenameTeX <- sprintf("%s.tex", fullnameRsp);
 filenamePDF <- sprintf("%s.pdf", fullnameRsp);
 
+filenameAux <- sprintf("%s.aux", fullnameRsp);
+if (file.exists(filenameAux)) {
+   file.remove(filenameAux);
+}
+			      
+filenameBbl <- sprintf("%s.bbl", fullnameRsp);
+if (file.exists(filenameBbl)) {
+   file.remove(filenameBbl);
+}
+
 # => *.tex.rsp => ... => *.pdf
 rsptex(filenameRsp, envir=globalenv(), pdf=TRUE, force=TRUE, verbose=-5);
 
