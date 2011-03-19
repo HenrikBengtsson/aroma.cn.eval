@@ -2,20 +2,25 @@
 % Authors: Henrik Bengtsson, hb@stat.berkeley.edu
 %          Pierre Neuvial, pierre@stat.berkeley.edu
 % Created on: 2009-02-23
-% Modified on: 2009-12-08
+% Modified on: 2011-03-18
 %
 % Usage:
 <%-- (RSP comment)
-  library("R.rsp");
-  fullnameRsp <- "BengtssonH_2009c-SupplementaryNotes";
-  filenameRsp <- sprintf("%s.tex.rsp", fullnameRsp);
-  filenameTeX <- sprintf("%s.tex", fullnameRsp);
-  filenamePDF <- sprintf("%s.pdf", fullnameRsp);
-  # => *.tex.rsp => ... => *.pdf
-  rsptex(filenameRsp, envir=globalenv(), pdf=TRUE, force=TRUE, verbose=-5);
-  pathnameTeX <- gsub(".pdf", ".tex", pdfPathname, fixed=TRUE);
-  file.copy(filenameTeX, pathnameTeX, overwrite=TRUE);
-  file.copy(filenamePDF, pdfPathname, overwrite=TRUE);
+  path <- file.path("vignettes/TCGA,OV,testSet,pairs,fracB/");
+  setwd(path);
+
+  buildIt <- function() {
+    library("R.rsp");
+    fullnameRsp <- "BengtssonH_2009c-SupplementaryNotes";
+    filenameRsp <- sprintf("%s.tex.rsp", fullnameRsp);
+    filenameTeX <- sprintf("%s.tex", fullnameRsp);
+    filenamePDF <- sprintf("%s.pdf", fullnameRsp);
+    # => *.tex.rsp => ... => *.pdf
+    rsptex(filenameRsp, envir=globalenv(), force=TRUE, verbose=-5);
+    pathnameTeX <- gsub(".pdf", ".tex", pdfPathname, fixed=TRUE);
+    file.copy(filenameTeX, pathnameTeX, overwrite=TRUE);
+    file.copy(filenamePDF, pdfPathname, overwrite=TRUE);
+  } # buildIt()
 
   # => *.tex.rsp => ... => *.pdf
 #  # rsptex(filename, envir=globalenv(), pdf=TRUE, force=TRUE, verbose=-5);
@@ -53,6 +58,21 @@
   Rterm --file=build.Rex --args --tumorType=OV --dataSet=TCGA,OV,BeadStudio,BAF --confQuantile=0.9 > build.log 2>&1
 
 --%>
+%
+% Required setup:
+% annotationData/
+%   chipTypes/
+%     GenomeWideSNP_6/
+%        GenomeWideSNP_6,*.ugp
+%        GenomeWideSNP_6,*.cdf
+%     Human1M-Duo/
+%        Human1M-Duo,*.ugp
+% totalAndFracB/
+%   TCGA,OV,CRMAv2/
+%   TCGA,OV,CRMAv2,TBN,Birdseed/
+%   TCGA,OV,CRMAv2,TBN,NGC/
+%     GenomeWideSNP_6/
+%        TCGA-23-1027-01A-02D-0428-01,fracB.asb
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
 %=====================================================================
@@ -61,7 +81,9 @@
 <%
 verbose && enter(verbose, "Setup");
 
+# Loading include files
 sourceDirectory("R/");
+
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Graphical settings
@@ -246,6 +268,11 @@ Specifically, we compare the following three methods:
   (<%=ii%>) \textbf{``<%=nms[ii]%>"}: <%=descs[ii]%>. 
 <% } ## for (ii in ... ) %>%
 For completeness we also include an evaluation of Total copy numbers (TCN).
+
+<%
+# Sanity check
+stopifnot(length(fracBDsList) %in% c(2,3));   # raw, Birdseed*, NGC
+%>
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% BEGIN Regions of interest
@@ -1245,6 +1272,10 @@ This report was automatically generated using the R.rsp package.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % HISTORY:
+% 2011-03-18 [HB]
+% o As a result of trying to rerun this vignette, I've added more
+%   documentation to the header of this file and a few more
+%   sanity checks.
 % 2010-03-04 [PN]
 % o Level of Heterozygosity -> Decrease in Heterozygosity
 % 2009-12-08 [HB]

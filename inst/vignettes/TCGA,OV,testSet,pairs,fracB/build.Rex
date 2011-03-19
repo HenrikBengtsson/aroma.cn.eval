@@ -1,3 +1,9 @@
+######################################################################
+# Author: Henrik Bengtsson
+#
+# Interactive usage:
+# source("build.Rex")
+######################################################################
 if (interactive()) savehistory();
 library("R.rsp");
 
@@ -28,3 +34,14 @@ pathnameLOG <- gsub(".pdf", ".log", pdfPathname, fixed=TRUE);
 if (isFile(filenameLOG)) {
   file.copy(filenameLOG, pathnameLOG, overwrite=TRUE);
 }
+
+
+######################################################################
+# HISTORY:
+# 2011-03-18
+# o Added header and history comments.
+# 2010-09-28
+# o ...
+# 2010-??-??
+# o Created.
+######################################################################

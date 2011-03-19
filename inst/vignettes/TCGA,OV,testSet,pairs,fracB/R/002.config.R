@@ -109,6 +109,11 @@ if (regexpr("ismpolish", dataSet) != -1) {
 } else {
   throw("Cannot infer ('docTags', 'genTags') from 'dataSet': ", dataSet);
 }
+
+if (regexpr("CalMaTe", dataSet) != -1) {
+  docTags <- c(docTags, "CalMaTe");
+}
+
 docTags <- c(docTags, tumorType);
 
 genTag <- genTags[length(genTags)];

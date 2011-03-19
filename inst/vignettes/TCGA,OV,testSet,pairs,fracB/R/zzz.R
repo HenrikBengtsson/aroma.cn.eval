@@ -277,7 +277,7 @@ rm(df, tags);
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ds <- cnDsList[[1]];
 platform <- getPlatform(ds);
-chipType <- getChipType(ds);
+chipType <- getChipType(ds, fullname=FALSE);
 chipTypeEsc <- gsub("_", "\\_", chipType, fixed=TRUE);
 rm(ds);
 
@@ -294,6 +294,8 @@ pdfName <- sprintf("%s.pdf", docName);
 pdfPathname <- filePath(docPath, pdfName);
 
 figPath <- file.path(docPath, "figures", "col");
+setOption("devEval/args/path", figPath);
+
 figForce <- 3;
 figDev <- function(..., force=(figForce > 0)) { epsDev(..., path=figPath, force=force) }
 figDev <- function(..., force=(figForce > 0)) { pngDev(..., device=png, path=figPath, force=force) }
@@ -309,6 +311,8 @@ rm(fntFUN);
 
 ############################################################################
 # HISTORY:
+# 2011-03-18
+# o Prepared to utilize new devEval().
 # 2009-12-06
 # o Updated to also handle BeadStudio genotype calls.
 # 2009-12-04

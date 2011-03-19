@@ -91,6 +91,15 @@ loadAllDataSets <- function(dataSet, chipType="*", pattern=NULL, ..., rootPath="
   verbose && cat(verbose, "Loaded data sets:");
   verbose && print(verbose, dsList);
 
+  # Sanity check
+  ns <- sapply(dsList, FUN=function(ds) nbrOfUnits(getFile(ds,1)));
+  nbrOfUnits <- ns[1];
+  if (!all(ns == nbrOfUnits)) {
+    verbose && print(verbose, ns);
+    verbose && print(verbose, dsList);
+    throw("INTERNAL ERROR: The loaded data sets does not have the same number of units.");
+  }
+
   verbose && exit(verbose);
 
   dsList;
@@ -100,6 +109,8 @@ loadAllDataSets <- function(dataSet, chipType="*", pattern=NULL, ..., rootPath="
 
 ############################################################################
 # HISTORY:
+# 2011-03-18
+# o Added sanity checks for the result of loadAllDataSets().
 # 2009-02-23
 # o Created.
 ############################################################################
