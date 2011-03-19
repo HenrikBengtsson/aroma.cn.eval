@@ -91,7 +91,8 @@ if (regexpr("ismpolish", dataSet) != -1) {
   genTags <- c("Birdseed", "NGC");
   rocCurvesPattern <- "^(raw|TCN),Birdseed$|^TBN";
 } else if (regexpr("(ACC,ra,-XY,BPN,-XY,AVG,FLN,-XY|CRMAv2)", dataSet) != -1) {
-  docTags <- "CRMAv2";
+  docTags <- gsub(".*,((ACC,ra,-XY,BPN,-XY,AVG,FLN,-XY|CRMAv2)(|-CalMaTe)(,[^,]+)*).*", "\\1", dataSet);
+#  docTags <- "CRMAv2";
   genTags <- c("Birdseed", "NGC")[2];
   rocCurvesPattern <- "^(raw|TCN),Birdseed$|^TBN";
 } else if (regexpr("BeadStudio", dataSet) != -1) {
@@ -110,9 +111,9 @@ if (regexpr("ismpolish", dataSet) != -1) {
   throw("Cannot infer ('docTags', 'genTags') from 'dataSet': ", dataSet);
 }
 
-if (regexpr("CalMaTe", dataSet) != -1) {
-  docTags <- c(docTags, "CalMaTe");
-}
+## if (regexpr("CalMaTe", dataSet) != -1) {
+##   docTags <- c(docTags, "CalMaTe");
+## }
 
 docTags <- c(docTags, tumorType);
 

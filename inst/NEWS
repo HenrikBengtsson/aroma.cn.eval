@@ -1,6 +1,13 @@
 Package: aroma.cn.eval
 ======================
 
+Version: 0.1.2 [2011-03-18]
+o No code updates.
+o VIGNETTES: Updated the TumorBoost vignettes with more help 
+  comments and to do more sanity checks and give more
+  informative error messages.
+
+
 Version: 0.1.1 [2009-11-01]
 o Updated the dependencies.  For the record, the ROC package is 
   only needed in auc() of the RocCurve class.
