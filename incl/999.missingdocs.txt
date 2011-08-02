@@ -3,4 +3,4 @@ as.character.RocCurve auc auc.RocCurve blockAvg
  getFpRate.RocCurve getTpRate getTpRate.RocCurve lines.RocCurve
  plot.RocCurve points.RocCurve scanRocTpAtFp scanRocTpAtFp.default
  smooth
-
+cat require

@@ -28,6 +28,8 @@
 \alias{scanRocTpAtFp}
 \alias{scanRocTpAtFp.default}
 \alias{smooth}
+\alias{cat}
+\alias{require}
 
 \description{
   This page contains aliases for all "non-documented" objects that

@@ -1,9 +1,21 @@
 # Allows conflicts. For more information, see library() and
 # conflicts() in [R] base.
-.conflicts.OK <- TRUE
+.conflicts.OK <- TRUE;
 
 
-.First.lib <- function(libname, pkgname) {
+# WORKAROUND: In order for the package to work with the most recent
+# version of R devel, which automatically add namespaces to packages
+# who do not have one, we explicitly have specify the following.
+# /HB 2011-07-27
+# R.utils:
+cat <- R.utils::cat; 
+
+# aroma.core:
+require <- aroma.core::require;
+
+
+## .First.lib <- function(libname, pkgname) {
+.onAttach <- function(libname, pkgname) {
   pkg <- Package(pkgname);
   assign(pkgname, pkg, pos=getPosition(pkg));
 
