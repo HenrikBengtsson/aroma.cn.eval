@@ -7,7 +7,7 @@
 %  rsptex("main.tex.rsp");  # => *.tex.rsp => ... => *.dvi
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 <%
-sourceDirectory("R/");
+sourceDirectory(file.path(rspPath, "R/"));
 title <- sprintf("Single-sample assessment of copy-number preprocessing methods CRMA~v1 and CRMA~v2 based on tumor-normal sample HCC1143 in GEO data set %s", dataSet);
 authors <- "Henrik Bengtsson et al.";
 figPath <- "figures/col/";
@@ -157,62 +157,55 @@ tbl <- tbl[o];
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % BEGIN Figure
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-<%
-figName <- sprintf("%s,track", region$label);
-if (fig <- figDev(figName, aspect=1.5)) {
-
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 # Plot CN ratios along genome
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-cnList <- getCnList(cnList);
-print(cnList);
-
-nbrOfSources <- length(cnList);
-subplots(nbrOfSources, ncol=1);
-par(mar=c(3,3,0.5,1)+0.1);
-pch <- 19; cex <- 0.7;
-pch <- "."; cex <- 2;
-pch <- 176; cex <- 0.8;
-xScale <- 1e-6;
-xRange <- range(sapply(cnList, FUN=xRange));
-states <- na.omit(sort(unique(getStates(cnList[[1]]))));
-cp <- region$params$cp;
-s <- region$params$s;
-
-for (kk in seq(along=cnList)) {
-  cn <- cnList[[kk]];
-  name <- names(cnList)[kk];
-  xlim <- xRange*xScale;
-  plot(cn, pch=pch, cex=1*cex, xlim=xlim, xScale=xScale);
-#  abline(v=cp["position"]+c(-1,+1)*cp["delta"]);
-  xs <- cp["position"]+c(-1,+1)*cp["delta"];
-  ys <- par("usr")[3:4];
-  dy <- 0.04*diff(ys);
-  if (s[1] != 0) {
-    rect(xlim[1],ys[1],xs[1],ys[1]+dy, col="#999999");
-  } else {
-    rect(xs[2],ys[1],xlim[2],ys[1]+dy, col="#999999");
-  }
-  rect(xs[1],ys[1], xs[2],ys[2], density=10, col="#999999");
-  stext(side=3, pos=0.02, line=-1.5, cex=1.0, name);
-  if (kk == 1) {
-    stext(side=3, pos=0.98, line=-1.5, cex=0.8, sprintf("Chr%02d", getChromosome(cn)));
-  }
-  sd <- estimateStandardDeviation(cn);
-#  stext(side=1, pos=0.98, line=-1.5, cex=0.8, sprintf("SD=%.3g", sd));
-  stext(side=4, pos=1, line=0.3, cex=0.8, sprintf("SD=%.3g", sd));
-##  binWidth <- 10e3;
-##  cn <- extractSubsetByState(cn, states=states);
-##  cnS <- binnedSmoothingByState(cn, from=xRange[1], to=xRange[2], by=binWidth);
-##  points(cnS, pch=pch, cex=0.8*cex, col="white", xScale=xScale);
-##  points(cnS, pch=19, cex=0.6*cex, col="orange", xScale=xScale);
-} # for (kk ...)
-devDone(figName);
-} # if (figDev(...))
-%>
 \begin{figure}[htb]
  \begin{center}
-  \resizebox{0.95\textwidth}{!}{\includegraphics{<%=fig$fullname%>}}
+  \resizebox{0.95\textwidth}{!}{\includegraphics{<%=toPNG(region$label, tags="track", aspectRatio=1.5, {
+    cnList <- getCnList(cnList);
+    print(cnList);
+    nbrOfSources <- length(cnList);
+    subplots(nbrOfSources, ncol=1);
+    par(mar=c(3,3,0.5,1)+0.1);
+    pch <- 19; cex <- 0.7;
+    pch <- "."; cex <- 2;
+    pch <- 176; cex <- 0.8;
+    xScale <- 1e-6;
+    xRange <- range(sapply(cnList, FUN=xRange));
+    states <- na.omit(sort(unique(getStates(cnList[[1]]))));
+    cp <- region$params$cp;
+    s <- region$params$s;
+    
+    for (kk in seq(along=cnList)) {
+      cn <- cnList[[kk]];
+      name <- names(cnList)[kk];
+      xlim <- xRange*xScale;
+      plot(cn, pch=pch, cex=1*cex, xlim=xlim, xScale=xScale);
+    #  abline(v=cp["position"]+c(-1,+1)*cp["delta"]);
+      xs <- cp["position"]+c(-1,+1)*cp["delta"];
+      ys <- par("usr")[3:4];
+      dy <- 0.04*diff(ys);
+      if (s[1] != 0) {
+        rect(xlim[1],ys[1],xs[1],ys[1]+dy, col="#999999");
+      } else {
+        rect(xs[2],ys[1],xlim[2],ys[1]+dy, col="#999999");
+      }
+      rect(xs[1],ys[1], xs[2],ys[2], density=10, col="#999999");
+      stext(side=3, pos=0.02, line=-1.5, cex=1.0, name);
+      if (kk == 1) {
+        stext(side=3, pos=0.98, line=-1.5, cex=0.8, sprintf("Chr%02d", getChromosome(cn)));
+      }
+      sd <- estimateStandardDeviation(cn);
+    #  stext(side=1, pos=0.98, line=-1.5, cex=0.8, sprintf("SD=%.3g", sd));
+      stext(side=4, pos=1, line=0.3, cex=0.8, sprintf("SD=%.3g", sd));
+    ##  binWidth <- 10e3;
+    ##  cn <- extractSubsetByState(cn, states=states);
+    ##  cnS <- binnedSmoothingByState(cn, from=xRange[1], to=xRange[2], by=binWidth);
+    ##  points(cnS, pch=pch, cex=0.8*cex, col="white", xScale=xScale);
+    ##  points(cnS, pch=19, cex=0.6*cex, col="orange", xScale=xScale);
+    } # for (kk ...)
+  }%>}}
  \end{center}
  \caption{(<%=region$src%>) 
   There are <%=tbl[1]%> loci of state <%=names(tbl[1])%> ("negatives") and

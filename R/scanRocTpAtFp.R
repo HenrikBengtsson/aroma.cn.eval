@@ -84,12 +84,13 @@ setMethodS3("scanRocTpAtFp", "default", function(truth, data, fpRate, ..., W=NUL
       for (shift in shifts) {
         idxs <- getBlockAverageMap(n=dim[1], h=h, s=shift);
         if (is.null(W)) {
-          dataAvg <- blockAvg(data0, idxs);
+          dataAvg <- colAvgsPerRowSet(data0, S=idxs);
         } else {
-          dataAvg <- blockAvg(data0, idxs, FUN=rowWeightedMeans.matrix, W=W);
+          dataAvg <- colAvgsPerRowSet(data0, W=W, S=idxs, 
+                                      FUN=rowWeightedMeans.matrix, tFUN=TRUE);
         }
         data <- rbind(data, dataAvg);
-        truth <- rbind(truth, blockAvg(truth0, idxs));
+        truth <- rbind(truth, colAvgsPerRowSet(truth0, S=idxs));
       } # for (shift ...)
       hApprox <- attr(idxs, "hApprox");
       verbose && exit(verbose);

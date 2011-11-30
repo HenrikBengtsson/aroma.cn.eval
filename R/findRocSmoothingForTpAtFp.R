@@ -45,8 +45,8 @@ setMethodS3("findRocSmoothingForTpAtFp", "default", function(truth, data, fpRate
     hApprox2 <- attr(idxs, "hApprox");
 
     # Smooth (truth, data)
-    truth <- blockAvg(truth, idxs);
-    data <- blockAvg(data, idxs);
+    truth <- colAvgsPerRowSet(truth, S=idxs);
+    data <- colAvgsPerRowSet(data, S=idxs);
 
     # Find TP rate at given FP rate for smoothed (truth, data)
     fit <- findRocTpAtFp(truth, data, fpRate=fpRate, ..., 
@@ -75,8 +75,8 @@ setMethodS3("findRocSmoothingForTpAtFp", "default", function(truth, data, fpRate
 
     idxs <- getBlockAverageMap(n=n, h=hUse);
     hApprox <- attr(idxs, "hApprox");
-    data <- blockAvg(data0, idxs);
-    truth <- blockAvg(truth0, idxs);
+    data <- colAvgsPerRowSet(data0, S=idxs);
+    truth <- colAvgsPerRowSet(truth0, S=idxs);
 
     fit <- findRocTpAtFp(truth, data, fpRate=fpRate, ..., verbose=less(verbose), .checkArgs=FALSE);
     tpRate <- fit$tpRate;

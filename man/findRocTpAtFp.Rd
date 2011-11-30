@@ -75,5 +75,6 @@ for (fpRate in c(0.2, 0.4)) {
 
 
 
+\keyword{methods}
 \keyword{internal}
 \keyword{utilities}
