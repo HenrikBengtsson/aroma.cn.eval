@@ -165,11 +165,10 @@ authors <- "Henrik Bengtsson, Pierre Neuvial";
 %=====================================================================
 % Introduction
 %=====================================================================
+\noindent \underline{ \bf Note: this vignette has been created from the TumorBoost vignette.}\\
+\underline{ \bf The text has not been fully updated yet.}
+
 \section{Introduction}
-\textbf{
-\color{red}
-Note: this vignette has been created from the TumorBoost vignette, and the text has not been updated yet.
-}
 This report, which is automatically generated, assesses the performance of the TumorBoost method based on a few change points in a particular tumor/normal pair.
 For more details on the evaluation methods, see the main TumorBoost manuscript.
 
