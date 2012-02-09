@@ -96,7 +96,7 @@ if (regexpr("ismpolish", dataSet) != -1) {
   genTags <- c("Birdseed", "NGC")[2];
   rocCurvesPattern <- "^(raw|TCN),Birdseed$|^TBN";
 } else if (regexpr("BeadStudio", dataSet) != -1) {
-  docTags <- gsub(".*,(BeadStudio,[^,]+).*", "\\1", dataSet);
+  docTags <- gsub(".*,(BeadStudio(,[^,]+)*).*", "\\1", dataSet);
   genTags <- c("BeadStudio", "NGC")[2];
   if (confQuantile < 1) {
     rocCurvesPattern <- "^(raw|TCN),NGC$|^TBN";

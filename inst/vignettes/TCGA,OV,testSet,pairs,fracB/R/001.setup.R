@@ -10,10 +10,10 @@ if (interactive()) {
   dataSets <- c(
     "TCGA,%s,BeadStudio,BAF",
     "TCGA,%s,BeadStudio,XY",
-    "TCGA,%s,BeadStudio,XY-CalMaTe",
+    "TCGA,%s,BeadStudio,XY,CalMaTe",
     "TCGA,%s,Birdseed,ismpolish",
     "TCGA,%s,CRMAv2",
-    "TCGA,%s,CRMAv2-CalMaTe"
+    "TCGA,%s,CRMAv2,CalMaTe"
   );
   dataSets <- sprintf(dataSets, tumorType);
   dataSet <- textMenu(dataSets, title="Data set:", value=TRUE);

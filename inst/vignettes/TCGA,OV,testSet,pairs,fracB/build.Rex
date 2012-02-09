@@ -2,6 +2,7 @@
 # Author: Henrik Bengtsson
 #
 # Interactive usage:
+# rm(list=ls())
 # source("build.Rex")
 ######################################################################
 if (interactive()) savehistory();
@@ -9,35 +10,25 @@ library("R.rsp");
 
 fullnameRsp <- "BengtssonH_2009c-SupplementaryNotes";
 filenameRsp <- sprintf("%s.tex.rsp", fullnameRsp);
-filenameTeX <- sprintf("%s.tex", fullnameRsp);
 filenamePDF <- sprintf("%s.pdf", fullnameRsp);
+filenameTeX <- sprintf("%s.tex", fullnameRsp);
+rsp(filenameRsp, force=TRUE, verbose=-5);
 
-filenameAux <- sprintf("%s.aux", fullnameRsp);
-if (file.exists(filenameAux)) {
-   file.remove(filenameAux);
-}
-			      
-filenameBbl <- sprintf("%s.bbl", fullnameRsp);
-if (file.exists(filenameBbl)) {
-   file.remove(filenameBbl);
-}
-
-# => *.tex.rsp => ... => *.pdf
-rsptex(filenameRsp, envir=globalenv(), pdf=TRUE, force=TRUE, verbose=-5);
-
-pathnameTeX <- gsub(".pdf", ".tex", pdfPathname, fixed=TRUE);
-file.copy(filenameTeX, pathnameTeX, overwrite=TRUE);
+# Copy *.tex and *.pdf files to each final locations
+texPathname <- gsub(".pdf", ".tex", pdfPathname, fixed=TRUE);
+file.copy(filenameTeX, texPathname, overwrite=TRUE);
 file.copy(filenamePDF, pdfPathname, overwrite=TRUE);
 
-filenameLOG <- "build.log";
-pathnameLOG <- gsub(".pdf", ".log", pdfPathname, fixed=TRUE);
-if (isFile(filenameLOG)) {
-  file.copy(filenameLOG, pathnameLOG, overwrite=TRUE);
+if (isFile("build.log")) {
+  logPathname <- gsub(".pdf", ".log", pdfPathname, fixed=TRUE);
+  file.copy("build.log", logPathname, overwrite=TRUE);
 }
 
 
 ######################################################################
 # HISTORY:
+# 2012-02-08
+# o Updated to make use rsp() (since R.rsp v0.5.0 [2011-04-14]).
 # 2011-03-18
 # o Added header and history comments.
 # 2010-09-28
