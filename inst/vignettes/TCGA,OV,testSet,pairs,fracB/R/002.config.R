@@ -10,8 +10,8 @@ fixedSeed <- 0xbeef;
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 evalSignal <- "abs(fracB-1/2)";
 
-addLegend <- FALSE;
-addSdEst <- FALSE;	
+addLegend <- TRUE;
+addSdEst <- FALSE;
 
 plotAllRocCurves <- c(TRUE, FALSE)[1];
 plotTracks <- c(TRUE, FALSE)[1];
@@ -23,8 +23,8 @@ palette <- brewer.pal(n=9, name="Set1");
 
 # Colors for different data sets/methods
 colorMap <- c(
-  "*"="#000000", 
-  "NA"="#999999", 
+  "*"="#000000",
+  "NA"="#999999",
   "1"=palette[1],
   "2"=palette[5],
   "3"=palette[2],
@@ -56,7 +56,7 @@ addDiagHorizLines <- TRUE;
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-fixedNbrOfPoints <- 100000;
+fixedNbrOfPoints <- 100;
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -66,7 +66,7 @@ fixedNbrOfPoints <- 100000;
 byCount <- c(TRUE, FALSE)[1];
 
 # "Width" of each bin
-binCounts <- c(1, 2, 4);
+binCounts <- c(1, 2, 4)[1];
 
 # Add smoothed track?
 addBinTrack <- TRUE;
@@ -83,7 +83,7 @@ rocCols <- 2;
 
 robust <- c(FALSE, TRUE)[1];
 robustStr <- ifelse(robust, "median", "mean");
-binFFracB <- ifelse(robust, "median", "mean"); 
+binFFracB <- ifelse(robust, "median", "mean");
 
 # Infer document tags
 if (regexpr("ismpolish", dataSet) != -1) {

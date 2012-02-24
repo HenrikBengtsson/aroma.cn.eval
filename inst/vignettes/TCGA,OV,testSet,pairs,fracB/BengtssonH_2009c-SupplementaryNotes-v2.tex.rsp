@@ -315,16 +315,19 @@ pcns <- NULL;
 
 # Extracting allele-specific signals
 what <- evalSignal;
-signalList <- getFracBList(fracBDsList, what=what, pattern=methodPattern);
-signalN <- getFracBList(list(dsN), what=what)[[1]];
+fracBSignalList <- getFracBList(fracBDsList, what=what, pattern=methodPattern);
+fracBSignalN <- getFracBList(list(dsN), what=what)[[1]];
 
 # Extracting total CNs 
 cnList <- getCnList(cnDsList, what="ratios");
-cn <- cnList[[1]];
-cn$unit <- signalN$unit;
-addLocusFields(cn, "unit");
-
-signalList[["TCN"]] <- cn;
+cnList <- lapply(cnList, FUN=function(cn) {
+  ## cn <- cnList[[1]];
+  cn$unit <- fracBSignalN$unit;
+  addLocusFields(cn, "unit");
+  cn
+})
+names(cnList) <- gsub(dataSet, "TCN", names(cnList))
+signalList <- append(fracBSignalList, cnList);
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -342,14 +345,14 @@ if (confQuantile < 1) {
 }
 str(signalList);
 
-
-
 dn <- dimnames(signalList);
 nms <- sapply(dn[[2]], FUN=function(nm) sprintf("%s,%s", dn[[1]], nm));
 nms <- as.character(nms);
 
-# Keep only certain data sets of interest 
-patts <- c("raw", sprintf("%s,%s", dn[[2]], dn[[2]]), "TCN");
+# Keep only certain data sets of interest
+## PN 2012-02-24: ad hoc fix to avoid dropping CalMaTe
+## patts <- c("raw", sprintf("%s,%s", dn[[2]], dn[[2]]), "TCN");
+patts <- c("raw", sprintf("^CalMaTe,%s", dn[[2]]), sprintf("%s,%s", dn[[2]], dn[[2]]), "TCN");
 keep <- unlist(sapply(patts, FUN=grep, nms), use.names=FALSE);
 nms <- nms[keep];
 signalList <- signalList[keep];
@@ -386,6 +389,7 @@ nms <- names(signalList);
 cols <- rep("#000000", times=nbrOfSets);
 cols[regexpr("raw", nms) != -1] <- "#000000";
 cols[regexpr("TCN", nms) != -1] <- palette[3];
+cols[regexpr("TCN,CalMaTe", nms) != -1] <- palette[4];
 cols[regexpr("TBN(,v[0-9]|),(BeadStudio|Birdseed)", nms) != -1] <- palette[2];
 cols[regexpr("TBN(,v[0-9]|),NGC", nms) != -1] <- palette[1];
 
@@ -1300,6 +1304,8 @@ This report was automatically generated using the R.rsp package.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % HISTORY:
+% 2012-02-24 [PN]
+% o Added support for multiple TCN data sets.
 % 2012-02-19 [HB]
 % o First steps toward generalizing this vignette to support multiple
 #   postprocessing methods, e.g. TumorBoost and CalMaTe.

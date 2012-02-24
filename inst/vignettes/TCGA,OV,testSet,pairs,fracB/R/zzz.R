@@ -96,17 +96,17 @@ if (!is.null(methodPattern)) {
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-# 2. Setting up total CN data set
+# 2. Setting up total CN data sets
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 if (!exists("cnDsList", mode="list")) {
-  if (!exists("acs") || !inherits(acs, "AromaUnitTotalCnBinarySet")) {
-    acs0 <- AromaUnitTotalCnBinarySet$byName(dataSet, chipType=chipType, paths=rootPath, verbose=verbose);
+  dsList <- loadAllDataSets(dataSet, chipType=chipType, pattern=dataSet, type="total", rootPath=rootPath, verbose=verbose);
+  for (acs0 in dsList) {
     setFullNamesTranslator(acs0, fntFUN);
     
     types <- sapply(acs0, function(df) getTags(df)[1]);
     isTumor <- grep("^01[A-Z]$", types);
     isNormal <- grep("^1[01][A-Z]$", types);
-  
+    
     acsN <- extract(acs0, isNormal);
     acsT <- extract(acs0, isTumor);
     rm(acs0, types, isTumor, isNormal);
@@ -114,8 +114,9 @@ if (!exists("cnDsList", mode="list")) {
     exportTotalCnRatioSet(acsT, acsN, verbose=verbose);
     rm(acsN, acsT);
   }
-  
-  pattern <- sprintf("^%s(|.lnk)$", dataSet)
+  rm(dsList)
+ 
+  pattern <- sprintf("^%s(|,%s)(|.lnk)$", dataSet, paste(postTags, collapse="|"))
   cnDsList <- loadAllDataSets(dataSet, chipType=chipType, pattern=pattern, type="total", rootPath="rawCnData", verbose=verbose);
   rm(pattern);
 }
@@ -344,6 +345,8 @@ rm(fntFUN);
 
 ############################################################################
 # HISTORY:
+# 2012-02-24 [PN]
+# o Now able to load several TCN data sets
 # 2012-02-19
 # o Now the data set name pattern for loading fracB data is generated
 #   from the 'postProcessing' strings.
