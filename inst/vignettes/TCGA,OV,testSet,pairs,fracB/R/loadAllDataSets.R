@@ -95,9 +95,9 @@ loadAllDataSets <- function(dataSet, chipType="*", pattern=NULL, ..., rootPath="
   ns <- sapply(dsList, FUN=function(ds) nbrOfUnits(getFile(ds,1)));
   nbrOfUnits <- ns[1];
   if (!all(ns == nbrOfUnits)) {
-    verbose && print(verbose, ns);
     verbose && print(verbose, dsList);
-    throw("INTERNAL ERROR: The loaded data sets does not have the same number of units.");
+    verbose && print(verbose, ns);
+#    throw("INTERNAL ERROR: The loaded data sets does not have the same number of units.");
   }
 
   verbose && exit(verbose);

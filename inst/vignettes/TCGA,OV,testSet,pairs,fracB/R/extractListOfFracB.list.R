@@ -40,34 +40,56 @@ setMethodS3("extractListOfFracB", "list", function(this, name, chromosome, regio
   fracBList <- list();
   for (kk in seq(dfList)) {
     df <- dfList[[kk]];
+    verbose && enter(verbose, sprintf("File #%d ('%s') of %d", kk, getFullName(df), length(dfList)));
 
     # Extract only units that exist in target chip type?
     units <- NULL;
     if (!is.null(targetChipType)) {
-      verbose && enter(verbose, "Identifying target units");
       chipType <- getChipType(df);
       if (chipType != targetChipType) {
         units <- matchUnitsToTargetCdf(chipType, targetChipType);
+        verbose && printf(verbose, "Identified %s units available in %s.\n", chipType, targetChipType);
       }
       verbose && str(verbose, units);
-      verbose && exit(verbose);
     }
 
     # Extract copy numbers
     verbose && enter(verbose, "Extracting FracBs");
     fracB <- extractRawAlleleBFractions(df, chromosome=chromosome, 
                            region=region, units=units, keepUnits=TRUE);
-    verbose && print(verbose, fracB);
-    verbose && print(verbose, fracB);
+
+    # Remap the unit indices to the target chip type?
+    if (!is.null(units) && !is.null(targetChipType) && (chipType != targetChipType)) {
+      verbose && enter(verbose, "Remapping unit indices to target chip type");
+      library("aroma.affymetrix");
+      unitsS <- fracB$unit;
+      verbose && printf(verbose, "%s units:\n", chipType);
+      verbose && str(verbose, unitsS);
+      cdf <- AffymetrixCdfFile$byChipType(chipType);
+      targetCdf <- AffymetrixCdfFile$byChipType(targetChipType);
+      unitNames <- getUnitNames(cdf)[unitsS];
+      verbose && str(verbose, unitNames);
+      unitsT <- indexOf(targetCdf, names=unitNames);
+      verbose && printf(verbose, "%s units:\n", targetChipType);
+      verbose && str(verbose, unitsT);
+      fracB$unit <- unitsT;
+      verbose && exit(verbose);
+    }
 
     # Add true FracB functions?
     if (!is.null(truth)) {
       fracB <- SegmentedAlleleBFractions(fracB, states=truth);
     }
+
     verbose && print(verbose, fracB);
+    verbose && cat(verbose, "Units:");
+    verbose && str(verbose, fracB$unit);
+
     verbose && exit(verbose);
 
     fracBList[[kk]] <- fracB;
+
+    verbose && exit(verbose);
   } # for (kk ...)
   names(fracBList) <- names(dfList);
 

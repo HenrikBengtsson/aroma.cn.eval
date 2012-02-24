@@ -13,7 +13,9 @@ fntFUN <- function(names, ...) {
 if (!exists("fracBDsList", mode="list")) {
   verbose && enter(verbose, "Loading 'fracBDsList'");
 
-  pattern <- sprintf("^%s(|,TBN.*)$", dataSet);
+  pattern <- sprintf("|,%s.*", names(postProcessing));
+  pattern <- paste(pattern, collapse="");
+  pattern <- sprintf("^%s(%s)$", dataSet, pattern);
   fracBDsList <- loadAllDataSets(dataSet, chipType=chipType, pattern=pattern, type="fracB", rootPath=rootPath);
   rm(pattern);
 
@@ -26,6 +28,8 @@ if (!exists("fracBDsList", mode="list")) {
   keep <- grep("^1[01][A-Z]$", types);
   dsN <- extract(dsN0, keep);
   verbose && print(verbose, dsN);
+  # Sanity check
+  stopifnot(length(dsN) > 0);
   rm(dsN0, types);
   verbose && exit(verbose);
 
@@ -130,6 +134,14 @@ if (!exists("gcDsList", mode="list")) {
   gcDsList <- loadAllDataSets(dataSet, chipType=chipType, pattern=pattern, type="genotypes", rootPath="callData", verbose=verbose);
   rm(pattern);
 
+  # Keep only those that match the target chip type
+  if (!is.null(targetChipType)) {
+    keep <- sapply(gcDsList, function(ds) {
+      (getChipType(ds) == targetChipType);
+    });
+    gcDsList <- gcDsList[keep];
+  }
+
   gcDsList <- lapply(gcDsList, setFullNamesTranslator, fntFUN);
 
   ## Keep only normals
@@ -153,6 +165,13 @@ if (!exists("gcDsList", mode="list")) {
   }
   genTags <- genTags[!is.na(m)];
   gcDsList <- gcDsList[genTags];
+
+  # Sanity check
+  ns <- sapply(gcDsList, FUN=function(ds) {
+    nbrOfUnits(getFile(ds,1));
+  });
+  stopifnot(length(unique(ns)) == 1);
+
   rm(m);
 }
 
@@ -170,6 +189,14 @@ if (confQuantile < 1) {
     pattern <- sprintf("^%s,", dataSet)
     gcsDsList <- loadAllDataSets(dataSet, chipType=chipType, pattern=pattern, type="confidenceScores", rootPath="callData", verbose=verbose);
     rm(pattern);
+
+    # Keep only those that match the target chip type
+    if (!is.null(targetChipType)) {
+      keep <- sapply(gcsDsList, function(ds) {
+        (getChipType(ds) == targetChipType);
+      });
+      gcsDsList <- gcsDsList[keep];
+    }
   
     gcsDsList <- lapply(gcsDsList, setFullNamesTranslator, fntFUN);
   
@@ -215,6 +242,12 @@ if (confQuantile < 1) {
     if (length(gcDsList) == 0) {
       throw("After matching genotypes with available confidence scores, there is no data.");
     }
+
+    # Sanity check
+    ns <- sapply(gcsDsList, FUN=function(ds) {
+      nbrOfUnits(getFile(ds,1));
+    });
+    stopifnot(length(unique(ns)) == 1);
   }
 } else {
   # Empty dummy
@@ -226,7 +259,7 @@ genTags <- names(gcDsList);
 names <- names(fracBDsList);
 names <- strsplit(names, split=",", fixed=TRUE);
 keep <- sapply(names, FUN=function(tags) {
-  is.element("raw", tags) || any(is.element(genTags, tags))
+  is.element("raw", tags) || is.element("CalMaTe", tags) || any(is.element(genTags, tags))
 });
 fracBDsList <- fracBDsList[keep];
 rm(keep);
@@ -311,6 +344,9 @@ rm(fntFUN);
 
 ############################################################################
 # HISTORY:
+# 2012-02-19
+# o Now the data set name pattern for loading fracB data is generated
+#   from the 'postProcessing' strings.
 # 2011-03-18
 # o Prepared to utilize new devEval().
 # 2009-12-06

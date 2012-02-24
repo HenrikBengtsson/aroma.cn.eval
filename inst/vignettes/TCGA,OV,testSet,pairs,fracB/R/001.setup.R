@@ -1,5 +1,9 @@
 library("R.menu");
 
+rootPath <- "totalAndFracBData/"
+rootPath <- Arguments$getReadablePath(rootPath);
+
+
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 # 1. Data sets
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -10,10 +14,10 @@ if (interactive()) {
   dataSets <- c(
     "TCGA,%s,BeadStudio,BAF",
     "TCGA,%s,BeadStudio,XY",
-    "TCGA,%s,BeadStudio,XY,CalMaTe",
+#    "TCGA,%s,BeadStudio,XY,CalMaTe,v1",
     "TCGA,%s,Birdseed,ismpolish",
-    "TCGA,%s,CRMAv2",
-    "TCGA,%s,CRMAv2,CalMaTe"
+    "TCGA,%s,CRMAv2"
+#    "TCGA,%s,CRMAv2,CalMaTe,v1"
   );
   dataSets <- sprintf(dataSets, tumorType);
   dataSet <- textMenu(dataSets, title="Data set:", value=TRUE);
@@ -29,9 +33,28 @@ if (interactive()) {
   }
 }
 
+# Assert that data set exists
+path <- file.path(rootPath, dataSet);
+path <- Arguments$getReadablePath(path);
+
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-# 2. Threshold for genotype confidence scores
+# 2. Post-processing methods, e.g. TumorBoost & CalMaTe
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+knownPostProcessing <- c("TBN"="TumorBoost", "CalMaTe"="CalMaTe");
+
+# Identify all possible postprocessing methods
+pattern <- sprintf("^%s,([^,]*)(,.*)*", dataSet);
+dataSetsPost <- list.files(pattern=pattern, path=rootPath);
+postTags <- unique(gsub(pattern, "\\1", dataSetsPost));
+if (interactive()) {
+  postTags <- selectMenu(postTags, title="Postprocessing methods:", selected=TRUE);
+}
+postProcessing <- knownPostProcessing[postTags];
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+# 3. Threshold for genotype confidence scores
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 if (interactive()) {
   confQuantiles <- c(1.00, 0.90);
@@ -51,7 +74,6 @@ confQuantileTag <- sprintf("conf=%.0f", 100*confQuantile);
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 # Infer chip type for data set directory
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-rootPath <- "totalAndFracBData"
 path <- file.path(rootPath, dataSet);
 path <- Arguments$getReadablePath(path);
 paths <- list.files(path=path, full.names=TRUE);
@@ -66,7 +88,8 @@ targetChipType <- chipType;
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 # Pattern of data sets to be analyzed
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-methodPattern <- "^(raw|TBN)";
+methodPattern <- paste(c("raw", names(postProcessing)), collapse="|");
+methodPattern <- sprintf("^(%s)", methodPattern);
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -88,3 +111,5 @@ if (tumorType == "OV") {
     "TCGA-02-0001:Chr13@0-70,cp=45+/-1,s=0/2"
   );
 }
+
+regions <- regions[1];
