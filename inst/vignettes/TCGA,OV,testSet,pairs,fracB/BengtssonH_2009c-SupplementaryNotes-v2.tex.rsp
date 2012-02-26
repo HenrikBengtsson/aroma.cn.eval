@@ -494,7 +494,7 @@ for (kk in seq(along=signalList)) {
       binWidths <- binCounts;
       binWidth <- binWidths[length(binWidths)];
       if (!byCount) {
-        binWidth <- round(diff(xRange(signal))/(nbrOfLoci(signal, na.rm=TRUE)-1)*binWidth)
+#        binWidth <- round(diff(xRange(signal))/(nbrOfLoci(signal, na.rm=TRUE)-1)*binWidth)
       }
       signalS <- binnedSmoothingByState(signal, from=xRange[1], to=xRange[2], by=binWidth, FUN=binFFracB, byCount=byCount);
       setStateColorMap(signalS, smoothedColorMap);

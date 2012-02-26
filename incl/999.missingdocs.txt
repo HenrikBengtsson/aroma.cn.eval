@@ -4,3 +4,4 @@ as.character.RocCurve auc auc.RocCurve blockAvg
  plot.RocCurve points.RocCurve scanRocTpAtFp scanRocTpAtFp.default
  smooth
 cat require
+testSeparation

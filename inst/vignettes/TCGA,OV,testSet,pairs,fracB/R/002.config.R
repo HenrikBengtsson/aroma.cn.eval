@@ -66,7 +66,12 @@ fixedNbrOfPoints <- 100;
 byCount <- c(TRUE, FALSE)[1];
 
 # "Width" of each bin
-binCounts <- c(1, 2, 4)[1];
+if (byCount) {
+  binCounts <- c(1, 2, 4);
+} else {
+  binCounts <- c(10, 50, 100)*1e3;
+}
+binCounts <- binCounts[1];
 
 # Add smoothed track?
 addBinTrack <- TRUE;

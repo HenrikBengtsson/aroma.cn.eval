@@ -1,3 +1,32 @@
+###########################################################################/**
+# @set "class=SegmentedGenomicSignalsInterface"
+# @RdocMethod testSeparation
+#
+# @title "Tests statistically the separation between two states"
+#
+# \description{
+#  @get "title".
+# }
+#
+# @synopsis
+#
+# \arguments{
+#   \item{test}{A @character string specifying the statistical test to use.}
+#   \item{stateIdxs}{An @integer @vector specifying the indicies of the 
+#     two states to be used.}
+#   \item{...}{Not used.}
+# }
+#
+# \value{
+#  Returns what test function returns.
+# }
+#
+# @author
+#
+# \seealso{
+#   @see "aroma.core::SegmentedGenomicSignalsInterface"
+# }
+#*/###########################################################################
 setMethodS3("testSeparation", "SegmentedGenomicSignalsInterface", function(this, test=c("t.test", "ks.test"), stateIdxs=1:2, ...) {
   # Argument 'test':
   if (is.function(test)) {
@@ -51,6 +80,9 @@ setMethodS3("testSeparation", "SegmentedGenomicSignalsInterface", function(this,
 
 ############################################################################
 # HISTORY:
+# 2012-02-25
+# o Added Rdoc comments.
+# o Added to the aroma.cn.eval package.  Used to be part of a vignette.
 # 2009-06-25
 # o Added testSeparation().
 # o Created by extending PN's code in the TumorBoost vignette.

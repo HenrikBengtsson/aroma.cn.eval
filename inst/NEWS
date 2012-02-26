@@ -1,6 +1,11 @@
 Package: aroma.cn.eval
 ======================
 
+Version: 0.3.0 [2012-02-25]
+o Added testSeparation() for SegmentedGenomicSignalsInterface.
+  It used to be part of the TCGA vignette.
+
+
 Version: 0.2.0 [2011-11-29]
 o Added a namespace.
 
