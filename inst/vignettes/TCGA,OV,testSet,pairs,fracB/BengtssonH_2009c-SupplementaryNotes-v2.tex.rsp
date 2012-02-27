@@ -91,7 +91,7 @@ sourceDirectory("R/");
 devOptions("png", width=840);
 devOptions("pdf", width=8.4);
 setOption("devEval/args/path", figPath);
-setOption("devEval/args/force", FALSE);
+setOption("devEval/args/force", TRUE);
 toFig <- toPNG;
 
 pch <- "."; cex <- 2.5;
