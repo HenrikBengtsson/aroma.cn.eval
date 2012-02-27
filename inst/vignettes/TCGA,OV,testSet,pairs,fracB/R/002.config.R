@@ -65,16 +65,17 @@ fixedNbrOfPoints <- 100;
 # Bin by counts of genomic length?
 byCount <- c(TRUE, FALSE)[1];
 
-# "Width" of each bin
+# Width of each bin
 if (byCount) {
-  binCounts <- c(1, 2, 4);
+  binWidths <- c(1, 2, 4);
 } else {
-  binCounts <- c(10, 50, 100)*1e3;
+  binWidths <- c(10, 50, 100)*1e3;
 }
-binCounts <- binCounts[1];
+binWidths <- binWidths;
 
 # Add smoothed track?
 addBinTrack <- TRUE;
+binWidthS <- binWidths[length(binWidth)];
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

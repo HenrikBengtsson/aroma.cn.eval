@@ -101,6 +101,8 @@ pch <- "."; cex <- 2.5;
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 pmTag <- "@plusOrMinus@";
 
+postProcessingStr <- hpaste(postProcessing, lastCollapse=" as well as ");
+
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Analysis settings
@@ -132,7 +134,7 @@ verbose && exit(verbose);
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Document settings
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-title <- sprintf("Supplementary Note: Assessment of TumorBoost based on tumor/normal pair %s in the %s %s data set %s", sampleName, platform, chipTypeEsc, dataSet);
+title <- sprintf("Supplementary Note: Assessment of %s based on tumor/normal pair %s in the %s %s data set %s", hpaste(postProcessing, lastCollapse=" and "), sampleName, platform, chipTypeEsc, dataSet);
 if (confQuantile < 1) {
   title <- sprintf("%s using the SNPs with %.0f\\%% highest confidence scores", title, 100*confQuantile);
 }
@@ -187,8 +189,8 @@ authors <- "Henrik Bengtsson, Pierre Neuvial, Terence P. Speed";
 % Introduction
 %=====================================================================
 \section{Introduction}
-This report, which is automatically generated, assesses the performance of the TumorBoost method based on a few change points in a particular tumor/normal pair.
-For more details on the evaluation methods, see the main TumorBoost manuscript.
+This report, which is automatically generated, assesses the performance of <%=hpaste(postProcessing, lastCollapse=" and ")%> based on a few change points in a particular tumor/normal pair.
+For more details on the evaluation methods, see the TumorBoost article.
 
 
 
@@ -205,20 +207,37 @@ The data was generated on the <%=platform%> <%=chipTypeEsc%> chip type.
 <% if (platform == "Affymetrix") { %>
   There is one CEL file per hybridization.
   <% if (is.element("CRMAv2", docTags)) { %>%
-  Each CEL file was preprocessed separately using CRMAv2~\cite{BengtssonH_etal_2009b}, without relying neither on reference samples nor prior estimates.
+  Each CEL file was preprocessed separately using CRMAv2~\citep{BengtssonH_etal_2009b}, without relying neither on reference samples nor prior estimates.
   <% } %>%
   <% if (is.element("ismpolish", docTags)) { %>%
-  The CEL files were preprocessed using Birdseed/median polish~\cite{KornJ_etal_2008} as part of a larger batch of CEL files.
+  The CEL files were preprocessed using Birdseed/median polish~\citep{KornJ_etal_2008} as part of a larger batch of CEL files.
   <% } %>%
 <% } else if (platform == "Illumina") { %>%
   <% if (is.element("XY", docTags)) { %>%
-  Each array was preprocessed separately using BeadStudio's "XY-normalization" method~\cite{Illumina_20061004}, which is principle is a single-array method that relies neither on reference samples nor prior estimates.
+  Each array was preprocessed separately using BeadStudio's "XY-normalization" method~\citep{Illumina_20061004}, which is principle is a single-array method that relies neither on reference samples nor prior estimates.
   <% } %>%
   <% if (is.element("BAF", docTags)) { %>%
-  Each array was preprocessed using BeadStudio's "BAF" normalization method~\cite{PeifferD_etal_2006}, which is a multi-array (population-based) method.
+  Each array was preprocessed using BeadStudio's "BAF" normalization method~\citep{PeifferD_etal_2006}, which is a multi-array (population-based) method.
   <% } %>%
 <% } %>
 
+
+\subsection{Postprocessing methods}
+The result of the above preprocessing method are estimates of total copy numbers (TCNs) and allele B fractions (BAFs).
+The (TCN,BAF) signals are then postprocessed by <%=postProcessingStr%>.
+<% if (is.element("TumorBoost", postProcessing)) { %>
+Because TumorBoost models each tumor-normal pair independently, it can be applied to the studied pair without the need for reference samples.
+<% } %>
+<% if (is.element("CalMaTe", postProcessing)) { %>
+The CalMaTe method is a multi-array method, which estimates SNP effects from a set of reference samples, and then correct all samples based on these estimates.  For details on the reference set used, see descriptions elsewhere.
+<% } %>
+
+
+\subsection{Identifying heterozygous SNPs}
+When evaluating the power to detect a change point using the BAFs, we identify the heterozyous SNPs from the matched normal do calculate the Decrease of Heterozygousity (DH) signals.  See the TumorBoost article for details.
+<% if (is.element("NGC", genTags)) { %>
+We use a naive genotyping algorithm (see TumorBoost article) to identify the heterozygous SNPs.
+<% } %>
 
 
 \subsection{Stratification on genotype confidence scores}
@@ -232,6 +251,30 @@ We focus on the SNPs in which we are the most confident that they are heterozygo
 %=====================================================================
 % Description of change points studied
 %=====================================================================
+\section{Evaluation}
+We next compare how well we can detect various change points 
+(see Section~\ref{secListOfChangePoints}) by using the above
+preprocessed signals as is ("raw") or when followed by one
+of the above postprocessing methods.
+%% For completeness we also include an evaluation of total copy numbers (TCN).
+<%
+nms <- names(fracBDsList);
+descs <- character(length(nms));
+descs[nms == "raw"] <- "preprocessed signals without postprocessing";
+for (gg in genTags) {
+  descs[grep(gg, nms)] <- sprintf("preprocessed signals followed by TumorBoost normalization using %s genotype calls", gg);
+} # for (gg ...) %>%
+Specifically, we compare the following sets of data:
+\begin{enumerate}
+<% for (ii in seq(along=nms)) {%>%
+  \item \textbf{``<%=nms[ii]%>"}: <%=descs[ii]%>. 
+<% } ## for (ii in ... ) %>%
+\end{enumerate}
+The assessment is based on ROC analysis at the full resolution as well 
+as various smoothed resolution with bin sizes $h=\{<%=hpaste(binWidths)%>\}$.
+For further details and rationales behind the ROC analysis, see the TumorBoost article.
+
+
 \subsection{List of change points}
 \label{secListOfChangePoints}
 For this data set, we have selected a few regions for which one can safely assume that there exists a single copy number change point. By definition, each change point separates two sets of genomic loci such that the true Decrease in Heterozygosity (DH) is the same within one set of loci but differs between the two sets.  These regions were selected visually. For each region we chose a large enough safety margin to make our evaluation independent of the uncertainty on the true location of the change point.
@@ -257,28 +300,11 @@ for (region in regionsList) {
 \label{tblRegions}
 \end{table}
 
-We next compare how well each of these change points is detected using
-the above preprocessed signals followed or not by TumorBoost
-normalization using the ROC analysis described in the main TumorBoost
-manuscript at the full resolution as well as smoothed resolution with
-bin sizes $h=\{<%=paste(binCounts, collapse=", ")%>\}$.
-%
-<%
-nms <- names(fracBDsList);
-descs <- character(length(nms));
-descs[nms == "raw"] <- "preprocessed signals without TumorBoost normalization";
-for (gg in genTags) {
-  descs[grep(gg, nms)] <- sprintf("preprocessed signals followed by TumorBoost normalization using %s genotype calls", gg);
-} # for (gg ...) %>%
-Specifically, we compare the following three methods:
-<% for (ii in seq(along=nms)) {%>%
-  (<%=ii%>) \textbf{``<%=nms[ii]%>"}: <%=descs[ii]%>. 
-<% } ## for (ii in ... ) %>%
-For completeness we also include an evaluation of Total copy numbers (TCN).
 
 <%
 # Sanity check
-stopifnot(length(fracBDsList) %in% c(2,3));   # raw, Birdseed*, NGC
+#stopifnot(length(fracBDsList) %in% 2:3);   # raw, Birdseed*, NGC
+stopifnot(length(fracBDsList) %in% 2:4);   # raw, Birdseed*, NGC
 %>
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -349,7 +375,7 @@ if (byCount) {
     min(table(getStates(signals)));
   }));
   if (is.null(fixedNbrOfPoints)) {
-    binCounts <- binCounts * fixedNbrOfPoints/minNbrOfPoints;
+    binWidths <- binWidths * fixedNbrOfPoints/minNbrOfPoints;
     minNbrOfPoints <- fixedNbrOfPoints;
   }
   if (!is.null(fixedSeed)) {
@@ -466,7 +492,6 @@ for (kk in seq(along=signalList)) {
 
     # Add smoothed track?
     if (addBinTrack) {
-      binWidths <- binCounts;
       binWidth <- binWidths[length(binWidths)];
       if (!byCount) {
         binWidth <- round(diff(xRange(signal))/(nbrOfLoci(signal, na.rm=TRUE)-1)*binWidth)
@@ -521,7 +546,8 @@ verbose && enter(verbose, "Plotting densities");
 what <- "fracB";
 fracBList <- getFracBList(fracBDsList, what=what, pattern=methodPattern);
 # Sanity check
-stopifnot(length(fracBList) %in% c(2,3));   # raw, Birdseed*, NGC
+# stopifnot(length(fracBList) %in% 2:3);   # raw, Birdseed*, NGC
+stopifnot(length(fracBList) %in% 2:4);   # raw, Birdseed*, NGC
 fracB <- fracBList[[1]];
 ustates <- na.omit(getUniqueStates(fracB));
 %>
@@ -577,7 +603,7 @@ if (platform == "Affymetrix") {
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 <%  } # for (ss ...) %>
  \end{center}
- \caption{Density of raw (dashed lines) and TumorBoost-normalized (solid lines) allele B fractions for region <%=region$src%>.}
+ \caption{Density of raw (dashed lines) and postprocessed (solid lines) allele B fractions for region <%=region$src%>.}
  \label{fig<%=fullname(region$label, tags=c(what, "density"))%>}
 \end{figure}
 
@@ -591,7 +617,6 @@ signal <- signalList[[1]];
 nbrOfLoci <- sum(is.finite(signal$y), na.rm=TRUE);
 fullRes <- (diff(xRange(signal))+1) / (nbrOfLoci-1);
 
-binWidths <- binCounts;
 if (!byCount) {
   binWidths <- round(fullRes*binWidths);
 }
@@ -601,7 +626,7 @@ if (!byCount) {
 % BEGIN Figure: ROC curves
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 <%
-  rocRows <- ceiling(length(binCounts)/rocCols); 
+  rocRows <- ceiling(length(binWidths)/rocCols); 
   aspect <- rocRows/rocCols;
 
   ltyLgds <- rep("solid", length(ltys));
@@ -628,7 +653,8 @@ if (!byCount) {
        binWidth <- binWidths[ww];
       
        smtFUN <- function(signal) {
-         signalS <- binnedSmoothingByState(signal, from=xRange[1], to=xRange[2], by=binWidth, FUN=binFFracB, byCount=byCount);
+           signalS <- binnedSmoothingByState(signal, from=xRange[1], to=xRange[2], 
+           by=binWidth, FUN=binFFracB, byCount=byCount);
          signalS <- extractSubsetByState(signalS, states=states);
          signalS;
        }
@@ -1162,7 +1188,7 @@ for (what in evalSignals) {
     what2 <- ifelse(what == "fracB", "beta", "DH");
     output2 <- ifelse(output == "statistic", "test statistics", "p-value");
 
-    caption <- sprintf("%s %s of the null hypothesis of equal %s before and after each PCN change point (%s): raw or TumorBoost-normalized %s, and total copy number (last line). %s. The larger value, the more different the true %ss are.", testLabel, output2, testParam, probeType, what2, txtB, testParam);
+    caption <- sprintf("%s %s of the null hypothesis of equal %s before and after each PCN change point (%s): raw or postprocessed %s, and total copy number (last line). %s. The larger value, the more different the true %ss are.", testLabel, output2, testParam, probeType, what2, txtB, testParam);
 
     label <- sprintf("tab%s%s%s", testName, what2, toCamelCase(probeType));
 

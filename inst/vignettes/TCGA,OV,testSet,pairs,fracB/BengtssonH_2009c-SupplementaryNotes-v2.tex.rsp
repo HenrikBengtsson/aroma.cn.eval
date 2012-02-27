@@ -91,7 +91,7 @@ sourceDirectory("R/");
 devOptions("png", width=840);
 devOptions("pdf", width=8.4);
 setOption("devEval/args/path", figPath);
-setOption("devEval/args/force", TRUE);
+setOption("devEval/args/force", FALSE);
 toFig <- toPNG;
 
 pch <- "."; cex <- 2.5;
@@ -146,7 +146,6 @@ authors <- "Henrik Bengtsson, Pierre Neuvial, Terence P. Speed";
 %=====================================================================
 % LaTeX setup
 %=====================================================================
-%\documentclass[a4paper,draft,10pt]{article}
 \documentclass[a4paper,10pt]{article}
 \usepackage{graphicx}
 \usepackage{grffile} % Allows for multiple dots in figure filenames
@@ -271,7 +270,7 @@ Specifically, we compare the following sets of data:
 <% } ## for (ii in ... ) %>%
 \end{enumerate}
 The assessment is based on ROC analysis at the full resolution as well 
-as various smoothed resolution with bin sizes $h=\{<%=paste(binCounts, collapse=", ")%>\}$.
+as various smoothed resolution with bin sizes $h=\{<%=hpaste(binWidths * ifelse(byCount,1,1e-3))%>\}$<%=if (!byCount) "~kb"%>.
 For further details and rationales behind the ROC analysis, see the TumorBoost article.
 
 
@@ -378,7 +377,7 @@ if (byCount) {
     min(table(getStates(signals)));
   }));
   if (is.null(fixedNbrOfPoints)) {
-    binCounts <- binCounts * fixedNbrOfPoints/minNbrOfPoints;
+    binWidths <- binWidths * fixedNbrOfPoints/minNbrOfPoints;
     minNbrOfPoints <- fixedNbrOfPoints;
   }
   if (!is.null(fixedSeed)) {
@@ -496,12 +495,7 @@ for (kk in seq(along=signalList)) {
 
     # Add smoothed track?
     if (addBinTrack) {
-      binWidths <- binCounts;
-      binWidth <- binWidths[length(binWidths)];
-      if (!byCount) {
-#        binWidth <- round(diff(xRange(signal))/(nbrOfLoci(signal, na.rm=TRUE)-1)*binWidth)
-      }
-      signalS <- binnedSmoothingByState(signal, from=xRange[1], to=xRange[2], by=binWidth, FUN=binFFracB, byCount=byCount);
+      signalS <- binnedSmoothingByState(signal, from=xRange[1], to=xRange[2], by=binWidthS, FUN=binFFracB, byCount=byCount);
       setStateColorMap(signalS, smoothedColorMap);
       lines(signalS, lty=1, lwd=2, col="white", xScale=xScale);
       points(signalS, pch=19, cex=0.7, col="white", xScale=xScale);
@@ -622,17 +616,16 @@ signal <- signalList[[1]];
 nbrOfLoci <- sum(is.finite(signal$y), na.rm=TRUE);
 fullRes <- (diff(xRange(signal))+1) / (nbrOfLoci-1);
 
-binWidths <- binCounts;
-if (!byCount) {
-  binWidths <- round(fullRes*binWidths);
-}
+##if (!byCount) {
+##  binWidths <- round(fullRes*binWidths);
+##}
 %>
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % BEGIN Figure: ROC curves
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 <%
-  rocRows <- ceiling(length(binCounts)/rocCols); 
+  rocRows <- ceiling(length(binWidths)/rocCols); 
   aspect <- rocRows/rocCols;
 
   ltyLgds <- rep("solid", length(ltys));
@@ -969,7 +962,7 @@ tbl <- tbl[,1, drop=TRUE];
       col <- rep(homCol, length(isHet));
       col[isHet] <-hetCol;
 
-      toFig(region$label, tags=c("ASCN", what, name, gTag, sprintf("state=%s", state)), {
+      figName <- toFig(region$label, tags=c("ASCN", what, name, gTag, sprintf("state=%s", state)), {
         par(mar=c(2.7,2.6,1.2,0)+0.1, mgp=c(1.4,0.3,0), tcl=-0.3, cex=cex, cex.axis=1.2, cex.lab=1.2);
         plot(NA, col=col, xlim=lim, ylim=lim, xlab=xlab, ylab=ylab);
         for (c in 2) lines(x=c(0,c), y=c(c,0), lty=1, lwd=2, col="#999999");
@@ -991,7 +984,7 @@ tbl <- tbl[,1, drop=TRUE];
  <% } # for (ss ...) %>
   \end{center}
   \caption{<%=txt%> for region <%=region$src%>.}
-  \label{fig<%=figName%>}
+  \label{fig<%=fullname(region$label, tags=c("ASCN", what, name, gTag))%>}
 \end{figure}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
