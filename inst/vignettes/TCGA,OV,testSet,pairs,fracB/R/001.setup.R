@@ -112,4 +112,4 @@ if (tumorType == "OV") {
   );
 }
 
-regions <- regions[1];
+regions <- regions[4];

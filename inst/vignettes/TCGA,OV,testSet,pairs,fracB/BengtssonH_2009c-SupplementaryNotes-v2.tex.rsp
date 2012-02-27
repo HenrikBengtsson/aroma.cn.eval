@@ -2,7 +2,7 @@
 % Authors: Henrik Bengtsson, hb@stat.berkeley.edu
 %          Pierre Neuvial, pierre@stat.berkeley.edu
 % Created on: 2009-02-23
-% Modified on: 2012-02-20
+% Modified on: 2012-02-26
 %
 % Usage:
 <%-- (RSP comment)
@@ -12,18 +12,18 @@
   buildIt <- function() {
     library("R.rsp");
     fullnameRsp <- "BengtssonH_2009c-SupplementaryNotes";
-    filenameRsp <- sprintf("%s.tex.rsp", fullnameRsp);
+
+    # => *.tex.rsp => ... => *.pdf
+    rsp(filenameRsp, force=TRUE, verbose=-5);
+
+    # Copy *.tex and *.pdf files to each final locations
+    # 'pdfPathname' is set by the vignette.
     filenameTeX <- sprintf("%s.tex", fullnameRsp);
     filenamePDF <- sprintf("%s.pdf", fullnameRsp);
-    # => *.tex.rsp => ... => *.pdf
-    rsptex(filenameRsp, envir=globalenv(), force=TRUE, verbose=-5);
-    pathnameTeX <- gsub(".pdf", ".tex", pdfPathname, fixed=TRUE);
-    file.copy(filenameTeX, pathnameTeX, overwrite=TRUE);
+    texPathname <- gsub(".pdf", ".tex", pdfPathname, fixed=TRUE);
+    file.copy(filenameTeX, texPathname, overwrite=TRUE);
     file.copy(filenamePDF, pdfPathname, overwrite=TRUE);
   } # buildIt()
-
-  # => *.tex.rsp => ... => *.pdf
-#  # rsptex(filename, envir=globalenv(), pdf=TRUE, force=TRUE, verbose=-5);
 
 # Now one can pass command line arguments to the build.Rex script;
   Arguments:
@@ -88,7 +88,11 @@ sourceDirectory("R/");
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Graphical settings
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-figForce <- TRUE;
+devOptions("png", width=840);
+devOptions("pdf", width=8.4);
+setOption("devEval/args/path", figPath);
+setOption("devEval/args/force", TRUE);
+toFig <- toPNG;
 
 pch <- "."; cex <- 2.5;
 
@@ -145,6 +149,7 @@ authors <- "Henrik Bengtsson, Pierre Neuvial, Terence P. Speed";
 %\documentclass[a4paper,draft,10pt]{article}
 \documentclass[a4paper,10pt]{article}
 \usepackage{graphicx}
+\usepackage{grffile} % Allows for multiple dots in figure filenames
 \usepackage{fancyvrb}
 \usepackage{a4wide}
 \usepackage{xspace}
@@ -161,9 +166,10 @@ authors <- "Henrik Bengtsson, Pierre Neuvial, Terence P. Speed";
 \renewcommand{\bottomfraction}{1.0} % max fraction of floats at bottom
 \renewcommand{\textfraction}{0.00}
 
-% The search path (within curly brackets and separated by commas)
+% The search path (must end with a slash, be within curly brackets,
+% and separated by commas)
 % where to find graphics files
-\graphicspath{{<%=figPath%>}}
+\graphicspath{{<%=figPath%>/}}
 \DeclareGraphicsRule{.eps.gz}{eps}{.eps.bb}{`gunzip -c #1}
 
 \newcommand{\pkg}[1]{\textsl{#1}\xspace}
@@ -461,8 +467,7 @@ for (kk in seq(along=signalList)) {
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
   # Plot along genome
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  figName <- sprintf("%s,%s,track,%s", region$label, figTag, name);
-  if (fig <- figDev(figName, aspect=trackAspect)) {
+  figName <- toFig(region$label, tags=c(figTag, name), aspectRatio=trackAspect, {
     # subplots(nbrOfSources, ncol=1);
     par(mar=c(1.2,2,0.1,0.2)+0.2, mgp=c(1.2,0.3,0), tcl=-0.3, cex=cex, cex.axis=0.7);
     
@@ -504,23 +509,20 @@ for (kk in seq(along=signalList)) {
       points(signalS, pch=19, cex=0.5, xScale=xScale);
       rm(signalS);
     }
-
-    devDone(figName);
-  } # if (fig <- figDev(...))
-  figList[[kk]] <- fig;
+  }) # toPNG()
+  figList[[kk]] <- figName;
 } # for (kk ...)
 %>
 
 \captionsetup{position=top}
 \begin{figure}[htb]
  \begin{center}
-  <% for (fig in figList) { %>%
+ <% for (figName in figList) { %>%
   <% 
-    figPathname <- file.path(figPath, fig$fullname, fsep="/"); 
-    label <- gsub(".*,track,", "", fig$fullname);
+    label <- gsub(".*,track,", "", figName);
   %>%
   \subfloat[<%=label%>.]{
-   \resizebox{\trackWidth}{!}{\includegraphics{<%=figPathname%>}}
+   \resizebox{\trackWidth}{!}{\includegraphics{<%=figName%>}}
   }\\
   <% } %>
  \end{center}
@@ -532,7 +534,7 @@ for (kk in seq(along=signalList)) {
 \end{figure}
 \captionsetup{position=bottom}
 <%
-rm(fig, label, figName, figPathname);
+rm(label, figName);
 %>
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -582,27 +584,24 @@ if (platform == "Affymetrix") {
 <%
 #fracB <- fracBList[[1]];
 #ustates <- na.omit(getUniqueStates(fracB));
-for (ss in seq(along=ustates)) {
-  figName <- sprintf("%s,%s,density,state=%s", region$label, what, ustates[ss]);
-  fracBStateList <- lapply(fracBList, FUN=extractSubsetByState, ustates[ss]);
-  betaT <- sapply(fracBStateList, FUN=getSignals);
-%>%
+%>
+<% for (ss in seq(along=ustates)) { %>
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % BEGIN Figure: {betaT} densities for state <%=ustates[ss]%>
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
   \subfloat[<%=names(tbl)[ss]%>.]{
     <% 
-    if (fig <- figDev(figName, aspect=0.4)) {
+    figName <- toFig(region$label, tags=c(what, "density", sprintf("state=%s", ustates[ss])), aspectRatio=0.4, {
       par(mar=c(2.7,0.2,1.2,0.2)+0.1, mgp=c(1.4,0.3,0), tcl=-0.3, cex=cex, cex.axis=1.2, cex.lab=1.2);
+      fracBStateList <- lapply(fracBList, FUN=extractSubsetByState, ustates[ss]);
+      betaT <- sapply(fracBStateList, FUN=getSignals);
       plotDensity(betaT, col="#000000", lty=c(3,1,1), lwd=6, adjust=adjust, xlim=xlim, ylim=ylim, xlab=xlab, ylab=NULL, axes=FALSE);
       axis(side=1, labels=FALSE, col.ticks=NA);
       axis(side=1, at=c(0,1/2,1));
       stext(side=3, pos=0.5, line=0, margin=c(0.2,0), cex=cex, names(tbl)[ss]);
-      devDone(figName);
-    } # if (fig <- figDev(...)) 
-    figPathname <- file.path(figPath, fig$fullname, fsep="/");
+    }) # toFig()
     %>%
-   \resizebox{0.34\textwidth}{!}{\includegraphics{<%=figPathname%>}}%
+   \resizebox{0.34\textwidth}{!}{\includegraphics{<%=figName%>}}%
   } % \subfloat{}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % END Figure: betaT densities for state <%=ustates[ss]%>
@@ -610,7 +609,7 @@ for (ss in seq(along=ustates)) {
 <%  } # for (ss ...) %>
  \end{center}
  \caption{Density of raw (dashed lines) and postprocessed (solid lines) allele B fractions for region <%=region$src%>.}
- \label{fig<%=figName%>}
+ \label{fig<%=fullname(region$label, tags=c(what, "density"))%>}
 \end{figure}
 
 <% verbose && exit(verbose); %>
@@ -666,75 +665,72 @@ if (!byCount) {
          signalS;
        }
 
-       figName <- sprintf("%s,ROC,%s,binWidth=%s", region$label, robustStr, binWidth);
-       if (fig <- figDev(figName, aspect=1, scale=0.5)) {
+       figName <- toFig(region$label, tags=c("ROC", robustStr, sprintf("binWidth=%s", binWidth)), aspectRatio=1, scale=0.5, {
          ##   layout(matrix(seq(along=binWidths), ncol=rocCols, byrow=TRUE));
          par(mar=c(2.5,2.4,1.3,1)+0.1, mgp=c(1.4,0.3,0), tcl=-0.3, cex=cex);
     
-     if (binWidth > 0) {
-       # Smooth signal using consecutive bins of given width (in kb)
-       signalSList <- lapply(signalList, FUN=smtFUN);
-       dim(signalSList) <- dim(signalList)
-        names(signalSList) <- names(signalList)
-
-       if (byCount) {
-         binLabel <- sprintf("Bin size: %g", round(binWidth));
-       } else {
-         binLabel <- sprintf("Bin width %g kb", binWidth/1e3);
-       }
-     } else {
-       signalSList <- signalList;
-       binLabel <- sprintf("Full resolution (%.1f kb, %s points)", fullRes/1e3, length(signal$unit));
-     }
-     print(signalSList);
+         if (binWidth > 0) {
+           # Smooth signal using consecutive bins of given width (in kb)
+           signalSList <- lapply(signalList, FUN=smtFUN);
+           dim(signalSList) <- dim(signalList)
+            names(signalSList) <- names(signalList)
+    
+           if (byCount) {
+             binLabel <- sprintf("Bin size: %g", round(binWidth));
+           } else {
+             binLabel <- sprintf("Bin width %g kb", binWidth/1e3);
+           }
+         } else {
+           signalSList <- signalList;
+           binLabel <- sprintf("Full resolution (%.1f kb, %s points)", fullRes/1e3, length(signal$unit));
+         }
+         print(signalSList);
   
-    fits <- NULL;
-    for (ss in seq(along=signalSList)) {
-      signalS <- signalSList[[ss]];
-      cat("Number of missing values: ", sum(is.na(getSignals(signalS))), "\n", sep="");
-      es <- ifelse(length(grep("TCN", names(signalList)[ss])), "TCN", evalSignal);
-      cat("Evaluation statistics:", es, "\n");
-      cat("States:", states, "\n");
-      qs <- getQuantStates(states, es);
-      cat("qs=", qs, "\n");
-      recall <- states[which.min(qs)]; ## In 'fitRoc', 'recall' is in fact the neutral state
-      cat("Recall:", recall ,"\n");
-      roc <- fitRoc(signalS, states=states, recall=recall);
-      fits <- append(fits, list(roc));
-    } # for (ss ...)
-    names(fits) <- names(signalSList);     
+        fits <- NULL;
+        for (ss in seq(along=signalSList)) {
+          signalS <- signalSList[[ss]];
+          cat("Number of missing values: ", sum(is.na(getSignals(signalS))), "\n", sep="");
+          es <- ifelse(length(grep("TCN", names(signalList)[ss])), "TCN", evalSignal);
+          cat("Evaluation statistics:", es, "\n");
+          cat("States:", states, "\n");
+          qs <- getQuantStates(states, es);
+          cat("qs=", qs, "\n");
+          recall <- states[which.min(qs)]; ## In 'fitRoc', 'recall' is in fact the neutral state
+          cat("Recall:", recall ,"\n");
+          roc <- fitRoc(signalS, states=states, recall=recall);
+          fits <- append(fits, list(roc));
+        } # for (ss ...)
+        names(fits) <- names(signalSList);     
   
-   for (kk in seq(along=fits)) {
-     doLgd <- ((kk == 1) && (ww == length(binWidths)) && (ww > 1));
-     fit <- fits[[kk]];
-     roc <- fit$roc;
-     if (kk == 1) {
-       plot(roc, type="l", lwd=3, col=cols[kk], lty=ltys[kk], xlim=fpLim, ylim=sort(1-fpLim), xlab="False-positive rate", ylab="True-positive rate");
-       abline(a=0, b=1, lty=3);
-       stext(side=3, pos=1, binLabel, line=0, cex=0.8*cex);
-     } else {
-       lines(roc, lwd=4, col=cols[kk], lty=ltys[kk]);
-     }
-     pcns <- sapply(states, FUN=getRegionPcns);
-     pcnTxt <- apply(pcns, MARGIN=2, FUN=function(x) sprintf("(%s,%s)", x[1], x[2]));
-     pcnTxt <- paste(pcnTxt, collapse=" vs ");
-     stext(side=3, pos=0, pcnTxt, line=0, col="#999999", cex=0.8*cex);
-#     stext(side=4, pos=0, what, col="#999999", line=-0.4);
-
-     if (addLegend && doLgd) {
-       legend("bottomright", col=cols, lwd=2, lty=ltys, labels, cex=0.4, bty="n");
-     }
-   } # for (kk ...)
-   devDone(figName);
-  } # if (fig <- figDev(...))
-  figPathname <- file.path(figPath, fig$fullname, fsep="/");
+       for (kk in seq(along=fits)) {
+         doLgd <- ((kk == 1) && (ww == length(binWidths)) && (ww > 1));
+         fit <- fits[[kk]];
+         roc <- fit$roc;
+         if (kk == 1) {
+           plot(roc, type="l", lwd=3, col=cols[kk], lty=ltys[kk], xlim=fpLim, ylim=sort(1-fpLim), xlab="False-positive rate", ylab="True-positive rate");
+           abline(a=0, b=1, lty=3);
+           stext(side=3, pos=1, binLabel, line=0, cex=0.8*cex);
+         } else {
+           lines(roc, lwd=4, col=cols[kk], lty=ltys[kk]);
+         }
+         pcns <- sapply(states, FUN=getRegionPcns);
+         pcnTxt <- apply(pcns, MARGIN=2, FUN=function(x) sprintf("(%s,%s)", x[1], x[2]));
+         pcnTxt <- paste(pcnTxt, collapse=" vs ");
+         stext(side=3, pos=0, pcnTxt, line=0, col="#999999", cex=0.8*cex);
+    #     stext(side=4, pos=0, what, col="#999999", line=-0.4);
+    
+         if (addLegend && doLgd) {
+           legend("bottomright", col=cols, lwd=2, lty=ltys, labels, cex=0.4, bty="n");
+         }
+       } # for (kk ...)
+     }) # toFig()
   %>%
-  \resizebox{0.45\textwidth}{!}{\includegraphics{<%=figPathname%>}}
+  \resizebox{0.45\textwidth}{!}{\includegraphics{<%=figName%>}}
 <% } # for (ww ...) %>%
  } % \parbox{...}
 \end{center}
  \caption{ROC curves for each preprocessing method at the full resolution as well as <%=length(binWidths)-1%> different amounts of smoothing (using the <%=binFFracB%>() function) for region <%=region$src%>. Legend: <%=legends%>.}
- \label{fig<%=figName%>}
+ \label{fig<%=fullname(region$label, tags=c("ROC", robustStr))%>}
 \end{figure}
 
 
@@ -809,8 +805,7 @@ tbl <- tbl[,1, drop=TRUE];
       col <- rep(homCol, length(isHet));
       col[isHet] <- hetCol;
 
-      figName <- sprintf("%s,betaNvsBetaT,%s,%s,%s,state=%s", region$label, what, name, gTag, ustates[ss]);
-      if (fig <- figDev(figName)) {
+      figName <- toFig(region$label, tags=c("betaNvsBetaT", what, name, gTag, sprintf("state=%s", ustates[ss])), {
         par(mar=c(2.7,2.6,1.2,0)+0.1, mgp=c(1.4,0.3,0), tcl=-0.3, cex=cex, cex.axis=1.2, cex.lab=1.2);
         plot(NA, xlim=lim, ylim=lim, xlab=xlab, ylab=ylab, axes=FALSE);
         axis(side=1, at=c(0,1/2,1));
@@ -884,12 +879,9 @@ tbl <- tbl[,1, drop=TRUE];
         nm <- names(tbl)[ss];
         stext(side=3, pos=0, line=-0.3, cex=cex, nm);
 #       stext(side=4, pos=0, line=-0.8, cex=cex, txt, col="#999999");
-
-        devDone(figName);
-      } # if (fig <- figDev(...))
-      figPathname <- file.path(figPath, fig$fullname, fsep="/");
+    }) # toFig()
       %>%
-      \resizebox{0.34\textwidth}{!}{\includegraphics{<%=figPathname%>}}
+      \resizebox{0.34\textwidth}{!}{\includegraphics{<%=figName%>}}
       <%  } # for (ss ...) %>
     \end{center}
     \caption{<%=txt%> for region <%=region$src%>.}
@@ -977,8 +969,7 @@ tbl <- tbl[,1, drop=TRUE];
       col <- rep(homCol, length(isHet));
       col[isHet] <-hetCol;
 
-      figName <- sprintf("%s,ASCN,%s,%s,%s,state=%s", region$label, what, name, gTag, state);
-      if (fig <- figDev(figName)) {
+      toFig(region$label, tags=c("ASCN", what, name, gTag, sprintf("state=%s", state)), {
         par(mar=c(2.7,2.6,1.2,0)+0.1, mgp=c(1.4,0.3,0), tcl=-0.3, cex=cex, cex.axis=1.2, cex.lab=1.2);
         plot(NA, col=col, xlim=lim, ylim=lim, xlab=xlab, ylab=ylab);
         for (c in 2) lines(x=c(0,c), y=c(c,0), lty=1, lwd=2, col="#999999");
@@ -994,11 +985,9 @@ tbl <- tbl[,1, drop=TRUE];
         stext(side=3, pos=1, line=-0.3, cex=cex, names(tbl)[ss]);
 #        stext(side=4, pos=0, line=-0.8, cex=cex, txt, col="#999999");
         points(CA, CB, col=col, pch=pch, cex=cex);
-        devDone(figName);
-      } # if (fig <- figDev(...))
-      figPathname <- file.path(figPath, fig$fullname, fsep="/");
+     }) # toFig()
    %>%
-   \resizebox{0.34\textwidth}{!}{\includegraphics{<%=figPathname%>}}
+   \resizebox{0.34\textwidth}{!}{\includegraphics{<%=figName%>}}
  <% } # for (ss ...) %>
   \end{center}
   \caption{<%=txt%> for region <%=region$src%>.}
@@ -1304,6 +1293,13 @@ This report was automatically generated using the R.rsp package.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % HISTORY:
+% 2012-02-26 [HB]
+% o Vignette now utilizing toPNG() and toPDF() of R.utils.
+% o By using LaTeX 'grffile' package it is now possible to include
+%   figure files with periods in their names, i.e. no longer needed
+%   to escape those.
+% o Finally got rid off paths in \includegraphics{}.  It turns out
+%   that figure paths must have trailing slashes in \graphicspath{}.
 % 2012-02-24 [PN]
 % o Added support for multiple TCN data sets.
 % 2012-02-19 [HB]

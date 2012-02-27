@@ -1,9 +1,11 @@
 Package: aroma.cn.eval
 ======================
 
-Version: 0.3.0 [2012-02-25]
+Version: 0.3.0 [2012-02-26]
 o Added testSeparation() for SegmentedGenomicSignalsInterface.
   It used to be part of the TCGA vignette.
+o CLEANUP: Now the TCGA vignette utilizes toPNG()/toPDF() of
+  R.utils (>= 1.11.0) to generate figures.
 
 
 Version: 0.2.0 [2011-11-29]
