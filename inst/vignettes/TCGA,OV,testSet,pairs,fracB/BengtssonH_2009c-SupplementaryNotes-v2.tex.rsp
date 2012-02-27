@@ -467,7 +467,7 @@ for (kk in seq(along=signalList)) {
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
   # Plot along genome
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  figName <- toFig(region$label, tags=c(figTag, name), aspectRatio=trackAspect, {
+  figName <- toFig(region$label, tags=c(figTag, "track", name), aspectRatio=trackAspect, {
     # subplots(nbrOfSources, ncol=1);
     par(mar=c(1.2,2,0.1,0.2)+0.2, mgp=c(1.2,0.3,0), tcl=-0.3, cex=cex, cex.axis=0.7);
     
