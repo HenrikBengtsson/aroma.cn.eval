@@ -327,7 +327,7 @@ signalN <- getFracBList(list(dsN), what=what)[[1]];
 cnList <- getCnList(cnDsList, what="ratios");
 cn <- cnList[[1]];
 cn$unit <- signalN$unit;
-addLocusFields(cn, "unit");
+cn <- addLocusFields(cn, "unit");
 
 signalList[["TCN"]] <- cn;
 
@@ -455,7 +455,7 @@ for (kk in seq(along=signalList)) {
     figTag <- "MBAF";
   }
 
-  setStateColorMap(signal, fullResColorMap);
+  signal <- setStateColorMap(signal, fullResColorMap);
 
   tbl <- getNbLociPerState(signal);
 
@@ -492,7 +492,7 @@ for (kk in seq(along=signalList)) {
     # Add smoothed track?
     if (addBinTrack) {
   signalS <- binnedSmoothingByState(signal, from=xRange[1], to=xRange[2], by=binWidthS, FUN=binFFracB, byCount=byCount);
-      setStateColorMap(signalS, smoothedColorMap);
+      signalS <- setStateColorMap(signalS, smoothedColorMap);
       lines(signalS, lty=1, lwd=2, col="white", xScale=xScale);
       points(signalS, pch=19, cex=0.7, col="white", xScale=xScale);
       lines(signalS, lty=3, lwd=1, xScale=xScale);
@@ -1063,7 +1063,7 @@ for (what in evalSignals) {
     # Sanity check
     signal <- signalList[[1]];
     cn$unit <- signal$unit;
-    addLocusFields(cn, "unit");
+    cn <- addLocusFields(cn, "unit");
     signalList[["TCN"]] <- cn; ## Add TCN
     rm(signal);
 
@@ -1282,6 +1282,8 @@ This report was automatically generated using the R.rsp package.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % HISTORY:
+% 2012-03-01 [HB]
+% o Now longer assuming that RawGenericSignals are ref. variables.
 % 2012-02-26 [HB]
 % o Vignette now utilizing toPNG() and toPDF() of R.utils.
 % o By using LaTeX 'grffile' package it is now possible to include

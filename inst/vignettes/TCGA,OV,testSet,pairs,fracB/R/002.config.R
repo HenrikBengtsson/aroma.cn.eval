@@ -68,14 +68,15 @@ byCount <- c(TRUE, FALSE)[1];
 # Width of each bin
 if (byCount) {
   binWidths <- c(1, 2, 4);
+  binWidthS <- binWidths[length(binWidths)];
 } else {
   binWidths <- c(10, 50, 100)*1e3;
+  binWidthS <- binWidths[2];
 }
 binWidths <- binWidths;
 
 # Add smoothed track?
 addBinTrack <- TRUE;
-binWidthS <- binWidths[length(binWidth)];
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

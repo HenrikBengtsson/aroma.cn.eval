@@ -21,7 +21,7 @@ setMethodS3("getBalancedRegions", "SegmentedGenomicSignalsInterface", function(t
     if (is.null(res)) {
       res <- thisByState;
     } else {
-      append(res, thisByState);
+      res <- append(res, thisByState);
     }
   } # for (ss ...)
 
@@ -31,6 +31,8 @@ setMethodS3("getBalancedRegions", "SegmentedGenomicSignalsInterface", function(t
 
 ############################################################################
 # HISTORY:
+# 2012-03-01
+# o No longer assuming reference variables.
 # 2009-10-26
 # o Resampling with replacement now allowed (implicitly through '...').
 # 2009-06-30

@@ -1,6 +1,12 @@
 Package: aroma.cn.eval
 ======================
 
+Version: 0.3.1 [2012-03-01]
+o PREPARING FOR FUTURE: Updated TCGA vignette to no longer assume
+  that the RawGenericSignals classes of aroma.core implement
+  reference variables.
+
+
 Version: 0.3.0 [2012-02-26]
 o Added testSeparation() for SegmentedGenomicSignalsInterface.
   It used to be part of the TCGA vignette.
