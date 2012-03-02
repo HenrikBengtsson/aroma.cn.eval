@@ -2,9 +2,10 @@ Package: aroma.cn.eval
 ======================
 
 Version: 0.3.1 [2012-03-01]
-o PREPARING FOR FUTURE: Updated TCGA vignette to no longer assume
-  that the RawGenericSignals classes of aroma.core implement
+o PREPARING FOR FUTURE: Updated TCGA vignette to also work when
+  RawGenericSignals extends a data.frame, i.e. no longer provides
   reference variables.
+o CLEANUP: There were some unnecessarily large vignette files.
 
 
 Version: 0.3.0 [2012-02-26]

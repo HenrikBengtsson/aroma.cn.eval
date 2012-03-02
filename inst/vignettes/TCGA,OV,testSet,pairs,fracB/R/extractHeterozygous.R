@@ -33,7 +33,14 @@ extractHeterozygous <- function(signalList, genotypeCalls, confidenceScores=NULL
   verbose && enter(verbose, "Extracting heterozygous subset");
 
   signals <- signalList[[1]];
-  name <- gsub(",.*", "", signals$name);
+
+  name <- getName(signals);
+  # Sanity check
+  stopifnot(!is.null(name));
+  
+  name <- gsub(",.*", "", name);
+  verbose && cat(verbose, "Name: ", name);
+
   idx <- indexOf(genotypeCalls, name);
   gf <- getFile(genotypeCalls, idx);
   verbose && print(verbose, gf);

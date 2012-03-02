@@ -1,0 +1,226 @@
+% This file was created with JabRef 2.8b.
+% Encoding: Cp1252
+
+@ARTICLE{BengtssonH_etal_2009b,
+  author = {Henrik Bengtsson and Pratyaksha Wirapati and Terence P. Speed},
+  title = {A single-array preprocessing method for estimating full-resolution
+	raw copy numbers from all {Affymetrix} genotyping arrays including
+	{GenomeWideSNP 5 \& 6}},
+  journal = {Bioinformatics},
+  year = {2009},
+  volume = {25},
+  pages = {2149--2156},
+  number = {17},
+  month = {Sep},
+  __markedentry = {[hb:1]},
+  abstract = {Motivation:
+	
+	High-resolution copy-number (CN) analysis have in recent years gained
+	much
+	
+	attention, not only for the purpose of identifying CN aberrations
+	associated with a
+	
+	certain phenotype but also for identifying CN polymorphisms. In order
+	for such studies
+	
+	to be successful and cost effective, the statistical methods have
+	to be optimized. We
+	
+	propose a single-array preprocessing method for estimating full-resolution
+	total CNs. It
+	
+	is applicable to all Affymetrix genotyping arrays, including the recent
+	ones that also
+	
+	contain non-polymorphic probes. A reference signal is only needed
+	at the last step
+	
+	when calculating relative CNs.
+	
+	
+	Results: 
+	
+	As with our method for earlier generations of arrays, this one controls
+	for allelic
+	
+	crosstalk, probe affinities and PCR fragment-length effects. Additionally,
+	it also corrects
+	
+	for probe-sequence effects and co-hybridization of fragments digested
+	by multiple
+	
+	enzymes that takes place on the latest chips. We compare our method
+	with Affymetrix'
+	
+	CN5 method and the dChip method by assessing how well they differentiate
+	between
+	
+	various CN states at the full resolution and various amounts of smoothing.
+	Although
+	
+	the others use data from all arrays for their preprocessing, we observe
+	that CRMA v2
+	
+	performs as well as or better even if it is a single-array method.
+	This shows that it is
+	
+	possible to do online analysis in large-scale projects where additional
+	arrays are
+	
+	introduced over time.
+	
+	
+	Availability: 
+	
+	A bounded-memory implementation that can process any number of arrays
+	is available
+	
+	in the open-source R package aroma.affymetrix.},
+  doi = {10.1093/bioinformatics/btp371},
+  file = {:BengtssonH_etal_2009b-CRMAv2.pdf:PDF;Supplementary Notes #1:BengtssonH_etal_2009b-CRMAv2,SupplNotes1,AnnotationSummary.pdf:PDF;Supplementary Notes #2:BengtssonH_etal_2009b-CRMAv2,SupplNotes2,Methods.pdf:PDF;Supplementary Notes #3:BengtssonH_etal_2009b-CRMAv2,SupplNotes3,GSE13372,HCC1143,log2ratios.pdf:PDF},
+  institution = {Department of Statistics, University of California, Berkeley, California,
+	USA. hb@stat.berkeley.edu},
+  keywords = {Algorithms; Artificial Intelligence; Base Sequence; Chromosome Mapping,
+	methods; DNA Mutational Analysis, methods; Gene Dosage, genetics;
+	Gene Expression Profiling, methods; Markov Chains; Molecular Sequence
+	Data; Oligonucleotide Array Sequence CRMA v2},
+  owner = {hb},
+  pii = {btn016},
+  pmid = {19535535},
+  timestamp = {2009.04.12},
+  url = {http://dx.doi.org/10.1093/bioinformatics/btp371}
+}
+
+@MISC{Illumina_20061004,
+  author = {Illumina},
+  title = {Illumina's genotyping data normalization methods},
+  howpublished = {Webpage},
+  month = {Oct},
+  year = {2006},
+  note = {White paper, Rev. C},
+  abstract = {This document will help guide Illumina’s customers in the exploration
+	of the normalization procedures used for Illumina’s raw genotyping
+	data. This purpose of this document is to provide general guidelines
+	for those researchers who wish to try their own normalization procedures,
+	develop their own algorithms for data analysis, and to detail Illumina’s
+	standard normalization method. Regardless of the normalization algorithm
+	used, it is necessary to apply such an algorithm by sub-bead pools
+	as defined below. Illumina’s standard normalization algorithm is
+	implemented as the first step in SNP genotyping data analysis. The
+	intensity data are normalized automatically when they are loaded
+	into Illumina’s BeadStudio software.},
+  file = {Illumina_20061004-NormalizationWhitePaper_revC.pdf:Illumina_20061004-NormalizationWhitePaper_revC.pdf:PDF},
+  owner = {hb},
+  timestamp = {2006.12.17}
+}
+
+@ARTICLE{KornJ_etal_2008,
+  author = {Joshua M Korn and Finny G Kuruvilla and Steven A McCarroll and Alec
+	Wysoker and James Nemesh and Simon Cawley and Earl Hubbell and Jim
+	Veitch and Patrick J Collins and Katayoon Darvishi and Charles Lee
+	and Marcia M Nizzari and Stacey B Gabriel and Shaun Purcell and Mark
+	J Daly and David Altshuler},
+  title = {Integrated genotype calling and association analysis of {SNP}s, common
+	copy number polymorphisms and rare {CNV}s.},
+  journal = NatGen,
+  year = {2008},
+  volume = {40},
+  pages = {1253--1260},
+  number = {10},
+  month = {Oct},
+  abstract = {Accurate and complete measurement of single nucleotide (SNP) and copy
+	number (CNV) variants, both common and rare, will be required to
+	understand the role of genetic variation in disease. We present Birdsuite,
+	a four-stage analytical framework instantiated in software for deriving
+	integrated and mutually consistent copy number and SNP genotypes.
+	The method sequentially assigns copy number across regions of common
+	copy number polymorphisms (CNPs), calls genotypes of SNPs, identifies
+	rare CNVs via a hidden Markov model (HMM), and generates an integrated
+	sequence and copy number genotype at every locus (for example, including
+	genotypes such as A-null, AAB and BBB in addition to AA, AB and BB
+	calls). Such genotypes more accurately depict the underlying sequence
+	of each individual, reducing the rate of apparent mendelian inconsistencies.
+	The Birdsuite software is applied here to data from the Affymetrix
+	SNP 6.0 array. Additionally, we describe a method, implemented in
+	PLINK, to utilize these combined SNP and CNV genotypes for association
+	testing with a phenotype.},
+  doi = {10.1038/ng.237},
+  file = {:KornJ_etal_2008-Integrated genotype calling and association analysis of SNPs, common copy number polymorphisms and rare CNVs.pdf:PDF;Supplementary Materials:KornJ_etal_2008-SupplMaterials.pdf:PDF},
+  institution = {Broad Institute of Harvard and Massachusetts Institute of Technology,
+	Cambridge, Massachusetts 02142, USA. jkorn@broad.mit.edu},
+  keywords = {Algorithms; Chromosomes, Human, Pair 4, genetics; Chromosomes, Human,
+	genetics; DNA, genetics; Female; Gene Dosage, genetics; Genome, Human;
+	Genotype; Haplotypes, genetics; Humans; Male; Markov Chains; Models,
+	Statistical; Oligonucleotide Array Sequence Analysis; Polymerase
+	Chain Reaction; Polymorphism, Single Nucleotide; Software, Birdseed,
+	Canary},
+  owner = {hb},
+  pii = {ng.237},
+  pmid = {18776909},
+  timestamp = {2008.11.13},
+  url = {http://dx.doi.org/10.1038/ng.237}
+}
+
+@ARTICLE{PeifferD_etal_2006,
+  author = {Daniel A Peiffer and Jennie M Le and Frank J Steemers and Weihua
+	Chang and Tony Jenniges and Francisco Garcia and Kirt Haden and Jiangzhen
+	Li and Chad A Shaw and John Belmont and Sau Wai Cheung and Richard
+	M Shen and David L Barker and Kevin L Gunderson},
+  title = {High-resolution genomic profiling of chromosomal aberrations using
+	{Infinium} whole-genome genotyping.},
+  journal = GenRes,
+  year = {2006},
+  volume = {16},
+  pages = {1136--1148},
+  number = {9},
+  month = {Sep},
+  __markedentry = {[hb:1]},
+  abstract = {Array-CGH is a powerful tool for the detection of chromosomal aberrations.
+	The introduction of high-density SNP genotyping technology to genomic
+	profiling, termed SNP-CGH, represents a further advance, since simultaneous
+	measurement of both signal intensity variations and changes in allelic
+	composition makes it possible to detect both copy number changes
+	and copy-neutral loss-of-heterozygosity (LOH) events. We demonstrate
+	the utility of SNP-CGH with two Infinium whole-genome genotyping
+	BeadChips, assaying 109,000 and 317,000 SNP loci, to detect chromosomal
+	aberrations in samples bearing constitutional aberrations as well
+	tumor samples at sub-100 kb effective resolution. Detected aberrations
+	include homozygous deletions, hemizygous deletions, copy-neutral
+	LOH, duplications, and amplifications. The statistical ability to
+	detect common aberrations was modeled by analysis of an X chromosome
+	titration model system, and sensitivity was modeled by titration
+	of gDNA from a tumor cell with that of its paired normal cell line.
+	Analysis was facilitated by using a genome browser that plots log
+	ratios of normalized intensities and allelic ratios along the chromosomes.
+	We developed two modes of SNP-CGH analysis, a single sample and a
+	paired sample mode. The single sample mode computes log intensity
+	ratios and allelic ratios by referencing to canonical genotype clusters
+	generated from approximately 120 reference samples, whereas the paired
+	sample mode uses a paired normal reference sample from the same individual.
+	Finally, the two analysis modes are compared and contrasted for their
+	utility in analyzing different types of input gDNA: low input amounts,
+	fragmented gDNA, and Phi29 whole-genome pre-amplified DNA.},
+  doi = {10.1101/gr.5402306},
+  file = {PeifferD_etal_2006-High-resolution genomic profiling of chromosomal aberrations using Infinium whole-genome genotyping.pdf:PeifferD_etal_2006-High-resolution genomic profiling of chromosomal aberrations using Infinium whole-genome genotyping.pdf:PDF},
+  keywords = {Cell Line, Tumor; Chromosome Aberrations; Chromosomes, Human; DNA;
+	Female; Genome, Human; Genomics; Genotype; Humans; In Situ Hybridization,
+	Fluorescence; Loss of Heterozygosity; Male; Oligonucleotide Array
+	Sequence Analysis; Polymorphism, Single Nucleotide, Illumina},
+  owner = {hb},
+  pii = {gr.5402306},
+  pmid = {16899659},
+  timestamp = {2007.12.20},
+  url = {http://dx.doi.org/10.1101/gr.5402306}
+}
+
+@comment{jabref-meta: selector_review:}
+
+@comment{jabref-meta: selector_publisher:}
+
+@comment{jabref-meta: selector_author:}
+
+@comment{jabref-meta: selector_journal:}
+
+@comment{jabref-meta: selector_keywords:}
+

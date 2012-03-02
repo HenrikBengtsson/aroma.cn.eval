@@ -1191,7 +1191,7 @@ for (what in evalSignals) {
 % References
 %=====================================================================
 \clearpage
-\bibliography{bioinformatics-journals-abbr,hb-at-maths.lth.se}
+\bibliography{bioinformatics-journals-abbr,CalMaTe-SupplementaryNotes}
 %\bibliographystyle{plain}
 \bibliographystyle{natbib}
 

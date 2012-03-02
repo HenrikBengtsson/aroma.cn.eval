@@ -328,10 +328,10 @@ cnList <- getCnList(cnDsList, what="ratios");
 cnList <- lapply(cnList, FUN=function(cn) {
   ## cn <- cnList[[1]];
   cn$unit <- fracBSignalN$unit;
-  addLocusFields(cn, "unit");
-  cn
+  cn <- addLocusFields(cn, "unit");
+  cn;
 })
-names(cnList) <- gsub(dataSet, "TCN", names(cnList))
+names(cnList) <- gsub(dataSet, "TCN", names(cnList));
 signalList <- append(fracBSignalList, cnList);
 
 
@@ -353,6 +353,7 @@ str(signalList);
 dn <- dimnames(signalList);
 nms <- sapply(dn[[2]], FUN=function(nm) sprintf("%s,%s", dn[[1]], nm));
 nms <- as.character(nms);
+print(nms);
 
 # Keep only certain data sets of interest
 ## PN 2012-02-24: ad hoc fix to avoid dropping CalMaTe
@@ -1067,7 +1068,7 @@ for (what in evalSignals) {
     # Sanity check
     signal <- signalList[[1]];
     cn$unit <- signal$unit;
-    addLocusFields(cn, "unit");
+    cn <- addLocusFields(cn, "unit");
     signalList[["TCN"]] <- cn; ## Add TCN
     rm(signal);
 
@@ -1109,7 +1110,6 @@ for (what in evalSignals) {
         signalList <- signalList[keep];
       }
     } # if (probeType == "heterozygous SNPs")
-    str(signalList);
 
     if (fixedNbPointsAcrossMethods) {
       if (!fixedNbPointsAcrossRegions) {
