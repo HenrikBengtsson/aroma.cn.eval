@@ -45,7 +45,9 @@ getFracBList <- function(dsList, fracBList=NULL, ..., what=c("fracB", "abs(fracB
   ## Rho
   if (what == "abs(fracB-1/2)") {
     fracBList <- lapply(fracBList, FUN=function(fracB) {
-      fracB$y <- 2*abs(fracB$y-1/2);
+      y <- getSignals(fracB);
+      dh <- 2*abs(y-1/2);
+      fracB <- setSignals(fracB, dh);
       fracB;
     });
     verbose && print(verbose, fracBList);

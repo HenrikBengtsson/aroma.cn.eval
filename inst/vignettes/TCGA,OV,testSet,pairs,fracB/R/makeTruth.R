@@ -29,7 +29,12 @@ makeTruth <- function(region, ..., verbose=FALSE) {
   verbose && str(verbose, states);
 
 
-  res <- function(x, ...) {
+  res <- function(data, ...) {
+    if (is.data.frame(data)) {
+      x <- data$x;
+    } else {
+      x <- data;
+    }
     res <- rep(as.integer(NA), times=length(x));
     res[x <= cpRegion[1]] <- states[1];
     res[x >  cpRegion[2]] <- states[2];
@@ -45,6 +50,10 @@ makeTruth <- function(region, ..., verbose=FALSE) {
 
 ############################################################################
 # HISTORY:
+# 2012-03-12
+# o Now makeTruth() returns a function that also accepts a data.frame
+#   as input.  This is part of the migration to making use of the
+#   virtual fields of the new RawGenomicSignals (aroma.core >=2.4.11).
 # 2009-06-13
 # o Created.
 ############################################################################

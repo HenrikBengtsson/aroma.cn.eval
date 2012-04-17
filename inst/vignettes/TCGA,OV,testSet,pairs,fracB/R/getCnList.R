@@ -19,7 +19,9 @@ getCnList <- function(dsList, cnList=NULL, ..., what=c("log2ratios", "ratios"), 
   # CN ratios
   if (what == "ratios") {
     cnList <- lapply(cnList, FUN=function(cn) {
-      cn$y <- 2*2^cn$y;
+      y <- getSignals(cn);
+      y <- 2*2^y;
+      cn <- setSignals(cn, y);
       cn;
     });
   }

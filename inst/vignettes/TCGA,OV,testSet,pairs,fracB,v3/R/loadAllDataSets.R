@@ -71,7 +71,7 @@ loadAllDataSets <- function(dataSet, chipType="*", pattern=NULL, ..., rootPath="
     } else if (type=="confidenceScores") {
       ds <- AromaUnitSignalBinarySet$byName(dataSet, chipType=chipType, pattern="confidenceScores", paths=rootPath);
     }
-    if (length(ds)) {
+    if (length(ds) > 0) {
       dsList[[kk]] <- ds;
       verbose && print(verbose, ds);
     } else {
@@ -104,8 +104,6 @@ loadAllDataSets <- function(dataSet, chipType="*", pattern=NULL, ..., rootPath="
 
   dsList;
 } # loadAllDataSets()
-
-
 
 ############################################################################
 # HISTORY:

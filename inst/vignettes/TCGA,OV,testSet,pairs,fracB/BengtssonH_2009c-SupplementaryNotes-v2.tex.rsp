@@ -328,7 +328,6 @@ cnList <- getCnList(cnDsList, what="ratios");
 cnList <- lapply(cnList, FUN=function(cn) {
   ## cn <- cnList[[1]];
   cn$unit <- fracBSignalN$unit;
-  cn <- addLocusFields(cn, "unit");
   cn;
 })
 names(cnList) <- gsub(dataSet, "TCN", names(cnList));
@@ -1068,7 +1067,6 @@ for (what in evalSignals) {
     # Sanity check
     signal <- signalList[[1]];
     cn$unit <- signal$unit;
-    cn <- addLocusFields(cn, "unit");
     signalList[["TCN"]] <- cn; ## Add TCN
     rm(signal);
 

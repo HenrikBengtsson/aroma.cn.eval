@@ -13,7 +13,7 @@ setMethodS3("getBalancedRegions", "SegmentedGenomicSignalsInterface", function(t
   for (ss in seq(along=states)) {
     state <- states[ss];
     thisByState <- extractSubsetByState(this, state);
-    nbUnits <- length(thisByState$y);
+    nbUnits <- length(getSignals(thisByState));
     if (!is.na(state)) {
       subset <- sample(nbUnits, minNbP, ...);
       thisByState <- extractSubset(thisByState, subset);
