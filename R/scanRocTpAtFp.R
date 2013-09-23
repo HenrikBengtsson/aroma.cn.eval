@@ -86,7 +86,7 @@ setMethodS3("scanRocTpAtFp", "default", function(truth, data, fpRate, ..., W=NUL
         if (is.null(W)) {
           dataAvg <- colAvgsPerRowSet(data0, S=idxs);
         } else {
-          dataAvg <- colAvgsPerRowSet(data0, W=W, S=idxs, 
+          dataAvg <- colAvgsPerRowSet(data0, W=W, S=idxs,
                                       FUN=rowWeightedMeans.matrix, tFUN=TRUE);
         }
         data <- rbind(data, dataAvg);
@@ -95,10 +95,10 @@ setMethodS3("scanRocTpAtFp", "default", function(truth, data, fpRate, ..., W=NUL
       hApprox <- attr(idxs, "hApprox");
       verbose && exit(verbose);
     }
-    
+
     verbose && enter(verbose, "Finding TP rate at FP rate for smoothed (truth, data)");
     # Find TP rate at given FP rate
-    fitT <- findRocTpAtFp(truth, data, fpRate=fpRate, ..., 
+    fitT <- findRocTpAtFp(truth, data, fpRate=fpRate, ...,
                                   verbose=less(verbose), .checkArgs=FALSE);
     verbose && exit(verbose);
 
@@ -107,7 +107,7 @@ setMethodS3("scanRocTpAtFp", "default", function(truth, data, fpRate, ..., W=NUL
     verbose && cat(verbose, "Estimated TP rate: ", tpRateEst);
     verbose && cat(verbose, "Call rate: ", callRate);
 
-    rr <- whichVector(h == fit[,1]);
+    rr <- which(h == fit[,1]);
 
     fit[rr,] <- c(h, hApprox, tpRateEst, callRate);
     verbose && print(verbose, fit);
@@ -116,7 +116,7 @@ setMethodS3("scanRocTpAtFp", "default", function(truth, data, fpRate, ..., W=NUL
   } # while(...)
 
   attr(fit, "fractionOKs") <- fractionOKs;
-  
+
   verbose && exit(verbose);
 
   fit;
@@ -124,6 +124,10 @@ setMethodS3("scanRocTpAtFp", "default", function(truth, data, fpRate, ..., W=NUL
 
 ############################################################################
 # HISTORY:
+# 2013-09-23
+# o SPEEDUP/CLEANUP: normalizeTumorBoost() now uses which() instead of
+#   whichVector() of 'R.utils'.  Before R (< 2.11.0), which() used to be
+#   10x slower than whichVector(), but now it's 3x faster.
 # 2009-02-01
 # o Renamed from scanTpAtFpLite() to scanRdocTpAtFp().
 # 2008-07-25

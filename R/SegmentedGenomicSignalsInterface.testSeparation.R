@@ -12,7 +12,7 @@
 #
 # \arguments{
 #   \item{test}{A @character string specifying the statistical test to use.}
-#   \item{stateIdxs}{An @integer @vector specifying the indicies of the 
+#   \item{stateIdxs}{An @integer @vector specifying the indicies of the
 #     two states to be used.}
 #   \item{...}{Not used.}
 # }
@@ -67,10 +67,10 @@ setMethodS3("testSeparation", "SegmentedGenomicSignalsInterface", function(this,
   # Get the signals for the two states
   y <- getSignals(this);
 
-  idxs <- whichVector(states == stateA);
+  idxs <- which(states == stateA);
   yA <- y[idxs];
 
-  idxs <- whichVector(states == stateB);
+  idxs <- which(states == stateB);
   yB <- y[idxs];
 
   rm(states, idxs, y);
@@ -80,10 +80,14 @@ setMethodS3("testSeparation", "SegmentedGenomicSignalsInterface", function(this,
 
 ############################################################################
 # HISTORY:
+# 2013-09-23
+# o SPEEDUP/CLEANUP: normalizeTumorBoost() now uses which() instead of
+#   whichVector() of 'R.utils'.  Before R (< 2.11.0), which() used to be
+#   10x slower than whichVector(), but now it's 3x faster.
 # 2012-02-25
 # o Added Rdoc comments.
 # o Added to the aroma.cn.eval package.  Used to be part of a vignette.
 # 2009-06-25
 # o Added testSeparation().
 # o Created by extending PN's code in the TumorBoost vignette.
-############################################################################  
+############################################################################
