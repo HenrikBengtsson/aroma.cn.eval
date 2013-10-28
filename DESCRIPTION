@@ -1,7 +1,7 @@
 Package: aroma.cn.eval
 Version: 0.4.0
 Depends: R (>= 3.0.2), aroma.core (>= 2.11.0)
-Imports: R.methodsS3 (>= 1.5.1), R.oo (>= 1.15.8), R.utils (>= 1.27.1), matrixStats (>= 0.8.12), ROC (>= 1.22.0)
+Imports: R.methodsS3 (>= 1.5.1), R.oo (>= 1.15.8), R.utils (>= 1.27.1), matrixStats (>= 0.8.12), ROC (>= 1.38.0)
 Suggests: R.rsp (>= 0.9.28)
 Date: 2013-10-28
 Title: Package for evaluating copy-number estimates
