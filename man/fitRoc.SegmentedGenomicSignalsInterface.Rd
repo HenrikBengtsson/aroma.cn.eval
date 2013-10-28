@@ -10,9 +10,7 @@
 \name{fitRoc.SegmentedGenomicSignalsInterface}
 \alias{fitRoc.SegmentedGenomicSignalsInterface}
 \alias{SegmentedGenomicSignalsInterface.fitRoc}
-\alias{fitRoc.SegmentedGenomicSignalsInterface}
 \alias{fitRoc,SegmentedGenomicSignalsInterface-method}
-
 
 \title{Estimates the ROC for calling the state of genomic loci}
 
@@ -20,7 +18,9 @@
  Estimates the ROC for calling the state of genomic loci.
 }
 
-\usage{\method{fitRoc}{SegmentedGenomicSignalsInterface}(this, states=NULL, recall=states[1], ...)}
+\usage{
+\method{fitRoc}{SegmentedGenomicSignalsInterface}(this, states=NULL, recall=states[1], ...)
+}
 
 \arguments{
   \item{states}{}
@@ -138,7 +138,7 @@ for (kk in seq(along=fits)) {
 }
 }
 
-\author{Henrik Bengtsson (\url{http://www.braju.com/R/})}
+\author{Henrik Bengtsson}
 
 \seealso{
   \code{\link[aroma.core]{SegmentedGenomicSignalsInterface}}

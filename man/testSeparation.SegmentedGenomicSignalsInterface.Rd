@@ -10,9 +10,7 @@
 \name{testSeparation.SegmentedGenomicSignalsInterface}
 \alias{testSeparation.SegmentedGenomicSignalsInterface}
 \alias{SegmentedGenomicSignalsInterface.testSeparation}
-\alias{testSeparation.SegmentedGenomicSignalsInterface}
 \alias{testSeparation,SegmentedGenomicSignalsInterface-method}
-
 
 \title{Tests statistically the separation between two states}
 
@@ -20,7 +18,9 @@
  Tests statistically the separation between two states.
 }
 
-\usage{\method{testSeparation}{SegmentedGenomicSignalsInterface}(this, test=c("t.test", "ks.test"), stateIdxs=1:2, ...)}
+\usage{
+\method{testSeparation}{SegmentedGenomicSignalsInterface}(this, test=c("t.test", "ks.test"), stateIdxs=1:2, ...)
+}
 
 \arguments{
   \item{test}{A \code{\link[base]{character}} string specifying the statistical test to use.}
@@ -33,7 +33,7 @@
  Returns what test function returns.
 }
 
-\author{Henrik Bengtsson (\url{http://www.braju.com/R/})}
+\author{Henrik Bengtsson}
 
 \seealso{
   \code{\link[aroma.core]{SegmentedGenomicSignalsInterface}}

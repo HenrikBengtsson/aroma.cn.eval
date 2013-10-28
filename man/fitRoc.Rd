@@ -16,7 +16,10 @@
   Calculates the Receiver Operating Characteristic (ROC).
  }
 
- \usage{\method{fitRoc}{default}(truth, data, recall=NULL, idxs=NULL, ncuts=1200, hasNAs=TRUE, isOrdered=FALSE, ..., verbose=FALSE)}
+ \usage{
+\method{fitRoc}{default}(truth, data, recall=NULL, idxs=NULL, ncuts=1200, hasNAs=TRUE, isOrdered=FALSE,
+  ..., verbose=FALSE)
+}
 
  \arguments{
    \item{truth}{A \code{\link[base]{numeric}} \code{\link[base]{vector}} of length N.}
@@ -58,7 +61,7 @@ fit2 <- fitRoc(T,D2)
 lines(fit2$roc, type="l", lwd=2, col="red")
 }
 
- \author{Henrik Bengtsson (\url{http://www.braju.com/R/})}
+ \author{Henrik Bengtsson}
 
 
 

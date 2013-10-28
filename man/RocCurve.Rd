@@ -6,15 +6,15 @@
 % by the Rdoc compiler part of the R.oo package.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
- \name{RocCurve}
+\name{RocCurve}
 \docType{class}
 \alias{RocCurve}
 
 
- \title{The RocCurve class}
+\title{The RocCurve class}
 
- \description{
-  Package:  aroma.cn.eval \cr
+\description{
+ Package:  aroma.cn.eval \cr
 \bold{Class RocCurve}\cr
 
 \code{logical}\cr
@@ -30,18 +30,20 @@ public class \bold{RocCurve}\cr
 extends \link[R.oo]{BasicObject}\cr
 
 
- }
+}
 
- \usage{RocCurve(roc=NULL, cuts=NULL, ...)}
+\usage{
+RocCurve(roc=NULL, cuts=NULL, ...)
+}
 
- \arguments{
-   \item{roc}{A \code{\link[base]{list}}.}
-   \item{cuts}{A \code{\link[base]{numeric}}al \code{\link[base]{vector}} of N cuts.}
-   \item{...}{Not used.}
- }
+\arguments{
+  \item{roc}{A \code{\link[base]{list}}.}
+  \item{cuts}{A \code{\link[base]{numeric}}al \code{\link[base]{vector}} of N cuts.}
+  \item{...}{Not used.}
+}
 
- \section{Fields and Methods}{
-  \bold{Methods:}\cr
+\section{Fields and Methods}{
+ \bold{Methods:}\cr
 \tabular{rll}{
  \tab \code{as.character} \tab  -\cr
  \tab \code{auc} \tab  -\cr
@@ -54,13 +56,13 @@ extends \link[R.oo]{BasicObject}\cr
 
 
  \bold{Methods inherited from BasicObject}:\cr
-asThis, $, $<-, [[, [[<-, as.character, attach, detach, equals, extend, getFields, getInstantiationTime, hasField, hashCode, isReferable, objectSize, print
+$, $<-, [[, [[<-, as.character, attach, detach, equals, extend, getFields, getInstantiationTime, hasField, hashCode, isReferable, objectSize, print, asThis
 
  \bold{Methods inherited from logical}:\cr
 as.data.frame, as.raster, whichVector
 
 
- }
+}
 
- \author{Henrik Bengtsson (\url{http://www.braju.com/R/})}
+\author{Henrik Bengtsson}
 \keyword{classes}

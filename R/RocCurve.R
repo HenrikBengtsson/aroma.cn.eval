@@ -6,7 +6,7 @@
 # \description{
 #  @classhierarchy
 # }
-# 
+#
 # @synopsis
 #
 # \arguments{
@@ -20,7 +20,7 @@
 # }
 #
 # @author
-#*/########################################################################### 
+#*/###########################################################################
 setConstructorS3("RocCurve", function(roc=NULL, cuts=NULL, ...) {
   extend(BasicObject(), "RocCurve",
     roc=roc,
@@ -41,16 +41,15 @@ setMethodS3("as.character", "RocCurve", function(x, ...) {
 
 
 setMethodS3("getFpRate", "RocCurve", function(object, ...) {
-  object$roc[,"fpRate"]; 
+  object$roc[,"fpRate"];
 })
 
 setMethodS3("getTpRate", "RocCurve", function(object, ...) {
-  object$roc[,"tpRate"]; 
+  object$roc[,"tpRate"];
 })
 
 
 setMethodS3("auc", "RocCurve", function(object, ...) {
-  require("ROC") || throw("Package not loaded: ROC");
   x <- getFpRate(object);
   y <- getTpRate(object);
   ROC::trapezint(x, y, a=0, b=1);

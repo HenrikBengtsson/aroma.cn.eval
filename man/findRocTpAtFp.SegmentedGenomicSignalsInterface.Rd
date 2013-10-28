@@ -10,9 +10,7 @@
 \name{findRocTpAtFp.SegmentedGenomicSignalsInterface}
 \alias{findRocTpAtFp.SegmentedGenomicSignalsInterface}
 \alias{SegmentedGenomicSignalsInterface.findRocTpAtFp}
-\alias{findRocTpAtFp.SegmentedGenomicSignalsInterface}
 \alias{findRocTpAtFp,SegmentedGenomicSignalsInterface-method}
-
 
 \title{Estimates the true-positive rate at a given false-positive rate for calling the state of genomic loci}
 
@@ -20,7 +18,9 @@
  Estimates the true-positive rate at a given false-positive rate for calling the state of genomic loci.
 }
 
-\usage{\method{findRocTpAtFp}{SegmentedGenomicSignalsInterface}(this, states=NULL, recall=states[1], ...)}
+\usage{
+\method{findRocTpAtFp}{SegmentedGenomicSignalsInterface}(this, states=NULL, recall=states[1], ...)
+}
 
 \arguments{
   \item{states}{}
@@ -32,7 +32,7 @@
  Returns what \code{\link{findRocTpAtFp}}() returns.
 }
 
-\author{Henrik Bengtsson (\url{http://www.braju.com/R/})}
+\author{Henrik Bengtsson}
 
 \seealso{
   \code{\link[aroma.core]{SegmentedGenomicSignalsInterface}}

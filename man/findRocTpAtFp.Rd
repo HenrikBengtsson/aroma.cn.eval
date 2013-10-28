@@ -16,7 +16,10 @@
   Find the ROC true-positive (TP) rate for a given false-positive (FP) rate.
  }
 
- \usage{\method{findRocTpAtFp}{default}(truth, data, fpRate, acc=0.001, recall=NULL, hasNAs=TRUE, isOrdered=FALSE, ..., .checkArgs=TRUE, verbose=FALSE)}
+ \usage{
+\method{findRocTpAtFp}{default}(truth, data, fpRate, acc=0.001, recall=NULL, hasNAs=TRUE, isOrdered=FALSE,
+  ..., .checkArgs=TRUE, verbose=FALSE)
+}
 
  \arguments{
    \item{truth}{A \code{\link[base]{numeric}} \code{\link[base]{vector}} of length N.}
@@ -71,7 +74,7 @@ for (fpRate in c(0.2, 0.4)) {
 }
 }
 
- \author{Henrik Bengtsson (\url{http://www.braju.com/R/})}
+ \author{Henrik Bengtsson}
 
 
 

@@ -1,16 +1,77 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # IMPORTS
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# importFrom(R.utils, cat)
-import(R.utils)
+importFrom("R.methodsS3", "setMethodS3")
+importFrom("R.oo", "setConstructorS3")
+importFrom("R.methodsS3", "throw")
+importFrom("R.oo", "extend")
+importFrom("R.oo", "Package")
+importFrom("R.oo", "startupMessage")
+
+## Importing Class:es
+importFrom("R.oo", "BasicObject")
+
+## Importing generics
+importFrom("ROC", "lines")
+importFrom("ROC", "plot")
+importFrom("ROC", "points")
+
+## Verbose output
+importFrom("R.utils", "Arguments")
+importFrom("R.utils", "cat") ## Multi-sources: R.utils, base
+importFrom("R.utils", "enter")
+importFrom("R.utils", "exit")
+importFrom("R.utils", "less")
+importFrom("R.utils", "popState")
+importFrom("R.utils", "printf")
+importFrom("R.utils", "pushState")
+
+
+## Importing functions
+importFrom("aroma.core", "apply") ## Multi-sources: aroma.core, base
+importFrom("aroma.core", "binnedSmoothingByState")
+importFrom("aroma.core", "extractSubsetByState")
+importFrom("aroma.core", "getSignals")
+importFrom("aroma.core", "getStates")
+importFrom("aroma.core", "require")
+importFrom("matrixStats", "colAvgsPerRowSet")
+importFrom("matrixStats", "rowWeightedMeans")
+importFrom("R.utils", "callHooks")
+
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # EXPORTS
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Object that must exported explicitly
-export(.conflicts.OK) 
-
 # Export all public methods, that is, those without a preceeding dot
 # in their names.
 exportPattern("^[^\\.]")
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# S3 DECLARATIONS
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# default
+S3method("findRocSmoothingForTpAtFp", "default")
+S3method("findRocTpAtFp", "default")
+S3method("fitRoc", "default")
+S3method("getBlockAverageMap", "default")
+S3method("scanRocTpAtFp", "default")
+
+# matrix
+S3method("blockAvg", "matrix")
+
+# RocCurve
+S3method("as.character", "RocCurve")
+S3method("auc", "RocCurve")
+S3method("getFpRate", "RocCurve")
+S3method("getTpRate", "RocCurve")
+S3method("lines", "RocCurve")
+S3method("plot", "RocCurve")
+S3method("points", "RocCurve")
+
+# SegmentedGenomicSignalsInterface
+S3method("findRocSmoothingForTpAtFp", "SegmentedGenomicSignalsInterface")
+S3method("findRocTpAtFp", "SegmentedGenomicSignalsInterface")
+S3method("fitRoc", "SegmentedGenomicSignalsInterface")
+S3method("testSeparation", "SegmentedGenomicSignalsInterface")

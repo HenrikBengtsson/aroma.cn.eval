@@ -87,7 +87,7 @@ setMethodS3("scanRocTpAtFp", "default", function(truth, data, fpRate, ..., W=NUL
           dataAvg <- colAvgsPerRowSet(data0, S=idxs);
         } else {
           dataAvg <- colAvgsPerRowSet(data0, W=W, S=idxs,
-                                      FUN=rowWeightedMeans.matrix, tFUN=TRUE);
+                                      FUN=rowWeightedMeans, tFUN=TRUE);
         }
         data <- rbind(data, dataAvg);
         truth <- rbind(truth, colAvgsPerRowSet(truth0, S=idxs));
@@ -124,6 +124,9 @@ setMethodS3("scanRocTpAtFp", "default", function(truth, data, fpRate, ..., W=NUL
 
 ############################################################################
 # HISTORY:
+# 2013-10-28
+# o CLEANUP: Now scanRocTpAtFp() calls generic function rowWeightedMeans()
+#   instead of rowWeightedMeans.matrix().
 # 2013-09-23
 # o SPEEDUP/CLEANUP: normalizeTumorBoost() now uses which() instead of
 #   whichVector() of 'R.utils'.  Before R (< 2.11.0), which() used to be

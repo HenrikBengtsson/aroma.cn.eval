@@ -16,7 +16,9 @@
   Gets a index map for averaging blocks of data.
  }
 
- \usage{\method{getBlockAverageMap}{default}(n, h=1, s=0, ...)}
+ \usage{
+\method{getBlockAverageMap}{default}(n, h=1, s=0, ...)
+}
 
  \arguments{
    \item{n}{An \code{\link[base]{integer}} specifying the total number of data points
@@ -105,7 +107,7 @@ str(map)
 ## [1] 2.363636
 }
 
- \author{Henrik Bengtsson (\url{http://www.braju.com/R/})}
+ \author{Henrik Bengtsson}
 
  \seealso{
    \code{\link{blockAvg.matrix}}().
