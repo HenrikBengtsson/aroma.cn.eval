@@ -35,8 +35,7 @@ setMethodS3("as.character", "RocCurve", function(x, ...) {
   s <- sprintf("%s: ", class(object)[1]);
   s <- c(s, sprintf("AUC: %.4g", auc(object)));
   s <- c(s, sprintf("Number of cuts: %d", length(object$cuts)));
-  class(s) <- "GenericSummary";
-  s;
+  GenericSummary(s);
 })
 
 
