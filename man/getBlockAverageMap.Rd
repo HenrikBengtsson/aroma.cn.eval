@@ -6,36 +6,36 @@
 % by the Rdoc compiler part of the R.oo package.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
- \name{getBlockAverageMap}
+\name{getBlockAverageMap}
 \alias{getBlockAverageMap.default}
 \alias{getBlockAverageMap}
 
- \title{Gets a index map for averaging blocks of data}
+\title{Gets a index map for averaging blocks of data}
 
- \description{
-  Gets a index map for averaging blocks of data.
- }
+\description{
+ Gets a index map for averaging blocks of data.
+}
 
- \usage{
+\usage{
 \method{getBlockAverageMap}{default}(n, h=1, s=0, ...)
 }
 
- \arguments{
-   \item{n}{An \code{\link[base]{integer}} specifying the total number of data points
-    to average over.}
-   \item{h}{An \code{\link[base]{integer}} (or \code{\link[base]{double}}) specifying the (average) number
-    of data points to average over in each block.}
-   \item{s}{An (optional) positive \code{\link[base]{integer}} specifying amount of shift.}
-   \item{...}{Not used.}
- }
+\arguments{
+  \item{n}{An \code{\link[base]{integer}} specifying the total number of data points
+   to average over.}
+  \item{h}{An \code{\link[base]{integer}} (or \code{\link[base]{double}}) specifying the (average) number
+   of data points to average over in each block.}
+  \item{s}{An (optional) positive \code{\link[base]{integer}} specifying amount of shift.}
+  \item{...}{Not used.}
+}
 
- \value{
-   Returns an \code{\link[base]{integer}} vector of indices.
-   The \code{\link[base]{double}} attribute \code{hApprox} specifies the on average number of
-   data points in each block.
- }
+\value{
+  Returns an \code{\link[base]{integer}} vector of indices.
+  The \code{\link[base]{double}} attribute \code{hApprox} specifies the on average number of
+  data points in each block.
+}
 
- \examples{
+\examples{
 # Blocks of two and two
 map <- getBlockAverageMap(n=20, h=2)
 print(map)
@@ -107,11 +107,11 @@ str(map)
 ## [1] 2.363636
 }
 
- \author{Henrik Bengtsson}
+\author{Henrik Bengtsson}
 
- \seealso{
-   \code{\link{blockAvg.matrix}}().
- }
+\seealso{
+  \code{\link[matrixStats]{colAvgsPerRowSet}}.
+}
 
 
 

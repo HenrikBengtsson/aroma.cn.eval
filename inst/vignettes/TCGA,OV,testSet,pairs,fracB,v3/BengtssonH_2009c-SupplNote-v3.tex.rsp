@@ -2,7 +2,7 @@
 % Authors: Henrik Bengtsson, hb@stat.berkeley.edu
 %          Pierre Neuvial, pierre@stat.berkeley.edu
 % Created on: 2009-02-23
-% Modified on: 2012-02-26
+% Modified on: 2012-03-14
 %
 % Usage:
 <%-- (RSP comment)
@@ -11,7 +11,7 @@
 
   buildIt <- function() {
     library("R.rsp");
-    fullnameRsp <- "BengtssonH_2009c-SupplementaryNotes";
+    fullnameRsp <- "BengtssonH_2009c-SupplNote-v3";
 
     # => *.tex.rsp => ... => *.pdf
     rsp(filenameRsp, force=TRUE, verbose=-5);
@@ -374,7 +374,8 @@ if (!plotAllRocCurves) {
 # Balance the left and the right regions?
 if (byCount) {
   minNbrOfPoints <- min(sapply(signalList, FUN=function(signals) {
-    min(table(getStates(signals)));
+    states <- signals$state;
+    min(table(states));
   }));
   if (is.null(fixedNbrOfPoints)) {
     binWidths <- binWidths * fixedNbrOfPoints/minNbrOfPoints;
@@ -433,7 +434,8 @@ cnLab <- "C";
 
 xScale <- 1e-6;
 xRange <- range(sapply(signalList, FUN=xRange));
-states <- na.omit(getUniqueStates(signalList[[1]]));
+states <- signalList[[1]]$state;
+states <- sort(unique(states));
 xlim <- xRange*xScale;
 cp <- region$params$cp;
 s <- region$params$s;
@@ -459,8 +461,6 @@ for (kk in seq(along=signalList)) {
     figTag <- "MBAF";
   }
 
-  signal <- setStateColorMap(signal, fullResColorMap);
-
   tbl <- getNbLociPerState(signal);
 
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -469,8 +469,8 @@ for (kk in seq(along=signalList)) {
   figName <- toFig(region$label, tags=c(figTag, "track", name), aspectRatio=trackAspect, {
     # subplots(nbrOfSources, ncol=1);
     par(mar=c(1.2,2,0.1,0.2)+0.2, mgp=c(1.2,0.3,0), tcl=-0.3, cex=cex, cex.axis=0.7);
-    
-    plot(signal, pch=pch, cex=cex, xlim=xlim, ylim=ylim, xScale=xScale, ylab=ylab);
+    col <- stateToColor(signal$state, colorMap=fullResColorMap);
+    plot(signal, pch=pch, cex=cex, col=col, xlim=xlim, ylim=ylim, xScale=xScale, ylab=ylab);
     if (addStateLabels) {
       stext(side=3, pos=0, line=-0.2, cex=0.8*cex, names(tbl[1]));
       stext(side=3, pos=1, line=-0.2, cex=0.8*cex, names(tbl[2]));
@@ -495,12 +495,13 @@ for (kk in seq(along=signalList)) {
 
     # Add smoothed track?
     if (addBinTrack) {
-      signalS <- binnedSmoothingByState(signal, from=xRange[1], to=xRange[2], by=binWidthS, FUN=binFFracB, byCount=byCount);
-      signalS <- setStateColorMap(signalS, smoothedColorMap);
+      signalS <- binnedSmoothingByField(signal, field="state", from=xRange[1], to=xRange[2], by=binWidthS, FUN=binFFracB, byCount=byCount);
+
       lines(signalS, lty=1, lwd=2, col="white", xScale=xScale);
       points(signalS, pch=19, cex=0.7, col="white", xScale=xScale);
       lines(signalS, lty=3, lwd=1, xScale=xScale);
-      points(signalS, pch=19, cex=0.5, xScale=xScale);
+      col <- stateToColor(signalS$state, colorMap=smoothedColorMap);
+      points(signalS, pch=19, cex=0.5, col=col, xScale=xScale);
       rm(signalS);
     }
   }) # toPNG()
@@ -548,7 +549,7 @@ fracBList <- getFracBList(fracBDsList, what=what, pattern=methodPattern);
 # stopifnot(length(fracBList) %in% 2:3);   # raw, Birdseed*, NGC
 stopifnot(length(fracBList) %in% 2:4);   # raw, Birdseed*, NGC
 fracB <- fracBList[[1]];
-ustates <- na.omit(getUniqueStates(fracB));
+ustates <- sort(unique(fracB$state));
 %>
 
 <%
@@ -577,7 +578,7 @@ if (platform == "Affymetrix") {
  \begin{center}
 <%
 #fracB <- fracBList[[1]];
-#ustates <- na.omit(getUniqueStates(fracB));
+#ustates <- sort(unique(fracB$state));
 %>
 <% for (ss in seq(along=ustates)) { %>
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
@@ -587,7 +588,9 @@ if (platform == "Affymetrix") {
     <% 
     figName <- toFig(region$label, tags=c(what, "density", sprintf("state=%s", ustates[ss])), aspectRatio=0.4, {
       par(mar=c(2.7,0.2,1.2,0.2)+0.1, mgp=c(1.4,0.3,0), tcl=-0.3, cex=cex, cex.axis=1.2, cex.lab=1.2);
-      fracBStateList <- lapply(fracBList, FUN=extractSubsetByState, ustates[ss]);
+      fracBStateList <- lapply(fracBList, FUN=function(fracB) {
+        subset(fracB, state == ustates[ss]);
+      });
       betaT <- sapply(fracBStateList, FUN=getSignals);
       plotDensity(betaT, col="#000000", lty=c(3,1,1), lwd=6, adjust=adjust, xlim=xlim, ylim=ylim, xlab=xlab, ylab=NULL, axes=FALSE);
       axis(side=1, labels=FALSE, col.ticks=NA);
@@ -641,7 +644,7 @@ fullRes <- (diff(xRange(signal))+1) / (nbrOfLoci-1);
   rm(seps);
   
   xRange <- range(sapply(signalList, FUN=xRange));
-  states <- na.omit(getUniqueStates(signal));
+  states <- sort(unique(signal$state));
 %>
 
 \begin{figure}[htb]
@@ -652,11 +655,13 @@ fullRes <- (diff(xRange(signal))+1) / (nbrOfLoci-1);
        binWidth <- binWidths[ww];
       
        smtFUN <- function(signal) {
-           signalS <- binnedSmoothingByState(signal, from=xRange[1], to=xRange[2], 
-           by=binWidth, FUN=binFFracB, byCount=byCount);
-         signalS <- extractSubsetByState(signalS, states=states);
+         signalS <- binnedSmoothingByField(signal, field="state", from=xRange[1], to=xRange[2], by=binWidth, FUN=binFFracB, byCount=byCount);
+
+         # Keep only states of interest
+         signalS <- subset(signalS, is.element(state, states));
+
          signalS;
-       }
+       } # smtFUN()
 
        figName <- toFig(region$label, tags=c("ROC", robustStr, sprintf("binWidth=%s", binWidth)), aspectRatio=1, scale=0.5, {
          ##   layout(matrix(seq(along=binWidths), ncol=rocCols, byrow=TRUE));
@@ -776,12 +781,12 @@ tbl <- tbl[,1, drop=TRUE];
 <%
     name <- names(fracBList)[kk];
     fracB <- fracBList[[kk]];
-    ustates <- na.omit(getUniqueStates(fracB));
+    ustates <- sort(unique(fracB$state));
     for (ss in seq(along=ustates)) {
-      fracBState <- extractSubsetByState(fracB, state=ustates[ss]);
-      fracBNState <- extractSubsetByState(fracBN, state=ustates[ss]);
-      betaN <- getSignals(fracBNState)
+      fracBState <- subset(fracB, state == ustates[ss]);
+      fracBNState <- subset(fracBN, state == ustates[ss]);
 
+      betaN <- getSignals(fracBNState)
       betaT <- getSignals(fracBState);
 
       ## genotype calls
@@ -907,14 +912,13 @@ cnList <- getCnList(cnDsList, what=what);
 cn <- cnList[[1]];
 print(cn);
 C <- getSignals(cn);
-col <- getStateColors(cn, na.rm=TRUE);
 
 fracBList <- getFracBList(fracBDsList, what="fracB", pattern=methodPattern);
 print(fracBList);
 nbrOfSources <- length(fracBList);
 
   xScale <- 1e-6;
-  states <- na.omit(sort(getUniqueStates(fracBList[[1]])));
+  states <- sort(unique(fracBList[[1]]$state));
   cp <- region$params$cp;
   s <- region$params$s;
 %>
@@ -934,12 +938,13 @@ tbl <- tbl[,1, drop=TRUE];
 <%
     name <- names(fracBList)[kk];
     fracB <- fracBList[[kk]];
-    ustates <- na.omit(getUniqueStates(fracB));
+    ustates <- sort(unique(fracB$state));
     for (ss in seq(along=ustates)) {
       state <- ustates[ss];
-      cnState <- extractSubsetByState(cn, state=state);
-      fracBState <- extractSubsetByState(fracB, state=state);
-      fracBNState <- extractSubsetByState(fracBN, state=state);
+
+      cnState <- subset(cn, state == ustates[ss]);
+      fracBState <- subset(fracB, state == ustates[ss]);
+      fracBNState <- subset(fracBN, state == ustates[ss]);
 
       C <- getSignals(cnState);
       beta <- getSignals(fracBState);
@@ -1112,7 +1117,8 @@ for (what in evalSignals) {
     if (fixedNbPointsAcrossMethods) {
       if (!fixedNbPointsAcrossRegions) {
         minNbPoints <- min(sapply(signalList, FUN=function(signals) {
-          min(table(getStates(signals)));
+          states <- signals$state;
+          min(table(states));
         }));
       } else {
         # Now we resample with replacement (for practical purposes)
@@ -1284,6 +1290,10 @@ This report was automatically generated using the R.rsp package.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % HISTORY:
+% 2012-03-14 [HB]
+% o We no longer need SegmentedCopyNumbers/SegmentedAlleleBFractions.
+%   Instead we can make full use of the new RawGenomicSignals that
+%   extends RichDataFrame (aroma.core >= 2.4.13).
 % 2012-03-01 [HB]
 % o Now longer assuming that RawGenericSignals are ref. variables.
 % 2012-02-26 [HB]

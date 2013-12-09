@@ -6,13 +6,13 @@
 # \description{
 #  @get "title".
 # }
-# 
+#
 # @synopsis
 #
 # \arguments{
 #   \item{n}{An @integer specifying the total number of data points
 #    to average over.}
-#   \item{h}{An @integer (or @double) specifying the (average) number 
+#   \item{h}{An @integer (or @double) specifying the (average) number
 #    of data points to average over in each block.}
 #   \item{s}{An (optional) positive @integer specifying amount of shift.}
 #   \item{...}{Not used.}
@@ -29,7 +29,7 @@
 # @author
 #
 # \seealso{
-#   @see "blockAvg.matrix".
+#   @see "matrixStats::colAvgsPerRowSet".
 # }
 #
 # @keyword internal
@@ -93,7 +93,7 @@ setMethodS3("getBlockAverageMap", "default", function(n, h=1, s=0, ...) {
 # HISTORY:
 # 2009-02-01
 # o BUG FIX: In more recent versions of R, idxs[idxs] <- seq_len(n) did not
-#   work because if sum(idxs) != n the values were not looped over 
+#   work because if sum(idxs) != n the values were not looped over
 #   automatically.
 # o Added Rdoc comments and an example.
 # o Extracted from blockAvg.R.
@@ -101,4 +101,4 @@ setMethodS3("getBlockAverageMap", "default", function(n, h=1, s=0, ...) {
 # o Extracted from CRMA-Fig8,res,filtered.R.
 # 2007-11-16
 # o Added argument 'W' to blockAvg().
-############################################################################## 
+##############################################################################

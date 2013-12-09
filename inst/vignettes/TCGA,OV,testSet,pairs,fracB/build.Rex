@@ -8,8 +8,7 @@
 if (interactive()) savehistory();
 library("R.rsp");
 
-fullnameRsp <- "BengtssonH_2009c-SupplementaryNotes-v2";
-## fullnameRsp <- "BengtssonH_2009c-SupplementaryNotes";
+fullnameRsp <- "BengtssonH_2009c-SupplNote";
 
 filenameRsp <- sprintf("%s.tex.rsp", fullnameRsp);
 filenamePDF <- sprintf("%s.pdf", fullnameRsp);

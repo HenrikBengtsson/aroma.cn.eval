@@ -11,7 +11,7 @@
 
   buildIt <- function() {
     library("R.rsp");
-    fullnameRsp <- "BengtssonH_2009c-SupplementaryNotes";
+    fullnameRsp <- "BengtssonH_2009c-SupplNote";
 
     # => *.tex.rsp => ... => *.pdf
     rsp(filenameRsp, force=TRUE, verbose=-5);
