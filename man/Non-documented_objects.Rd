@@ -16,8 +16,6 @@
 \alias{auc}
 \alias{auc.RocCurve}
 \alias{blockAvg}
-\alias{findRocSmoothingForTpAtFp}
-\alias{findRocSmoothingForTpAtFp.default}
 \alias{getFpRate}
 \alias{getFpRate.RocCurve}
 \alias{getTpRate}
@@ -25,13 +23,10 @@
 \alias{lines.RocCurve}
 \alias{plot.RocCurve}
 \alias{points.RocCurve}
-\alias{scanRocTpAtFp}
-\alias{scanRocTpAtFp.default}
 \alias{smooth}
 \alias{cat}
 \alias{require}
 \alias{testSeparation}
-\alias{parseRegion}
 
 \description{
   This page contains aliases for all "non-documented" objects that

@@ -1,3 +1,42 @@
+###########################################################################/**
+# @RdocDefault scanRocTpAtFp
+#
+# @title "Find the ROC true-positive (TP) rate for a given false-positive (FP) rate"
+#
+# \description{
+#  @get "title".
+# }
+#
+# @synopsis
+#
+# \arguments{
+#   \item{truth}{An NxM @numeric @matrix of length N.}
+#   \item{data}{A NxM @numeric @matrix of length N.}
+#   \item{fpRate}{A @double in [0,1] specifying the target FP rate.}
+#   \item{...}{Additional arguments passed to @see "findRocTpAtFp".}
+#   \item{W}{An optional NxM @numeric @matrix specifying weights in [0,1]
+#    specific to each data points in \code{data}.}
+#   \item{hs}{A @double @vector with elements equal or greater than one.}
+#   \item{fit}{...}
+#   \item{shifts}{A @double @vector ...}
+#   \item{verbose}{See @see "R.utils::Verbose".}
+#   \item{.checkArgs}{If @TRUE, arguments are validated, otherwise not.}
+# }
+#
+# \value{
+#   Returns a ...
+# }
+#
+# @author
+#
+# \seealso{
+#   @see "findRocTpAtFp".
+#   @see "findRocSmoothingForTpAtFp".
+# }
+#
+# @keyword internal
+# @keyword utilities
+#*/###########################################################################
 setMethodS3("scanRocTpAtFp", "default", function(truth, data, fpRate, ..., W=NULL, hs=seq(from=1, to=10, by=0.1), fit=NULL, shifts=0, verbose=FALSE, .checkArgs=TRUE) {
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # Validate arguments
@@ -124,6 +163,8 @@ setMethodS3("scanRocTpAtFp", "default", function(truth, data, fpRate, ..., W=NUL
 
 ############################################################################
 # HISTORY:
+# 2013-12-12
+# o DOCUMENTATION: Added help for scanRocTpAtFp().
 # 2013-10-28
 # o CLEANUP: Now scanRocTpAtFp() calls generic function rowWeightedMeans()
 #   instead of rowWeightedMeans.matrix().

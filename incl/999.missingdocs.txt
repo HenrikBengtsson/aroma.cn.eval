@@ -1,8 +1,7 @@
 as.character.RocCurve auc auc.RocCurve blockAvg
- findRocSmoothingForTpAtFp findRocSmoothingForTpAtFp.default getFpRate
+ getFpRate
  getFpRate.RocCurve getTpRate getTpRate.RocCurve lines.RocCurve
- plot.RocCurve points.RocCurve scanRocTpAtFp scanRocTpAtFp.default
+ plot.RocCurve points.RocCurve
  smooth
 cat require
 testSeparation
-parseRegion

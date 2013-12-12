@@ -21,7 +21,7 @@
 #  Returns what test function returns.
 # }
 #
-# @author
+# @author "HB,PN"
 #
 # \seealso{
 #   @see "aroma.core::SegmentedGenomicSignalsInterface"

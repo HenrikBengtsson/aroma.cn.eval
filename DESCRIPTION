@@ -6,8 +6,10 @@ Suggests: R.rsp (>= 0.11.0), R.devices (>= 2.7.2), markdown (>= 0.6.3)
 VignetteBuilder: R.rsp
 Date: 2013-12-12
 Title: Package for evaluating copy-number estimates
-Authors@R: c(person("Henrik", "Bengtsson", role=c("aut", "cre", "cph"),
-                                          email = "henrikb@braju.com"))
+Authors@R: c(
+  person("Henrik", "Bengtsson", role=c("aut", "cre", "cph"),
+                                email = "henrikb@braju.com"),
+  person("Pierre", "Neuvial", role="ctb"))
 Description: This package is a private for now.
 License: LGPL (>= 2.1)
 URL: http://www.aroma-project.org/

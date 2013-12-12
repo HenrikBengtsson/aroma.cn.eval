@@ -6,7 +6,7 @@
 # \description{
 #  @get "title".
 # }
-# 
+#
 # @synopsis
 #
 # \arguments{
@@ -36,7 +36,7 @@
 #
 # @keyword internal
 # @keyword utilities
-#*/########################################################################### 
+#*/###########################################################################
 setMethodS3("fitRoc", "default", function(truth, data, recall=NULL, idxs=NULL, ncuts=1200, hasNAs=TRUE, isOrdered=FALSE, ..., verbose=FALSE) {
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # Validate arguments
@@ -50,7 +50,7 @@ setMethodS3("fitRoc", "default", function(truth, data, recall=NULL, idxs=NULL, n
 
   # Argument 'data':
   if (length(data) != length(truth)) {
-    throw("Argument 'data' and 'truth' are of different lengths: ", 
+    throw("Argument 'data' and 'truth' are of different lengths: ",
                                length(data), " != ", length(truth));
   }
 

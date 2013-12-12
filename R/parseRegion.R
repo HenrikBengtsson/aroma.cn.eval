@@ -1,7 +1,39 @@
-############################################################################
+###########################################################################/**
+# @RdocFunction parseRegion
 #
-############################################################################
+# @title "Parses a ROC change-point region string"
+#
+# \description{
+#  @get "title" in the format
+#  '<sample>:Chr<chr>@<start>-<stop>,cp=<pos>+/-<width>,s=<state0>/<state1>',
+#  where <sample> is a sample name, <chr> is an index, <start>, <stop>
+#  and <pos> (<width>) are genomic locations (lengths) (in units of Mb),
+#  and <state0> and <state1> are integers specifying the genomic state of
+#  the two segments flanking the change point at <pos>.
+# }
+#
+# @synopsis
+#
+# \arguments{
+#   \item{region}{A @character string.}
+#   \item{...}{Not used.}
+# }
+#
+# \value{
+#   Returns a named @list.
+# }
+#
+# @examples "../incl/parseRegion.Rex"
+#
+# @author
+#
+# @keyword internal
+# @keyword utilities
+#*/###########################################################################
 parseRegion <- function(region, ...) {
+  # Argument 'region'
+  region <- Arguments$getCharacter(region);
+
   src <- region;
 
   pattern <- "^(.*):Chr([0-9]+)@([.0-9]+)-([.0-9]+)(.*)";
@@ -30,7 +62,7 @@ parseRegion <- function(region, ...) {
     cp <- list(position=NA, delta=NA);
   } else {
     pattern <- "^(.*)\\+/-(.*)$";
-    cp <- list(position=gsub(pattern, "\\1", cp), 
+    cp <- list(position=gsub(pattern, "\\1", cp),
                delta=gsub(pattern, "\\2", cp));
   }
   cp <- sapply(cp, FUN=as.double);
@@ -56,6 +88,8 @@ parseRegion <- function(region, ...) {
 
 ############################################################################
 # HISTORY:
+# 2012-12-12
+# o DOCUMENTATION: Added help for parseRegion().
 # 2009-02-23
 # o Created.
 ############################################################################

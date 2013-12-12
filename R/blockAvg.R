@@ -10,7 +10,7 @@
 #  \emph{This method is deprecated. Use @see "matrixStats::colAvgsPerRowSet"
 #  instead.}
 # }
-# 
+#
 # @synopsis
 #
 # \arguments{
@@ -50,4 +50,4 @@ setMethodS3("blockAvg", "matrix", function(X, idxs, FUN=rowMeans, W=NULL, ...) {
 # o Extracted from CRMA-Fig8,res,filtered.R.
 # 2007-11-16
 # o Added argument 'W' to blockAvg().
-############################################################################## 
+##############################################################################

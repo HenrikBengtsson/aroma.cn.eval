@@ -1,3 +1,41 @@
+###########################################################################/**
+# @RdocDefault findRocSmoothingForTpAtFp
+#
+# @title "Find the amount of smoothing needed to obtain a minimum true-positive (TP) rate at a give false-positive (FP) rate"
+#
+# \description{
+#  @get "title".
+# }
+#
+# @synopsis
+#
+# \arguments{
+#   \item{truth}{A @numeric @vector of length N.}
+#   \item{data}{A @numeric @vector of length N.}
+#   \item{fpRate}{A @double in [0,1] specifying the target FP rate.}
+#   \item{minTpRate}{A @double in [0,1] specifying the minimum TP rate.}
+#   \item{nstepsR}{An @integer ...}
+#   \item{accTp}{A @double specifying the accuracy ...}
+#   \item{accR}{A @double specifying the accuracy ...}
+#   \item{...}{Additional arguments passed to @see "findRocTpAtFp".}
+#   \item{verbose}{See @see "R.utils::Verbose".}
+#   \item{.checkArgs}{If @TRUE, arguments are validated, otherwise not.}
+# }
+#
+# \value{
+#   Returns a positive @double scalar.
+# }
+#
+# @author
+#
+# \seealso{
+#   @see "findRocTpAtFp".
+#   @see "scanRocTpAtFp".
+# }
+#
+# @keyword internal
+# @keyword utilities
+#*/###########################################################################
 setMethodS3("findRocSmoothingForTpAtFp", "default", function(truth, data, fpRate=0.05, minTpRate=0.95, nstepsR=2, accTp=0.001, accR=0.01, ..., verbose=FALSE, .checkArgs=TRUE) {
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # Validate arguments
@@ -32,7 +70,7 @@ setMethodS3("findRocSmoothingForTpAtFp", "default", function(truth, data, fpRate
   hTp <- matrix(0, nrow=1, ncol=3);
 
   h <- c(1,5,10);
-  lastR <- Inf;  
+  lastR <- Inf;
   iter <- 1;
   while (diff(range(h)) > accR) {
     verbose && enter(verbose, sprintf("Iteration #%d", iter));
@@ -49,7 +87,7 @@ setMethodS3("findRocSmoothingForTpAtFp", "default", function(truth, data, fpRate
     data <- colAvgsPerRowSet(data, S=idxs);
 
     # Find TP rate at given FP rate for smoothed (truth, data)
-    fit <- findRocTpAtFp(truth, data, fpRate=fpRate, ..., 
+    fit <- findRocTpAtFp(truth, data, fpRate=fpRate, ...,
                               verbose=less(verbose), .checkArgs=FALSE);
 
     # The identified TP rate
@@ -117,13 +155,15 @@ setMethodS3("findRocSmoothingForTpAtFp", "default", function(truth, data, fpRate
   verbose && exit(verbose);
 
   hTp;
-})
+}) # findRocSmoothingForTpAtFp()
 
 
 
 
 ############################################################################
 # HISTORY:
+# 2013-12-12
+# o DOCUMENTATION: Added help for findRocSmoothingForTpAtFp().
 # 2007-08-20
 # o Added file caching to fitRoc2().
 # 2007-08-19

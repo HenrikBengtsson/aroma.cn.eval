@@ -6,49 +6,49 @@
 % by the Rdoc compiler part of the R.oo package.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
- \name{findRocTpAtFp}
+\name{findRocTpAtFp}
 \alias{findRocTpAtFp.default}
 \alias{findRocTpAtFp}
 
- \title{Find the ROC true-positive (TP) rate for a given false-positive (FP) rate}
+\title{Find the ROC true-positive (TP) rate for a given false-positive (FP) rate}
 
- \description{
-  Find the ROC true-positive (TP) rate for a given false-positive (FP) rate.
- }
+\description{
+ Find the ROC true-positive (TP) rate for a given false-positive (FP) rate.
+}
 
- \usage{
+\usage{
 \method{findRocTpAtFp}{default}(truth, data, fpRate, acc=0.001, recall=NULL, hasNAs=TRUE, isOrdered=FALSE,
   ..., .checkArgs=TRUE, verbose=FALSE)
 }
 
- \arguments{
-   \item{truth}{A \code{\link[base]{numeric}} \code{\link[base]{vector}} of length N.}
-   \item{data}{A \code{\link[base]{numeric}} \code{\link[base]{vector}} of length N.}
-   \item{fpRate}{A \code{\link[base]{double}} in [0,1] specifying the target FP rate.}
-   \item{acc}{A \code{\link[base]{double}} specifying the accuracy.}
-   \item{recall}{(Optional) Unless \code{truth} is given as binary
-     \eqn{\{0,1\}} values, it can be reclassified as such.}
-   \item{hasNAs}{If \code{\link[base:logical]{TRUE}} (\code{\link[base:logical]{FALSE}}), ROC is calculated as if there are
-     (no) missing values. [Not used!]}
-   \item{isOrdered}{If \code{\link[base:logical]{FALSE}}, data is ordered, otherwise not.}
-   \item{...}{Not used.}
-   \item{.checkArgs}{If \code{\link[base:logical]{TRUE}}, arguments are validated, otherwise not.}
-   \item{verbose}{See \code{\link[R.utils]{Verbose}}.}
- }
+\arguments{
+  \item{truth}{A \code{\link[base]{numeric}} \code{\link[base]{vector}} of length N.}
+  \item{data}{A \code{\link[base]{numeric}} \code{\link[base]{vector}} of length N.}
+  \item{fpRate}{A \code{\link[base]{double}} in [0,1] specifying the target FP rate.}
+  \item{acc}{A \code{\link[base]{double}} specifying the accuracy.}
+  \item{recall}{(Optional) Unless \code{truth} is given as binary
+    \eqn{\{0,1\}} values, it can be reclassified as such.}
+  \item{hasNAs}{If \code{\link[base:logical]{TRUE}} (\code{\link[base:logical]{FALSE}}), ROC is calculated as if there are
+    (no) missing values. [Not used!]}
+  \item{isOrdered}{If \code{\link[base:logical]{FALSE}}, data is ordered, otherwise not.}
+  \item{...}{Not used.}
+  \item{.checkArgs}{If \code{\link[base:logical]{TRUE}}, arguments are validated, otherwise not.}
+  \item{verbose}{See \code{\link[R.utils]{Verbose}}.}
+}
 
- \value{
-   Returns a \code{\link[base]{list}} with elements:
-   \item{tpRateEst,tpRateEstRange}{The estimated TP rate with lower and upper limits.}
-   \item{fpRateEst,fpRateEstRange}{The estimated FP rate with lower and upper limits. This should be close to the request target FP rate.}
-   \item{fpRate}{The target FP rate (equals the corresponding argument).}
-   \item{callRate}{Fraction of data points called.  If less than one, for
-     instance data points with missing values may have been excluded.}
-   \item{orderedIdxs}{The indices of the ordered data points corresponding to
-     the lower and upper limits.}
-   \item{w}{The weights of the lower and upper limits.}
- }
+\value{
+  Returns a \code{\link[base]{list}} with elements:
+  \item{tpRateEst,tpRateEstRange}{The estimated TP rate with lower and upper limits.}
+  \item{fpRateEst,fpRateEstRange}{The estimated FP rate with lower and upper limits. This should be close to the request target FP rate.}
+  \item{fpRate}{The target FP rate (equals the corresponding argument).}
+  \item{callRate}{Fraction of data points called.  If less than one, for
+    instance data points with missing values may have been excluded.}
+  \item{orderedIdxs}{The indices of the ordered data points corresponding to
+    the lower and upper limits.}
+  \item{w}{The weights of the lower and upper limits.}
+}
 
- \examples{
+\examples{
 n <- 1000
 x <- rnorm(n=n, mean=0, sd=1)
 y <- rnorm(n=n, mean=2, sd=1)
@@ -74,10 +74,14 @@ for (fpRate in c(0.2, 0.4)) {
 }
 }
 
- \author{Henrik Bengtsson}
+\author{Henrik Bengtsson}
+
+\seealso{
+  \code{\link{findRocSmoothingForTpAtFp}}().
+  \code{\link{scanRocTpAtFp}}().
+}
 
 
 
-\keyword{methods}
 \keyword{internal}
 \keyword{utilities}

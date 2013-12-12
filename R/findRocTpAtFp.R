@@ -6,7 +6,7 @@
 # \description{
 #  @get "title".
 # }
-# 
+#
 # @synopsis
 #
 # \arguments{
@@ -40,9 +40,14 @@
 #
 # @author
 #
+# \seealso{
+#   @see "findRocSmoothingForTpAtFp".
+#   @see "scanRocTpAtFp".
+# }
+#
 # @keyword internal
 # @keyword utilities
-#*/########################################################################### 
+#*/###########################################################################
 setMethodS3("findRocTpAtFp", "default", function(truth, data, fpRate, acc=1e-3, recall=NULL, hasNAs=TRUE, isOrdered=FALSE, ..., .checkArgs=TRUE, verbose=FALSE) {
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # Validate arguments
@@ -54,13 +59,13 @@ setMethodS3("findRocTpAtFp", "default", function(truth, data, fpRate, acc=1e-3, 
       pushState(verbose);
       on.exit(popState(verbose));
     }
-  
+
     # Argument 'data':
     if (length(data) != length(truth)) {
-      throw("Argument 'data' and 'truth' are of different lengths: ", 
+      throw("Argument 'data' and 'truth' are of different lengths: ",
                                  length(data), " != ", length(truth));
     }
-  
+
     # Argument 'fpRate':
     fpRate <- Arguments$getDouble(fpRate, range=c(0,1));
   }
@@ -106,7 +111,7 @@ setMethodS3("findRocTpAtFp", "default", function(truth, data, fpRate, acc=1e-3, 
   nbrOfDataPoints <- length(truth);
   totalTpCount <- as.integer(sum(truth));
   totalFpCount <- nbrOfDataPoints - totalTpCount;
-  verbose && printf(verbose, "Total (FP,TP): (%d,%d)\n", 
+  verbose && printf(verbose, "Total (FP,TP): (%d,%d)\n",
                                          totalFpCount, totalTpCount);
 
   fpCount <- fpRate * totalFpCount;
@@ -144,9 +149,9 @@ setMethodS3("findRocTpAtFp", "default", function(truth, data, fpRate, acc=1e-3, 
 
   verbose && exit(verbose);
 
-  list(tpRateEst=tpRateEst, tpRateEstRange=tpRateEstRange, 
-       fpRateEst=fpRateEst, fpRateEstRange=fpRateEstRange, fpRate=fpRate, 
-       callRate=callRate, 
+  list(tpRateEst=tpRateEst, tpRateEstRange=tpRateEstRange,
+       fpRateEst=fpRateEst, fpRateEstRange=fpRateEstRange, fpRate=fpRate,
+       callRate=callRate,
        orderedIdxs=as.integer(c(idx, idx+1)), w=w);
 }) # findRocTpAtFp()
 

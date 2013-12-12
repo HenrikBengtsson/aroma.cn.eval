@@ -33,7 +33,7 @@
  Returns what test function returns.
 }
 
-\author{Henrik Bengtsson}
+\author{Henrik Bengtsson, Pierre Neuvial}
 
 \seealso{
   \code{\link[aroma.core]{SegmentedGenomicSignalsInterface}}
