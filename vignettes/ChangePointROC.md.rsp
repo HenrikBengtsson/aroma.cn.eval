@@ -1,0 +1,215 @@
+<%@meta language="R-vignette" content="--------------------------------
+  DIRECTIVES FOR R:
+
+  %\VignetteIndexEntry{ROC assessment of detecting a change point}
+  %\VignetteKeyword{copy numbers, ROC}
+  %\VignetteAuthor{Henrik Bengtsson}
+  %\VignetteEngine{R.rsp::rsp}
+  ------------------------------------------------------------------"%>
+# <%@meta name="title"%>
+<%
+R.utils::use("aroma.cn.eval, R.devices")
+R.utils::use("R.devices")
+setOption("devEval/args/field", "pathname")
+stateLabels <- function(s) {
+  labels <- c("-1"="loss", "0"=NA, "1"="gain")[as.character(s)]
+  labels
+} # stateLabels()
+Clim <- c(-0.2,4.2)
+%>
+
+<%
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Simulating copy-number data
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# True CN states
+stateFcn <- function(x, ...) {
+  states <- integer(length(x))
+  states[200 <=x & x <= 500] <- -1L
+  states[600 <=x & x <= 900] <- +1L
+  states[480 <=x & x <= 520] <- NA
+  states
+}
+
+# Number of loci
+J <- 1000
+
+set.seed(0xBEEF)
+y <- rnorm(J, mean=2, sd=1/2)
+x <- 1:J
+for (state in c(-1,+1)) {
+  idxs <- which(stateFcn(x) == state)
+  y[idxs] <- y[idxs] + 0.5*state
+}
+%>
+
+## Copy number data
+
+### Whole-chromosome copy number data
+<%
+sampleName <- "SimulateProfile"
+cnR <- SegmentedCopyNumbers(y, x, states=stateFcn)
+%>
+```
+<% print(cnR) %>
+```
+
+<%
+cpIdx <- 1
+cps <- findChangePointsByState(cnR, na.rm=TRUE, ends=TRUE)
+cpsROC <- cps[cpIdx + 1:3]
+cnROC <- extractRegion(cnR, region=cpsROC[-2])
+cnROC <- setStateColorMap(cnROC, c('*'="black", 'NA'="gray"))
+%>
+
+
+![](<%=toPNG(sampleName, tags=c("TCN"), aspectRatio=1/3, {
+  par(mar=c(3,4,1,1)+0.1)
+  plot(cnR, col="black", cex=1, ylim=Clim)
+  lines(x=xRange(cnROC)/1e6, y=rep(par("usr")[3],2), lwd=3, xpd=TRUE, col="black")
+  cps <- findChangePointsByState(cnR, na.rm=TRUE, ends=TRUE)
+  abline(v=cps/1e6)
+  mids <- cps[-length(cps)]+diff(cps)/2
+  s <- getStates(cnR, x=cps[-length(cps)]+1)
+  mtext(side=s+2, at=mids/1e6, text=toupper(stateLabels(s)), line=-1)
+  stext(side=3, pos=0, sprintf("full [n=%d]", nbrOfLoci(cnR)))
+})%>)
+
+### Focusing on one change points
+Change point: #<%= cpIdx %> at position <%= cpsROC[2] %>.  
+Flanking segments: [<%=hpaste(cpsROC[1:2])%>] and [<%=hpaste(cpsROC[2:3])%>].  
+<% cnNA <- extractSubset(cnROC, is.na(getStates(cnROC))) %>
+Safefy zone: [<%=hpaste(xRange(cnNA))%>]
+```
+<% print(cnROC) %>
+```
+
+<%
+# Sanity checks
+states <- getUniqueStates(cnROC, na.rm=TRUE)
+if (length(states) == 1L) {
+  throw("Cannot perform ROC assessment: The extracted region has only one copy number state: ", states)
+} else if (length(states) > 2L) {
+  throw("Cannot perform ROC assessment: The extracted region has more than two copy number states: ", hpaste(states))
+}
+statesTag <- sprintf("s=%d_vs_%d", states[1], states[2])
+callState <- sort(states[states != 0], decreasing=TRUE)[1]
+%>
+
+![](<%=toPNG(sampleName, tags=c(statesTag, "TCN"), aspectRatio=1/3, {
+  par(mar=c(3,4,1,1)+0.1)
+  plot(cnROC, ylim=Clim)
+  cps <- findChangePointsByState(cnROC, na.rm=TRUE, ends=TRUE)
+  abline(v=cps/1e6)
+  mids <- cps[-length(cps)]+diff(cps)/2
+  s <- getStates(cnROC, x=cps[-length(cps)]+1)
+  mtext(side=s+2, at=mids/1e6, text=toupper(stateLabels(s)), line=-1)
+  stext(side=3, pos=0, "full")
+  ns <- table(getStates(cnROC, na.rm=FALSE), exclude=NULL)
+  stext(side=3, pos=1, sprintf("[n=nL+nS+nR=%d+%d+%d=%d]", ns[1], ns[3], ns[2], sum(ns)))
+})%>)
+
+
+<%
+# Drop loci with unknown state
+cn <- extractSubset(cnROC, !is.na(getStates(cnROC)))
+%>
+
+## Smoothing selected copy number data
+<%
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Smooth data
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Amount of smoothing
+binWidths <- c(NA, 1.5, 2, 4, 8, 12)
+cnList <- list()
+for (kk in seq(along=binWidths)) {
+  binWidth <- binWidths[kk]
+  if (is.na(binWidth)) {
+    cnS <- cn
+    key <- "full"
+  } else {
+    cnS <- binnedSmoothingByState(cn, by=binWidth)
+    cnS <- extractSubsetByState(cnS, states=states)
+    key <- sprintf("w=%g", binWidth)
+  }
+  cnList[[key]] <- cnS
+}
+%>
+Bin widths: <%=paste(sprintf("%g", na.omit(binWidths)), collapse=", ")%>
+
+<%
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Plot data
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+labels <- names(cnList)
+names(labels) <- names(cnList)
+%>
+
+<%
+  segs <- findChangePointsByState(cnROC, ends=TRUE)
+  mids <- cps[-length(segs)]+diff(segs)/2
+  s <- getStates(cnROC, x=segs[-length(segs)]+1)
+%>
+
+<% for (kk in seq_along(cnList)) { %>
+<%
+  name <- names(cnList)[kk]
+  binWidth <- binWidths[kk]
+  cn <- cnList[[name]]
+  label <- labels[name]
+  ylim <- c(-1,1)*2
+%>
+![](<%=toPNG(sampleName, tags=c(statesTag, "TCN", name), aspectRatio=1/3, {
+  par(mar=c(3,4,1,1)+0.1)
+  plot(cn, ylim=Clim, col=kk)
+  abline(v=segs/1e6)
+  mtext(side=s+2, at=mids/1e6, text=toupper(stateLabels(s)), line=-1)
+  stext(side=3, pos=0, label)
+  ns <- table(getStates(cn))
+  stext(side=3, pos=1, sprintf("[n=nL+nR=%d+%d=%d]", ns[1], ns[2], sum(ns)))
+
+})%>)
+
+<% } # for (kk ...) %>
+
+
+## Receive Operator Characteristic (ROC) assessment
+<%
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# ROC
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+fits <- lapply(cnList, FUN=fitRoc, recall=callState)
+%>
+![](<%=toPNG(sampleName, tags=c(statesTag, "ROC"), {
+  for (kk in seq(along=fits)) {
+    fit <- fits[[kk]]
+    roc <- fit$roc
+    if (kk == 1) {
+      par(mar=c(4,4,2,1)+0.1)
+      plot(roc, xlab="FP rate", ylab="TP rate", type="l", lwd=3, col=kk)
+      abline(a=0, b=1, lty=3)
+    } else {
+      lines(fit$roc, lwd=3, col=kk)
+    }
+  } # for (kk ...)
+  legend("bottomright", col=seq(along=fits), lwd=4, labels, bty="n")
+  title(sprintf("Calling the CN %s", stateLabels(callState)))
+})%>)
+
+
+## Appendix
+
+### Session information
+```
+<% print(sessionInfo()) %>
+```
+
+
+<%------------------------------------------------------------------
+HISTORY:
+2013-12-12
+o Cleanup.
+2013-12-11
+o Created.
+------------------------------------------------------------------%>

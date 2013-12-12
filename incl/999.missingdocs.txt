@@ -5,3 +5,4 @@ as.character.RocCurve auc auc.RocCurve blockAvg
  smooth
 cat require
 testSeparation
+parseRegion

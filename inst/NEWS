@@ -1,6 +1,12 @@
 Package: aroma.cn.eval
 ======================
 
+Version: 0.5.0 [2013-12-12]
+o Added methods for setting up, parsing and extract CN regions - 
+  methods that were previously only part of the RSP reports code.
+o DOCUMENTATION: Added vignette 'ROC assessment of detecting a change point'
+
+
 Version: 0.4.1 [2013-12-09]
 o Updated package dependencies.  Lowered the required version of ROC
   just to get it to build on R-Forge.

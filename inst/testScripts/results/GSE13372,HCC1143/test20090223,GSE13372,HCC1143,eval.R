@@ -1,14 +1,15 @@
 if (interactive()) savehistory();
 library("aroma.cn.eval");
+library("R.cache");
 
 
-dataSet <- "GSE13372";
+dataset <- "GSE13372";
 chipType <- "GenomeWideSNP_6";
 
 
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Known CN aberrant regions
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 truth <- function(x, chromosome, name, ...) {
   name <- gsub(",.*", "", name);
   res <- integer(length(x));
@@ -51,9 +52,9 @@ truth <- function(x, chromosome, name, ...) {
 } # truth()
 
 
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Regions of interest
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 regions <- c(
   "GSM337641:Chr1@98-112",
   "GSM337641:Chr3@80-92",
@@ -65,13 +66,13 @@ regions <- c(
 
 #region <- regions[1];
 #region <- regions[4];
-library("R.menu"); 
+library("R.menu");
 region <- selectMenu(regions);
 
 
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Infer sample name, chromsome, and region
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 pattern <- "^(.*):Chr([0-9]+)@([.0-9]+)-([.0-9]+)";
 array <- gsub(pattern, "\\1", region);
 chromosome <- as.integer(gsub(pattern, "\\2", region));
@@ -80,14 +81,14 @@ stop <- as.double(gsub(pattern, "\\4", region));
 region <- c(start, stop)*1e6;
 
 
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Setting up annotation data
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 rootPath <- "rawCnData";
 rootPath <- Arguments$getReadablePath(rootPath, mustExist=TRUE);
 
 if (!exists("unitsF", mode="numeric")) {
-  key <- list("fullUnitsAlsoInDefault", chipType=chipType); 
+  key <- list("fullUnitsAlsoInDefault", chipType=chipType);
   dirs <- c("aroma.affymetrix", chipType);
   unitsF <- loadCache(key=key, dirs=dirs);
   if (is.null(unitsF)) {
@@ -102,17 +103,20 @@ if (!exists("unitsF", mode="numeric")) {
 }
 
 
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Setting up data sets
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 if (!exists("dsList", mode="list")) {
-  pattern <- sprintf("^%s,.*,pairs", dataSet);
-  dataSets <- list.files(path=rootPath, pattern=pattern);
+  pattern <- sprintf("^%s,.*,pairs", dataset);
+  datasets <- list.files(path=rootPath, pattern=pattern);
+  if (length(datasets) == 0L) {
+    throw(sprintf("Failed to located any '%s' data sets under '%s'.", pattern, rootPath));
+  }
 
   dsList <- list();
-  for (kk in seq(along=dataSets)) {
-    dataSet <- dataSets[kk];
-    ds <- AromaUnitTotalCnBinarySet$byName(dataSet, chipType=chipType);
+  for (kk in seq(along=datasets)) {
+    dataset <- datasets[kk];
+    ds <- AromaUnitTotalCnBinarySet$byName(dataset, chipType=chipType);
     dsList[[kk]] <- ds;
   }
 
@@ -126,11 +130,11 @@ if (!exists("dsList", mode="list")) {
   names(dsList) <- names;
   print(dsList);
 }
+stopifnot(length(dsList) > 0L)
 
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Extract CNs for sample and genomic region of interest
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 dfList <- lapply(dsList, FUN=getFile, indexOf(ds, array));
 cnList <- lapply(dfList, FUN=function(df) {
   if (regexpr("Full", getChipType(df)) != -1) {
@@ -142,20 +146,21 @@ cnList <- lapply(dfList, FUN=function(df) {
   SegmentedCopyNumbers(cn, states=truth);
 });
 print(cnList);
+stopifnot(length(cnList) > 0L)
 
 
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Infer states
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 cn <- cnList[[1]];
 states <- sort(unique(getStates(cn)));
 states <- states[is.finite(states)];
 stopifnot(length(states) == 2);
 
 
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Plot CN ratios along genome
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 fig <- sprintf("%s,chr%02d", getName(dfList[[1]]), chromosome);
 devSet(fig, width=8, height=8);
 nbrOfSources <- length(cnList);
@@ -177,14 +182,14 @@ for (kk in seq(along=cnList)) {
   cn <- extractSubsetByState(cn, states=states);
   cnS <- binnedSmoothingByState(cn, from=xRange[1], to=xRange[2], by=binWidth);
   points(cnS, cex=1.2, col="white");
-  points(cnS, cex=1, col="orange");  
+  points(cnS, cex=1, col="orange");
 }
 devDone(fig);
 
 
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # ROC performances at various resolutions (in kb)
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 devSet("ROC");
 binWidths <- c(0,1,2,5)*1e3;
 layout(matrix(seq(along=binWidths), ncol=2, byrow=TRUE));
@@ -199,7 +204,7 @@ for (ww in seq(along=binWidths)) {
       cnS <- binnedSmoothingByState(cn, from=xRange[1], to=xRange[2], by=binWidth);
       cnS <- extractSubsetByState(cnS, states=states);
       cnS;
-    }) 
+    })
     binLabel <- sprintf("Bin width %g kb", binWidth/1e3);
   } else {
     cnSList <- cnList;

@@ -31,6 +31,7 @@
 \alias{cat}
 \alias{require}
 \alias{testSeparation}
+\alias{parseRegion}
 
 \description{
   This page contains aliases for all "non-documented" objects that
