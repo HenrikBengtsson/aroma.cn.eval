@@ -25,18 +25,24 @@ Clim <- c(-0.2,4.2)
 # True CN states
 stateFcn <- function(x, ...) {
   states <- integer(length(x))
-  states[200 <=x & x <= 500] <- -1L
-  states[600 <=x & x <= 900] <- +1L
-  states[480 <=x & x <= 520] <- NA
+  x <- x/1e6
+  states[20 <=x & x < 50] <- -1L
+  states[60 <=x & x < 90] <- +1L
+  states[48 <=x & x < 52] <- NA
   states
 }
+
+# Alternative to create data with a single change point
+## region <- "SimulatedProfile:Chr1@0-0.001,cp=.0005+/-0.00002,s=-1/0"
+## reg <- parseRegion(region)
+## stateFcn <- makeTruth(reg)
 
 # Number of loci
 J <- 1000
 
 set.seed(0xBEEF)
 y <- rnorm(J, mean=2, sd=1/2)
-x <- 1:J
+x <- seq(from=1, to=100e6, length.out=J)
 for (state in c(-1,+1)) {
   idxs <- which(stateFcn(x) == state)
   y[idxs] <- y[idxs] + 0.5*state
@@ -47,8 +53,7 @@ for (state in c(-1,+1)) {
 
 ### Whole-chromosome copy number data
 <%
-sampleName <- "SimulateProfile"
-cnR <- SegmentedCopyNumbers(y, x, states=stateFcn)
+cnR <- SegmentedCopyNumbers(y, x, states=stateFcn, name="SimulatedProfile")
 %>
 ```
 <% print(cnR) %>
@@ -63,14 +68,14 @@ cnROC <- setStateColorMap(cnROC, c('*'="black", 'NA'="gray"))
 %>
 
 
-![](<%=toPNG(sampleName, tags=c("TCN"), aspectRatio=1/3, {
+![](<%=toPNG(getName(cnR), tags=c("TCN"), aspectRatio=1/3, {
   par(mar=c(3,4,1,1)+0.1)
   plot(cnR, col="black", cex=1, ylim=Clim)
   lines(x=xRange(cnROC)/1e6, y=rep(par("usr")[3],2), lwd=3, xpd=TRUE, col="black")
   cps <- findChangePointsByState(cnR, na.rm=TRUE, ends=TRUE)
   abline(v=cps/1e6)
   mids <- cps[-length(cps)]+diff(cps)/2
-  s <- getStates(cnR, x=cps[-length(cps)]+1)
+  s <- getStates(cnR, x=mids)
   mtext(side=s+2, at=mids/1e6, text=toupper(stateLabels(s)), line=-1)
   stext(side=3, pos=0, sprintf("full [n=%d]", nbrOfLoci(cnR)))
 })%>)
@@ -96,13 +101,13 @@ statesTag <- sprintf("s=%d_vs_%d", states[1], states[2])
 callState <- sort(states[states != 0], decreasing=TRUE)[1]
 %>
 
-![](<%=toPNG(sampleName, tags=c(statesTag, "TCN"), aspectRatio=1/3, {
+![](<%=toPNG(getName(cnROC), tags=c(statesTag, "TCN"), aspectRatio=1/3, {
   par(mar=c(3,4,1,1)+0.1)
   plot(cnROC, ylim=Clim)
   cps <- findChangePointsByState(cnROC, na.rm=TRUE, ends=TRUE)
   abline(v=cps/1e6)
   mids <- cps[-length(cps)]+diff(cps)/2
-  s <- getStates(cnROC, x=cps[-length(cps)]+1)
+  s <- getStates(cnR, x=mids)
   mtext(side=s+2, at=mids/1e6, text=toupper(stateLabels(s)), line=-1)
   stext(side=3, pos=0, "full")
   ns <- table(getStates(cnROC, na.rm=FALSE), exclude=NULL)
@@ -121,7 +126,7 @@ cn <- extractSubset(cnROC, !is.na(getStates(cnROC)))
 # Smooth data
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Amount of smoothing
-binWidths <- c(NA, 1.5, 2, 4, 8, 12)
+binWidths <- c(NA, 1.5, 2, 4, 8, 12)*1e5
 cnList <- list()
 for (kk in seq(along=binWidths)) {
   binWidth <- binWidths[kk]
@@ -149,7 +154,7 @@ names(labels) <- names(cnList)
 <%
   segs <- findChangePointsByState(cnROC, ends=TRUE)
   mids <- cps[-length(segs)]+diff(segs)/2
-  s <- getStates(cnROC, x=segs[-length(segs)]+1)
+  s <- getStates(cnROC, x=mids)
 %>
 
 <% for (kk in seq_along(cnList)) { %>
@@ -160,7 +165,7 @@ names(labels) <- names(cnList)
   label <- labels[name]
   ylim <- c(-1,1)*2
 %>
-![](<%=toPNG(sampleName, tags=c(statesTag, "TCN", name), aspectRatio=1/3, {
+![](<%=toPNG(getName(cn), tags=c(statesTag, "TCN", name), aspectRatio=1/3, {
   par(mar=c(3,4,1,1)+0.1)
   plot(cn, ylim=Clim, col=kk)
   abline(v=segs/1e6)
@@ -181,7 +186,7 @@ names(labels) <- names(cnList)
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 fits <- lapply(cnList, FUN=fitRoc, recall=callState)
 %>
-![](<%=toPNG(sampleName, tags=c(statesTag, "ROC"), {
+![](<%=toPNG(getName(cnR), tags=c(statesTag, "ROC"), {
   for (kk in seq(along=fits)) {
     fit <- fits[[kk]]
     roc <- fit$roc

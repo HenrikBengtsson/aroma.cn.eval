@@ -22,11 +22,12 @@
 }
 
 \usage{
-parseRegion(region, ...)
+parseRegion(region, xScale=1e+06, ...)
 }
 
 \arguments{
   \item{region}{A \code{\link[base]{character}} string.}
+  \item{xScale}{A positive \code{\link[base]{numeric}} specifying the unit length.}
   \item{...}{Not used.}
 }
 
@@ -37,6 +38,17 @@ parseRegion(region, ...)
 \examples{
 reg <- parseRegion("TCGA-23-1027:Chr2@108-140,cp=124+/-0.5,s=0/1")
 str(reg)
+
+stateFcn <- makeTruth(reg)
+print(reg)
+
+data <- data.frame(chromosome=2, x=seq(from=122e6, to=126e6, by=0.2e6))
+data$state <- stateFcn(data)
+print(data)
+}
+
+\seealso{
+ \code{\link{makeTruth}}().
 }
 
 \author{Henrik Bengtsson}

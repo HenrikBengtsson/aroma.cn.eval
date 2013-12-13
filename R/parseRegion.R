@@ -16,6 +16,7 @@
 #
 # \arguments{
 #   \item{region}{A @character string.}
+#   \item{xScale}{A positive @numeric specifying the unit length.}
 #   \item{...}{Not used.}
 # }
 #
@@ -25,14 +26,24 @@
 #
 # @examples "../incl/parseRegion.Rex"
 #
+# \seealso{
+#  @see "makeTruth".
+# }
+#
 # @author
 #
 # @keyword internal
 # @keyword utilities
 #*/###########################################################################
-parseRegion <- function(region, ...) {
+parseRegion <- function(region, xScale=1e6, ...) {
   # Argument 'region'
   region <- Arguments$getCharacter(region);
+
+  # Argument 'xScale'
+  xScale <- Arguments$getNumeric(xScale, range=c(0,Inf));
+  if (xScale != 1e6) {
+    throw("Non-supported value of 'xScale': ", xScale);
+  }
 
   src <- region;
 
@@ -46,10 +57,10 @@ parseRegion <- function(region, ...) {
   tags <- gsub(pattern, "\\5", region);
   tags <- strsplit(tags, split=",", fixed=TRUE);
   tags <- unlist(tags, use.names=FALSE);
-  tags <- tags[nchar(tags) > 0];
+  tags <- tags[nchar(tags) > 0L];
 
   pattern <- "^(.*)=(.*)$";
-  hasParams <- (regexpr(pattern, tags) != -1);
+  hasParams <- (regexpr(pattern, tags) != -1L);
 
   keys <- gsub(pattern, "\\1", tags[hasParams]);
   values <- gsub(pattern, "\\2", tags[hasParams]);
@@ -74,7 +85,7 @@ parseRegion <- function(region, ...) {
   if (is.null(states)) {
     states <- c(A=NA, B=NA);
   } else {
-    states <- strsplit(states, split="/", fixed=TRUE)[[1]];
+    states <- strsplit(states, split="/", fixed=TRUE)[[1L]];
   }
   states <- as.integer(states);
   attr(states, "src") <- params$s;
@@ -82,7 +93,7 @@ parseRegion <- function(region, ...) {
 
   label <- sprintf("%s,chr%02d,%s-%s", name, chromosome, startStr, stopStr);
 
-  list(name=name, chromosome=chromosome, region=c(start, stop)*1e6, tags=tags, params=params, label=label, src=src);
+  list(name=name, chromosome=chromosome, region=c(start, stop)*xScale, tags=tags, params=params, label=label, src=src);
 } # parseRegion()
 
 
