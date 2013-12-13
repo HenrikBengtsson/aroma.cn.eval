@@ -126,7 +126,7 @@ cn <- extractSubset(cnROC, !is.na(getStates(cnROC)))
 # Smooth data
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Amount of smoothing
-binWidths <- c(NA, 1.5, 2, 4, 8, 12)*1e5
+binWidths <- c(NA, 1.5, 2, 4, 8)*1e5
 cnList <- list()
 for (kk in seq(along=binWidths)) {
   binWidth <- binWidths[kk]
