@@ -5,4 +5,3 @@
 ^incl
 ^NAMESPACE,.*[.]txt$
 ^nohup.*$
-
