@@ -9,7 +9,6 @@
 # <%@meta name="title"%>
 <%
 R.utils::use("aroma.cn.eval, R.devices")
-R.utils::use("R.devices")
 setOption("devEval/args/field", "pathname")
 stateLabels <- function(s) {
   labels <- c("-1"="loss", "0"=NA, "1"="gain")[as.character(s)]
