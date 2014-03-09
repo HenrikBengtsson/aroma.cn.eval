@@ -1,6 +1,11 @@
 Package: aroma.cn.eval
 ======================
 
+Version: 0.5.1 [2014-03-09]
+o Updated package dependencies.
+o Package requires R (>= 3.0.2) [and Bioc (>= 2.13.0)].
+
+
 Version: 0.5.0 [2013-12-12]
 o Added methods for setting up, parsing and extract CN regions -
   methods that were previously only part of the RSP reports code.
