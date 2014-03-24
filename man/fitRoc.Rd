@@ -18,7 +18,7 @@
 
 \usage{
 \method{fitRoc}{default}(truth, data, recall=NULL, idxs=NULL, ncuts=1200, hasNAs=TRUE, isOrdered=FALSE,
-  ..., verbose=FALSE)
+  as=c("list", "RocCurve"), ..., verbose=FALSE)
 }
 
 \arguments{

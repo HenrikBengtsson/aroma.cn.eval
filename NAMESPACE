@@ -15,6 +15,7 @@ importFrom("R.oo", "BasicObject")
 importFrom("ROC", "lines")
 importFrom("ROC", "plot")
 importFrom("ROC", "points")
+importFrom("ROC", "trapezint")
 
 ## Verbose output
 importFrom("R.utils", "Arguments")

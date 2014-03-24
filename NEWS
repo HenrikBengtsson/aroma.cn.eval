@@ -2,9 +2,12 @@ Package: aroma.cn.eval
 ======================
 
 Version: 0.5.2 [2014-03-24]
+o Added argument 'as' to fitRoc().
 o ROBUSTNESS: Added validation of arguments to RocCurve().
 o Now RocCurve() also accepts a list with element 'roc' and 'cuts'.
 o Minor speedup by replacing rm() calls with NULL assignments.
+o BUG FIX: auc() for RocCurve now adds (FPR,TPR):s (0,0) and (1,1)
+  if missing.
 
 
 Version: 0.5.1 [2014-03-09]

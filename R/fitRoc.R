@@ -37,7 +37,7 @@
 # @keyword internal
 # @keyword utilities
 #*/###########################################################################
-setMethodS3("fitRoc", "default", function(truth, data, recall=NULL, idxs=NULL, ncuts=1200, hasNAs=TRUE, isOrdered=FALSE, ..., verbose=FALSE) {
+setMethodS3("fitRoc", "default", function(truth, data, recall=NULL, idxs=NULL, ncuts=1200, hasNAs=TRUE, isOrdered=FALSE, as=c("list", "RocCurve"), ..., verbose=FALSE) {
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # Validate arguments
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -58,6 +58,9 @@ setMethodS3("fitRoc", "default", function(truth, data, recall=NULL, idxs=NULL, n
   if (!is.null(idxs)) {
     idxs <- Arguments$getIndices(idxs);
   }
+
+  # Argument 'as':
+  as <- match.arg(as);
 
 
   verbose && enter(verbose, "Fitting ROC");
@@ -138,7 +141,11 @@ setMethodS3("fitRoc", "default", function(truth, data, recall=NULL, idxs=NULL, n
 
 
   # Return structure
-  res <- list(roc=counts, cuts=cuts);
+  if (as == "list") {
+    res <- list(roc=counts, cuts=cuts);
+  } else if (as == "RocCurve") {
+    res <- RocCurve(roc=counts, cuts=cuts);
+  }
 
   verbose && exit(verbose);
 
@@ -149,6 +156,8 @@ setMethodS3("fitRoc", "default", function(truth, data, recall=NULL, idxs=NULL, n
 
 ############################################################################
 # HISTORY:
+# 2014-03-24
+# o Added argument 'as' to fitRoc().
 # 2009-01-29
 # o Added Rdoc comments.
 # o Renamed from fitRocLite() to fitRoc().
