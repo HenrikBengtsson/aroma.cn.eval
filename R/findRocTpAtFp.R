@@ -84,7 +84,7 @@ setMethodS3("findRocTpAtFp", "default", function(truth, data, fpRate, acc=1e-3, 
     callRate <- sum(ok)/length(ok);
     truth <- truth[ok];
     data <- data[ok];
-    rm(ok);
+    ok <- NULL; # Not needed anymore
     verbose && exit(verbose);
   } else {
     callRate <- 1;
@@ -95,7 +95,7 @@ setMethodS3("findRocTpAtFp", "default", function(truth, data, fpRate, acc=1e-3, 
     o <- order(data);
     truth <- truth[o];
     data <- data[o];
-    rm(o);
+    o <- NULL; # Not needed anymore
     verbose && exit(verbose);
   }
 

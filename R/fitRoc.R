@@ -77,7 +77,7 @@ setMethodS3("fitRoc", "default", function(truth, data, recall=NULL, idxs=NULL, n
       ok <- (is.finite(truth) & is.finite(data));
       truth <- truth[ok];
       data <- data[ok];
-      rm(ok);
+      ok <- NULL; # Not needed anymore
       verbose && exit(verbose);
     }
   }
@@ -88,7 +88,7 @@ setMethodS3("fitRoc", "default", function(truth, data, recall=NULL, idxs=NULL, n
     o <- order(data);
     truth <- truth[o];
     data <- data[o];
-    rm(o);
+    o <- NULL; # Not needed anymore
     verbose && exit(verbose);
   }
 
@@ -100,7 +100,7 @@ setMethodS3("fitRoc", "default", function(truth, data, recall=NULL, idxs=NULL, n
   }
 
   cuts <- data[idxs];
-  rm(data);
+  data <- NULL; # Not needed anymore
 
   # Turn 'truth' into (0,1) variable by re-calling?
   if (!is.null(recall)) {
@@ -124,7 +124,7 @@ setMethodS3("fitRoc", "default", function(truth, data, recall=NULL, idxs=NULL, n
     # Count the number 0's
     counts[kk,1] <- length(ii) - counts[kk,2];
   }
-  rm(truth);
+  truth <- NULL; # Not needed anymore
 
   # Add up cumulatively
   counts <- apply(counts, MARGIN=2, FUN=cumsum);

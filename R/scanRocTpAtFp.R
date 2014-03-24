@@ -97,10 +97,10 @@ setMethodS3("scanRocTpAtFp", "default", function(truth, data, fpRate, ..., W=NUL
     t <- matrix(NA, nrow=length(hs), ncol=ncol(fit));
     t[,1] <- hs;
     fit <- rbind(fit, t);
-    rm(t);
+    t <- NULL; # Not needed anymore
     o <- order(fit[,1]);
     fit <- fit[o,];
-    rm(o);
+    o <- NULL; # Not needed anymore
   }
 
   # Skip already existing ones.

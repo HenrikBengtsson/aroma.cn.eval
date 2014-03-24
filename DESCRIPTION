@@ -1,10 +1,10 @@
 Package: aroma.cn.eval
-Version: 0.5.1
+Version: 0.5.2
 Depends: R (>= 3.0.2), aroma.core (>= 2.12.1)
-Imports: R.methodsS3 (>= 1.6.1), R.oo (>= 1.18.0), R.utils (>= 1.29.9), matrixStats (>= 0.8.12), ROC (>= 1.36.0)
+Imports: R.methodsS3 (>= 1.6.1), R.oo (>= 1.18.0), R.utils (>= 1.29.8), matrixStats (>= 0.8.12), ROC (>= 1.36.0)
 Suggests: R.rsp (>= 0.15.0), R.devices (>= 2.8.2), markdown (>= 0.6.4)
 VignetteBuilder: R.rsp
-Date: 2014-03-09
+Date: 2014-03-24
 Title: Package for evaluating copy-number estimates
 Authors@R: c(
   person("Henrik", "Bengtsson", role=c("aut", "cre", "cph"),

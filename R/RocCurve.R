@@ -10,8 +10,8 @@
 # @synopsis
 #
 # \arguments{
-#   \item{roc}{A @list.}
-#   \item{cuts}{A @numerical @vector of N cuts.}
+#   \item{roc}{A @matrix with N (FP,TP) rate data points.}
+#   \item{cuts}{A @numerical @vector of N+1 cuts.}
 #   \item{...}{Not used.}
 # }
 #
@@ -22,6 +22,33 @@
 # @author
 #*/###########################################################################
 setConstructorS3("RocCurve", function(roc=NULL, cuts=NULL, ...) {
+  # Argument 'roc':
+  if (is.list(roc)) {
+    rocList <- roc;
+    if (!is.element("roc", names(rocList))) {
+      throw("When argument 'roc' is a list, it must contain element 'roc'.");
+    }
+    roc <- rocList$roc;
+    if (is.element("cuts", names(rocList))) {
+      cuts <- rocList$cuts;
+    }
+  }
+
+  if (!is.null(roc)) {
+    if (!is.matrix(roc)) {
+      stop("Argument 'roc' must be a matrix: ", class(roc)[1L]);
+    }
+  }
+
+  if (!is.null(cuts)) {
+    if (!is.numeric(cuts)) {
+      stop("Argument 'cuts' must be a numeric vector: ", class(cuts)[1L]);
+    }
+    if (length(cuts) != nrow(roc) + 1L) {
+      stop("Length argument 'cuts' is not one more than the number of rows in argument 'roc': ", length(cuts), " != ", nrow(roc) + 1L);
+    }
+  }
+
   extend(BasicObject(), "RocCurve",
     roc=roc,
     cuts=cuts
@@ -80,6 +107,9 @@ setMethodS3("lines", "RocCurve", function(x, lwd=2, ...) {
 
 ############################################################################
 # HISTORY:
+# 2014-03-24
+# o ROBUSTNESS: Added validation of arguments to RocCurve().
+# o Now RocCurve() also accepts a list with element 'roc' and 'cuts'.
 # 2007-08-20
 # o Added file caching to fitRoc2().
 # 2007-08-19

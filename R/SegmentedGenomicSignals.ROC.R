@@ -36,7 +36,7 @@ setMethodS3("fitRoc", "SegmentedGenomicSignalsInterface", function(this, states=
 
   # Extract data
   data <- as.data.frame(this, translate=FALSE);
-  rm(this);
+  this <- NULL; # Not needed anymore
 
   # Recall?
   if (!is.null(recall)) {
@@ -150,7 +150,7 @@ setMethodS3("findRocSmoothingForTpAtFp", "SegmentedGenomicSignalsInterface", fun
 
   binWidthRange <- c(1, 20);
   binWidth <- mean(binWidthRange);
-  lastR <- Inf;  
+  lastR <- Inf;
   iter <- 1;
   status <- "UNKNOWN";
   status <- "TOOSMALL";

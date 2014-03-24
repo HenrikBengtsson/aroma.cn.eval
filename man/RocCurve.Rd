@@ -37,8 +37,8 @@ RocCurve(roc=NULL, cuts=NULL, ...)
 }
 
 \arguments{
-  \item{roc}{A \code{\link[base]{list}}.}
-  \item{cuts}{A \code{\link[base]{numeric}}al \code{\link[base]{vector}} of N cuts.}
+  \item{roc}{A \code{\link[base]{matrix}} with N (FP,TP) rate data points.}
+  \item{cuts}{A \code{\link[base]{numeric}}al \code{\link[base]{vector}} of N+1 cuts.}
   \item{...}{Not used.}
 }
 

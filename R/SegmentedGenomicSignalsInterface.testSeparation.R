@@ -73,7 +73,7 @@ setMethodS3("testSeparation", "SegmentedGenomicSignalsInterface", function(this,
   idxs <- which(states == stateB);
   yB <- y[idxs];
 
-  rm(states, idxs, y);
+  states <- idxs <- y <- NULL; # Not needed anymore
 
   testFcn(yA, yB);
 }) # testSeparation()
