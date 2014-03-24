@@ -78,11 +78,13 @@ setMethodS3("getTpRate", "RocCurve", function(object, ...) {
 setMethodS3("auc", "RocCurve", function(object, ...) {
   roc <- object$roc[,c("fpRate","tpRate")];
 
-  # Add (0,0) and (1,1) in case they're missing
-  roc <- rbind(c(0,0), roc, c(1,1));
+  # Add (0,0)?
+  roc0 <- roc[1L,]
+  if (roc0[1] != 0 || roc0[2] != 0) roc <- rbind(c(0,0), roc);
 
-  # Drop duplicates
-  roc <- unique(roc);
+  # Add (1,1)?
+  roc1 <- roc[nrow(roc),]
+  if (roc1[1] != 1 || roc1[2] != 1) roc <- rbind(roc, c(1,1));
 
   trapezint(roc[,"fpRate"], roc[,"tpRate"], a=0, b=1);
 })
