@@ -33,12 +33,13 @@ extends \link[R.oo]{BasicObject}\cr
 }
 
 \usage{
-RocCurve(roc=NULL, cuts=NULL, ...)
+RocCurve(roc=NULL, cuts=NULL, counts=NULL, ...)
 }
 
 \arguments{
   \item{roc}{A \code{\link[base]{matrix}} with N (FP,TP) rate data points.}
   \item{cuts}{A \code{\link[base]{numeric}}al \code{\link[base]{vector}} of N+1 cuts.}
+  \item{counts}{A \code{\link[base]{numeric}}al \code{\link[base]{vector}} of N+1 cuts.}
   \item{...}{Not used.}
 }
 
@@ -47,6 +48,7 @@ RocCurve(roc=NULL, cuts=NULL, ...)
 \tabular{rll}{
  \tab \code{as.character} \tab  -\cr
  \tab \code{auc} \tab  -\cr
+ \tab \code{getCounts} \tab  -\cr
  \tab \code{getFpRate} \tab  -\cr
  \tab \code{getTpRate} \tab  -\cr
  \tab \code{lines} \tab  -\cr

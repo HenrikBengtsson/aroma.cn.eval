@@ -12,6 +12,7 @@
 # \arguments{
 #   \item{roc}{A @matrix with N (FP,TP) rate data points.}
 #   \item{cuts}{A @numerical @vector of N+1 cuts.}
+#   \item{counts}{A @numerical @vector of N+1 cuts.}
 #   \item{...}{Not used.}
 # }
 #
@@ -21,7 +22,7 @@
 #
 # @author
 #*/###########################################################################
-setConstructorS3("RocCurve", function(roc=NULL, cuts=NULL, ...) {
+setConstructorS3("RocCurve", function(roc=NULL, cuts=NULL, counts=NULL, ...) {
   # Argument 'roc':
   if (is.list(roc)) {
     rocList <- roc;
@@ -29,9 +30,8 @@ setConstructorS3("RocCurve", function(roc=NULL, cuts=NULL, ...) {
       throw("When argument 'roc' is a list, it must contain element 'roc'.");
     }
     roc <- rocList$roc;
-    if (is.element("cuts", names(rocList))) {
-      cuts <- rocList$cuts;
-    }
+    if (is.element("cuts", names(rocList))) cuts <- rocList$cuts;
+    if (is.element("counts", names(rocList))) counts <- rocList$counts;
   }
 
   if (!is.null(roc)) {
@@ -49,9 +49,11 @@ setConstructorS3("RocCurve", function(roc=NULL, cuts=NULL, ...) {
     }
   }
 
+
   extend(BasicObject(), "RocCurve",
     roc=roc,
-    cuts=cuts
+    cuts=cuts,
+    counts=counts
   )
 })
 
@@ -62,9 +64,17 @@ setMethodS3("as.character", "RocCurve", function(x, ...) {
   s <- sprintf("%s: ", class(object)[1]);
   s <- c(s, sprintf("AUC: %.4g", auc(object)));
   s <- c(s, sprintf("Number of cuts: %d", length(object$cuts)));
+  counts <- getCounts(object);
+  if (is.null(counts)) counts <- c(NA_integer_, NA_integer_);
+  s <- c(s, sprintf("Number of positives: %d (%.2f%%) of %d", counts[1L], 100*counts[1L]/sum(counts), sum(counts)));
+
   GenericSummary(s);
 })
 
+
+setMethodS3("getCounts", "RocCurve", function(object, ...) {
+  object$counts;
+})
 
 setMethodS3("getFpRate", "RocCurve", function(object, ...) {
   object$roc[,"fpRate"];
@@ -90,11 +100,11 @@ setMethodS3("auc", "RocCurve", function(object, ...) {
 })
 
 
-setMethodS3("plot", "RocCurve", function(x, xlim=c(0,1), ylim=c(1-diff(xlim),1), lwd=2, ...) {
+setMethodS3("plot", "RocCurve", function(x, lwd=2, xlim=c(0,1), ylim=c(1-diff(xlim),1), xlab="FP rate", ylab="TP rate", ...) {
   # To please R CMD check
   object <- x;
 
-  plot(object$roc, type="l", xlim=xlim, ylim=ylim, lwd=lwd, ...);
+  plot(object$roc, type="l", lwd=lwd, xlab=xlab, ylab=ylab, xlim=xlim, ylim=ylim, ...);
 })
 
 setMethodS3("points", "RocCurve", function(x, ...) {
@@ -116,6 +126,7 @@ setMethodS3("lines", "RocCurve", function(x, lwd=2, ...) {
 ############################################################################
 # HISTORY:
 # 2014-03-24
+# o Now RocCurve also stored total counts.
 # o ROBUSTNESS: Added validation of arguments to RocCurve().
 # o Now RocCurve() also accepts a list with element 'roc' and 'cuts'.
 # 2007-08-20

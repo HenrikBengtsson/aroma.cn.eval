@@ -98,7 +98,7 @@ setMethodS3("fitRoc", "default", function(truth, data, recall=NULL, idxs=NULL, n
   if (is.null(idxs)) {
     verbose && enter(verbose, "Identifying indices for cuts");
     n <- length(data);
-    idxs <- seq(from=1, to=n, length.out=ncuts+1);
+    idxs <- seq(from=1, to=n, length.out=ncuts+1L);
     verbose && exit(verbose);
   }
 
@@ -114,12 +114,15 @@ setMethodS3("fitRoc", "default", function(truth, data, recall=NULL, idxs=NULL, n
     verbose && exit(verbose);
   }
 
+  ns <- c(P=sum(truth), N=NA_integer_);
+  ns[2L] <- length(truth) - ns["P"];
+
   verbose && enter(verbose, "Counting TPs and FPs in blocks");
-  ncounts <- length(idxs)-1;
-  counts <- matrix(as.integer(0), nrow=ncounts, ncol=2);
+  ncounts <- length(idxs)-1L;
+  counts <- matrix(0L, nrow=ncounts, ncol=2);
   for (kk in 1:ncounts) {
     # Identify block of data points to count
-    ii <- idxs[kk]:(idxs[kk+1]);
+    ii <- idxs[kk]:(idxs[kk+1L]);
 
     # Count the number 1's
     counts[kk,2] <- sum(truth[ii]);
@@ -142,9 +145,9 @@ setMethodS3("fitRoc", "default", function(truth, data, recall=NULL, idxs=NULL, n
 
   # Return structure
   if (as == "list") {
-    res <- list(roc=counts, cuts=cuts);
+    res <- list(roc=counts, cuts=cuts, counts=ns);
   } else if (as == "RocCurve") {
-    res <- RocCurve(roc=counts, cuts=cuts);
+    res <- RocCurve(roc=counts, cuts=cuts, counts=ns);
   }
 
   verbose && exit(verbose);
@@ -157,6 +160,7 @@ setMethodS3("fitRoc", "default", function(truth, data, recall=NULL, idxs=NULL, n
 ############################################################################
 # HISTORY:
 # 2014-03-24
+# o Now fitRoc() also returns the number of positives and negatives.
 # o Added argument 'as' to fitRoc().
 # 2009-01-29
 # o Added Rdoc comments.

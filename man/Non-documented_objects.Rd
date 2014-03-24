@@ -27,6 +27,8 @@
 \alias{cat}
 \alias{require}
 \alias{testSeparation}
+\alias{getCounts}
+\alias{getCounts.RocCurve}
 
 \description{
   This page contains aliases for all "non-documented" objects that
