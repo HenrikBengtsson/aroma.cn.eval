@@ -27,9 +27,11 @@ install:
 # Adapt as necessary starting from here
 
 build_script:
- - travis-tool.sh install_bioc ROC
+ - travis-tool.sh install_bioc DNAcopy ROC
+ - travis-tool.sh install_r PSCBS
  - travis-tool.sh install_bioc ROC
  - travis-tool.sh install_r aroma.core matrixStats R.methodsS3 R.oo R.utils
+
  - travis-tool.sh install_r markdown R.devices R.rsp
 
 test_script:

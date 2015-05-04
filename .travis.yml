@@ -44,11 +44,11 @@ before_install:
     fi
 
 install:
- - $RENV install_bioc ROC
+ - $RENV install_bioc DNAcopy ROC
  - $RENV install_r PSCBS
  - $RENV install_bioc ROC
-
  - $RENV install_r aroma.core matrixStats R.methodsS3 R.oo R.utils
+
  - $RENV install_r markdown R.devices R.rsp
 
 script:
