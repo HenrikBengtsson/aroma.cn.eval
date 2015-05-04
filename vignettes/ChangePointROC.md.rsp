@@ -2,8 +2,9 @@
   DIRECTIVES FOR R:
 
   %\VignetteIndexEntry{ROC assessment of detecting a change point}
-  %\VignetteKeyword{copy numbers, ROC}
   %\VignetteAuthor{Henrik Bengtsson}
+  %\VignetteKeyword{copy numbers}
+  %\VignetteKeyword{ROC}
   %\VignetteEngine{R.rsp::rsp}
   ------------------------------------------------------------------"%>
 # <%@meta name="title"%>

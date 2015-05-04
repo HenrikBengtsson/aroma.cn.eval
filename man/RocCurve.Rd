@@ -61,7 +61,7 @@ RocCurve(roc=NULL, cuts=NULL, counts=NULL, ...)
 $, $<-, [[, [[<-, as.character, attach, detach, equals, extend, getFields, getInstantiationTime, hasField, hashCode, isReferable, objectSize, print, asThis
 
  \bold{Methods inherited from logical}:\cr
-as.data.frame, as.raster, whichVector
+Ops,nonStructure,vector-method, Ops,structure,vector-method, Ops,vector,nonStructure-method, Ops,vector,structure-method, as.data.frame, as.raster, coerce,ANY,logical-method, whichVector
 
 
 }

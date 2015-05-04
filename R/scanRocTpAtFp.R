@@ -88,13 +88,13 @@ setMethodS3("scanRocTpAtFp", "default", function(truth, data, fpRate, ..., W=NUL
 
   if (is.null(fit)) {
     colnames <- c("h", "hApprox", "tpRateEst", "callRate");
-    fit <- matrix(NA, nrow=length(hs), ncol=length(colnames));
+    fit <- matrix(NA_real_, nrow=length(hs), ncol=length(colnames));
     fit[,1] <- hs;
     colnames(fit) <- colnames;
   } else {
     hs <- hs[!(hs %in% fit[,1])];
     # Expand fit for these new ones
-    t <- matrix(NA, nrow=length(hs), ncol=ncol(fit));
+    t <- matrix(NA_real_, nrow=length(hs), ncol=ncol(fit));
     t[,1] <- hs;
     fit <- rbind(fit, t);
     t <- NULL; # Not needed anymore
