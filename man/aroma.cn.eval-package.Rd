@@ -25,7 +25,8 @@
  \section{Installation and updates}{
 
    To install this package, see instructions at
-   \url{http://www.aroma-project.org/}.
+   \url{http://www.aroma-project.org/,
+https://github.com/HenrikBengtsson/aroma.cn.eval}.
  }
 
  \author{

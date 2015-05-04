@@ -10,6 +10,7 @@ importFrom("R.oo", "startupMessage")
 
 ## Importing Class:es
 importFrom("R.oo", "BasicObject")
+importFrom("R.utils", "GenericSummary")
 
 ## Importing generics
 importFrom("ROC", "lines")
@@ -65,6 +66,7 @@ S3method("blockAvg", "matrix")
 # RocCurve
 S3method("as.character", "RocCurve")
 S3method("auc", "RocCurve")
+S3method("getCounts", "RocCurve")
 S3method("getFpRate", "RocCurve")
 S3method("getTpRate", "RocCurve")
 S3method("lines", "RocCurve")
