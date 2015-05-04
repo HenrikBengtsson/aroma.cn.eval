@@ -18,7 +18,7 @@ SuggestsNote:
   Recommended: DNAcopy, PSCBS, ROC
 VignetteBuilder: R.rsp
 Date: 2015-05-04
-Title: Objective Assessment of Copy-number Estimates
+Title: Objective Assessment of Copy-Number Estimates
 Authors@R: c(
   person("Henrik", "Bengtsson", role=c("aut", "cre", "cph"),
                                 email = "henrikb@braju.com"),
