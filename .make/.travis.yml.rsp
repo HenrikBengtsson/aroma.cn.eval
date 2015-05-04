@@ -163,8 +163,8 @@ install:
 <%= install_bioc(c("SuggestsNote")) %>
 <%= install_cran(c("SuggestsNote")) %>
 <%= install_bioc(c("Depends", "Imports")) %>
-<%= install_bioc(c("Suggests")) %>
 <%= install_cran(c("Depends", "Imports")) %>
+<%= install_bioc(c("Suggests")) %>
 <%= install_cran(c("Suggests")) %>
 
 script:
