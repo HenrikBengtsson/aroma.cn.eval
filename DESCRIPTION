@@ -15,7 +15,7 @@ Suggests:
   markdown (>= 0.7.4)
 SuggestsNote:
   BioC (>= 3.0),
-  Recommended: ROC
+  Recommended: ROC, PSCBS
 VignetteBuilder: R.rsp
 Date: 2015-05-04
 Title: Objective Assessment of Copy-number Estimates
