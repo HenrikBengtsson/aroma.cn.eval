@@ -15,7 +15,7 @@ truth <- function(x, chromosome, name, ...) {
   name <- gsub(",.*", "", name);
 
   theRegion <- NULL;
-  for (kk in seq(along=regions)) {
+  for (kk in seq_along(regions)) {
     region <- regions[kk];
     region <- parseRegion(region);
     if (region$name != name)
@@ -71,7 +71,7 @@ truth <- function(x, chromosome, name, ...) {
     if (length(cps) > 0) {
       res[cps[1] <= x & x < cps[2]] <- state;
       dx <- rep(dx, length.out=2);
-      for (kk in seq(along=cps)) {
+      for (kk in seq_along(cps)) {
         res[cps[kk]-dx[kk] <= x & x < cps[kk]+dx[kk]] <- NA;
       }
     }

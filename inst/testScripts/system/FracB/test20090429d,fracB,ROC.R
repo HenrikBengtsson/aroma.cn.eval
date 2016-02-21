@@ -100,12 +100,12 @@ cnList <- lapply(cnList, FUN=SegmentedCopyNumbers, states=truth);
 fits <- lapply(cnList, FUN=fitRoc, states=c(0,1));
 devSet(2);
 plot(NA, xlim=c(0,0.5), ylim=c(0.5,1));
-for (kk in seq(along=fits)) {
+for (kk in seq_along(fits)) {
   lines(fits[[kk]]$roc, lwd=2, col=kk);
 }
 
 fcnList <- list(mean, appendVarArgs(stats::median.default));
-for (jj in seq(along=fcnList)) {
+for (jj in seq_along(fcnList)) {
   devSet(2+jj);
   FUN <- fcnList[[jj]];
   cnSList <- lapply(cnList, FUN=function(cn) {
@@ -113,7 +113,7 @@ for (jj in seq(along=fcnList)) {
   });
   fits <- lapply(cnSList, FUN=fitRoc, states=c(0,1));
   plot(NA, xlim=c(0,0.5), ylim=c(0.5,1));
-  for (kk in seq(along=fits)) {
+  for (kk in seq_along(fits)) {
     lines(fits[[kk]]$roc, lwd=2, col=kk);
   }
 }

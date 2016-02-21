@@ -96,7 +96,7 @@ truth <- function(x, chromosome=NULL, name=NULL, ...) {
   }
 
   # Safety region of 50kb each side
-  for (kk in seq(along=xCps)) {
+  for (kk in seq_along(xCps)) {
     xCp <- xCps[kk];
     t[xCp-dx < x & x < xCp+dx] <- NA;
   }

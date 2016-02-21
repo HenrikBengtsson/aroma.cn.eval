@@ -104,7 +104,7 @@ setMethodS3("scanRocTpAtFp", "default", function(truth, data, fpRate, ..., W=NUL
   }
 
   # Skip already existing ones.
-  for (kk in seq(along=hs)) {
+  for (kk in seq_along(hs)) {
     h <- hs[kk];
 
     verbose && enter(verbose, sprintf("Iteration #%d of %d", kk, length(hs)));

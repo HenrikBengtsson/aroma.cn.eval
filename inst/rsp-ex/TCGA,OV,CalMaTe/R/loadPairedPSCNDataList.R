@@ -56,7 +56,7 @@ loadAllDataSetsPSCN <- function(dataSet, tags=NULL, chipType="*", pattern=NULL, 
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   dsList <- list();
   verbose && enter(verbose, "Loading data sets");
-  for (kk in seq(along=dataSets)) {
+  for (kk in seq_along(dataSets)) {
     dataSet <- dataSets[kk];
     verbose && enter(verbose, sprintf("Data set #%d ('%s') of %d",
                                           kk, dataSet, length(dataSets)));
@@ -179,7 +179,7 @@ loadPairedPSCNDataList <- function(sampleName, ..., fnt=NULL, verbose=FALSE) {
 
   verbose && enter(verbose, "Extracting PairedPSCNData objects");
   dataList <- list();
-  for (kk in seq(along=dsList)) {
+  for (kk in seq_along(dsList)) {
     key <- names(dsList)[kk];
     dsTCN <- dsList[[key]]$total;
     verbose && enter(verbose, sprintf("Data set #%d ('%s') of %d", kk, key, length(dsList)));
@@ -209,7 +209,7 @@ loadPairedPSCNDataList <- function(sampleName, ..., fnt=NULL, verbose=FALSE) {
   verbose && exit(verbose);
 
   verbose && enter(verbose, "Calling SNP and genotypes");
-  for (kk in seq(along=dataList)) {
+  for (kk in seq_along(dataList)) {
     key <- names(dataList)[kk];
     verbose && enter(verbose, sprintf("Data set #%d ('%s') of %d", kk, key, length(dataList)));
     data <- dataList[[key]];
@@ -229,7 +229,7 @@ loadPairedPSCNDataList <- function(sampleName, ..., fnt=NULL, verbose=FALSE) {
 
 
   verbose && enter(verbose, "Adding virtual (C,rho) fields");
-  for (kk in seq(along=dataList)) {
+  for (kk in seq_along(dataList)) {
     key <- names(dataList)[kk];
     verbose && enter(verbose, sprintf("Data set #%d ('%s') of %d", kk, key, length(dataList)));
     data <- dataList[[key]];

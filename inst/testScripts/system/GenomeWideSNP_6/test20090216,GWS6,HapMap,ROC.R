@@ -47,9 +47,9 @@ name <- getNames(dsList[[1]])[array];
 
 
 devSet("panels");
-layout(seq(along=cnList));
+layout(seq_along(cnList));
 par(mar=c(4.2,4.2,1.3,2.1));
-for (kk in seq(along=cnList)) {
+for (kk in seq_along(cnList)) {
   cn <- cnList[[kk]];
   plot(cn, xlim=xlim, ylim=Mlim);
   stext(side=3, pos=0, cex=0.8, name);
@@ -76,10 +76,10 @@ for (kk in seq(along=cnList)) {
 devSet("ROC");
 binWidths <- c(1,2,5,10)*1e3;
 binWidths <- c(0,1,2,3)*1e3;
-layout(matrix(seq(along=binWidths), ncol=2, byrow=TRUE));
+layout(matrix(seq_along(binWidths), ncol=2, byrow=TRUE));
 par(mar=c(3,3,2,1)+0.1, mgp=c(1.4,0.4,0));
 fpLim <- c(0,0.20);
-for (ww in seq(along=binWidths)) {
+for (ww in seq_along(binWidths)) {
   binWidth <- binWidths[ww];
 
   if (binWidth > 0) {
@@ -101,7 +101,7 @@ for (ww in seq(along=binWidths)) {
     fitRoc(cnS, states=states, recall=states[1]);
   });
 
-  for (kk in seq(along=fits)) {
+  for (kk in seq_along(fits)) {
     fit <- fits[[kk]];
     roc <- fit$roc;
     if (kk == 1) {
@@ -116,4 +116,4 @@ for (ww in seq(along=binWidths)) {
 
 labels <- strsplit(names(cnSList), split="\n");
 labels <- sapply(labels, FUN=function(s) s[1]);
-legend("bottomright", col=seq(along=labels), pch=19, labels, cex=0.8, bty="n");
+legend("bottomright", col=seq_along(labels), pch=19, labels, cex=0.8, bty="n");

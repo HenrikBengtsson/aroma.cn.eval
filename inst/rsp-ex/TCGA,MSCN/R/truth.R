@@ -22,7 +22,7 @@ truth <- function(x, chromosome, name, ...) {
   if (length(cps) > 0) {
     res[cps[1] <= x & x < cps[2]] <- state;
     dx <- rep(dx, length.out=2);
-    for (kk in seq(along=cps)) {
+    for (kk in seq_along(cps)) {
       res[cps[kk]-dx[kk] <= x & x < cps[kk]+dx[kk]] <- NA;
     }
   }

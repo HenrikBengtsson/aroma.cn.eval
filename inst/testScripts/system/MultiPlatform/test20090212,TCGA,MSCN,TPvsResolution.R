@@ -91,7 +91,7 @@ xlab <- "Width of bins (in kb)";
 par(mar=c(3,3,2,1)+0.1, mgp=c(1.4,0.4,0));
 plot(NA, xlim=xlim, ylim=tplim, xlab=xlab, ylab=tplab);
 stext(side=3, pos=0, name);
-trackCols <- seq(length=nbrOfTracks);
+trackCols <- seq_len(nbrOfTracks);
 labels <- apply(names[,-2], MARGIN=1, paste, collapse="/");
 legend("bottomright", col=trackCols, pch=19, labels, cex=0.8, bty="n");
 
@@ -101,7 +101,7 @@ colnames(tpRates) <- apply(names, MARGIN=1, paste, collapse=";");
 colnames(tpRates) <- names(cnList);
 res <- cbind(data.frame(binWidth=binWidths), tpRates);
 
-for (ww in seq(along=binWidths)) {
+for (ww in seq_along(binWidths)) {
   binWidth <- binWidths[ww];
 
   # Smooth CNs using consecutive bins of given width (in kb)
@@ -128,7 +128,7 @@ for (ww in seq(along=binWidths)) {
 o <- order(res[,"binWidth"]);
 res <- res[o,,drop=FALSE];
 
-for (kk in seq(length=nbrOfTracks)) {
+for (kk in seq_len(nbrOfTracks)) {
   binWidths <- res[,"binWidth"];
   tpRates <- res[,kk+1];
   lines(binWidths/1e3, tpRates, lwd=2, col=trackCols[kk]);

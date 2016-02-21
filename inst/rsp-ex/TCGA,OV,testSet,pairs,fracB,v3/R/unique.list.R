@@ -17,7 +17,7 @@ setMethodS3("unique", "list", function(x, ..., fromLast=FALSE, FUN=all.equal) {
   while(!identical(x, xPrev)) {
     xPrev <- x;
     n <- length(x);
-    for (ii in seq(length=n-1L)) {
+    for (ii in seq_len(n-1L)) {
       for (jj in (ii+1L):n) {
         # Drop, iff equal
         if (FUN(x[[jj]], x[[ii]])) {
