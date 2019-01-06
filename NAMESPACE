@@ -39,7 +39,8 @@ importFrom("matrixStats", "colAvgsPerRowSet")
 importFrom("matrixStats", "rowWeightedMeans")
 importFrom("R.utils", "callHooks")
 
-
+importFrom("stats", "na.omit")
+importFrom("utils", "str")
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # EXPORTS
