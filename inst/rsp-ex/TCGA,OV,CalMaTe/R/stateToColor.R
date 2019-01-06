@@ -65,7 +65,7 @@ setMethodS3("stateToColor", "default", function(states, colorMap, na.rm=FALSE, .
 #  print(table(states, exclude=NULL));
   uStates <- sort(unique(states), na.last=TRUE);
   uStates <- na.omit(uStates);
-  for (kk in seq(along=uStates)) {
+  for (kk in seq_along(uStates)) {
     state <- uStates[kk];
     key <- sprintf("%s", state);
 

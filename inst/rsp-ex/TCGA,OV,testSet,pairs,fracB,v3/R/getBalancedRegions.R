@@ -13,7 +13,7 @@ setMethodS3("getBalancedRegions", "RawGenomicSignals", function(this, minNbP=NUL
   res <- NULL;
   states <- this$state;
   states <- sort(unique(states), na.last=TRUE);
-  for (ss in seq(along=states)) {
+  for (ss in seq_along(states)) {
     thisByState <- subset(this, is.element(state, states[ss]));
 
     nbUnits <- length(getSignals(thisByState));

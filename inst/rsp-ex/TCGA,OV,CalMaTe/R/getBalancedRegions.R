@@ -25,7 +25,7 @@ setMethodS3("getBalancedRegions", "RawGenomicSignals", function(this, minNbP=NUL
   states <- sort(unique(states), na.last=TRUE);
   verbose && printf(verbose, "Unique states: (%s) [%d]\n", hpaste(states), length(states));
 
-  for (ss in seq(along=states)) {
+  for (ss in seq_along(states)) {
     verbose && enter(verbose, sprintf("State #%d ('%s') of %d", ss, states[ss], length(states)));
 
     verbose && enter(verbose, "Extract subset of loci with this state");
@@ -41,7 +41,7 @@ setMethodS3("getBalancedRegions", "RawGenomicSignals", function(this, minNbP=NUL
       verbose && enter(verbose, "Sample");
 
       nbUnits <- nbrOfLoci(thisByState);
-      subset <- sample(seq(length=nbUnits), size=minNbP, ...);
+      subset <- sample(seq_len(nbUnits), size=minNbP, ...);
       verbose && cat(verbose, "Subset:");
       verbose && str(verbose, subset);
       # Sanity check

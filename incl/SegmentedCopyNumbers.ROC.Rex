@@ -38,7 +38,7 @@ print(cn)
 binWidths <- c(1.5, 2, 4, 8, 12)
 print(binWidths)
 cnList <- list(raw=cn)
-for (kk in seq(along=binWidths)) {
+for (kk in seq_along(binWidths)) {
   binWidth <- binWidths[kk]
   cnS <- binnedSmoothingByState(cn, by=binWidth)
   cnS <- extractSubsetByState(cnS, states=states)
@@ -50,14 +50,14 @@ for (kk in seq(along=binWidths)) {
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Plot data
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-labels <- sapply(seq(along=cnList), FUN=function(kk) {
+labels <- sapply(seq_along(cnList), FUN=function(kk) {
   sprintf("%s [n=%d]", names(cnList)[kk], nbrOfLoci(cnList[[kk]]))
 })
 
-layout(seq(along=cnList))
+layout(seq_along(cnList))
 par(mar=c(3,4,1,1)+0.1)
 ylim <- c(-1,1)*2
-for (kk in seq(along=cnList)) {
+for (kk in seq_along(cnList)) {
   cn <- cnList[[kk]]
   plot(cn, ylim=ylim, col=kk)
   x <- xSeq(cn, by=1)
@@ -74,13 +74,13 @@ fits <- lapply(cnList, FUN=fitRoc, recall=states[1])
 
 layout(1)
 par(mar=c(4,4,2,1)+0.1)
-for (kk in seq(along=fits)) {
+for (kk in seq_along(fits)) {
   fit <- fits[[kk]]
   roc <- fit$roc
   if (kk == 1) {
     plot(roc, type="l", lwd=4, col=kk)
     abline(a=0, b=1, lty=3)
-    legend("bottomright", col=seq(along=fits), lwd=4, labels, bty="n")
+    legend("bottomright", col=seq_along(fits), lwd=4, labels, bty="n")
     title("Calling the CN gain")
   } else {
     lines(fit$roc, lwd=4, col=kk)
@@ -97,7 +97,7 @@ fits <- lapply(cnList, FUN=function(cn) {
   }
   res
 })
-for (kk in seq(along=fits)) {
+for (kk in seq_along(fits)) {
   fit <- fits[[kk]]
   points(fit, pch=21, lwd=2, col="black", bg=kk)
 }

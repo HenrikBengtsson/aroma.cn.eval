@@ -10,7 +10,7 @@ truth <- function(x, chromosome, name, ...) {
   name <- gsub(",.*", "", name);
 
   theRegion <- NULL;
-  for (kk in seq(along=regions)) {
+  for (kk in seq_along(regions)) {
     region <- regions[kk];
     region <- parseRegion(region);
     if (region$name != name)

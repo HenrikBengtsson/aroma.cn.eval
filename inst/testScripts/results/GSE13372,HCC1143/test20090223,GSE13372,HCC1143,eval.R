@@ -44,7 +44,7 @@ truth <- function(x, chromosome, name, ...) {
   if (length(cps) > 0) {
     res[cps[1] <= x & x < cps[2]] <- state;
     dx <- rep(dx, length.out=2);
-    for (kk in seq(along=cps)) {
+    for (kk in seq_along(cps)) {
       res[cps[kk]-dx[kk] <= x & x < cps[kk]+dx[kk]] <- NA;
     }
   }
@@ -114,7 +114,7 @@ if (!exists("dsList", mode="list")) {
   }
 
   dsList <- list();
-  for (kk in seq(along=datasets)) {
+  for (kk in seq_along(datasets)) {
     dataset <- datasets[kk];
     ds <- AromaUnitTotalCnBinarySet$byName(dataset, chipType=chipType);
     dsList[[kk]] <- ds;
@@ -168,7 +168,7 @@ subplots(nbrOfSources, ncol=1);
 par(mar=c(3,3,0.5,0.5)+0.1);
 
 xRange <- range(sapply(cnList, FUN=xRange));
-for (kk in seq(along=cnList)) {
+for (kk in seq_along(cnList)) {
   cn <- cnList[[kk]];
   name <- names(cnList)[kk];
   plot(cn, cex=1.5, xlim=xRange);
@@ -192,10 +192,10 @@ devDone(fig);
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 devSet("ROC");
 binWidths <- c(0,1,2,5)*1e3;
-layout(matrix(seq(along=binWidths), ncol=2, byrow=TRUE));
+layout(matrix(seq_along(binWidths), ncol=2, byrow=TRUE));
 par(mar=c(3,3,2,1)+0.1, mgp=c(1.4,0.4,0));
 fpLim <- c(0,0.50);
-for (ww in seq(along=binWidths)) {
+for (ww in seq_along(binWidths)) {
   binWidth <- binWidths[ww];
 
   if (binWidth > 0) {
@@ -217,7 +217,7 @@ for (ww in seq(along=binWidths)) {
     fitRoc(cnS, states=states, recall=states[1]);
   });
 
-  for (kk in seq(along=fits)) {
+  for (kk in seq_along(fits)) {
     fit <- fits[[kk]];
     roc <- fit$roc;
     if (kk == 1) {
@@ -230,7 +230,7 @@ for (ww in seq(along=binWidths)) {
     if (kk == 1) {
       labels <- strsplit(names(cnSList), split="\n");
       labels <- sapply(labels, FUN=function(s) s[1]);
-      legend("bottomright", col=seq(along=labels), pch=19, labels, cex=0.8, bty="n");
+      legend("bottomright", col=seq_along(labels), pch=19, labels, cex=0.8, bty="n");
     }
   } # for (kk ...)
 } # for (ww ...)

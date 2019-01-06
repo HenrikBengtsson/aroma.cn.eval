@@ -20,7 +20,7 @@ matchUnitsToTargetCdf <- function(chipType, targetChipType, ..., force=FALSE) {
   cdf <- AffymetrixCdfFile$byChipType(chipType);
 
   if (targetChipType == chipType) {
-    units <- seq(length=nbrOfUnits(cdf));
+    units <- seq_len(nbrOfUnits(cdf));
   } else {
     targetCdf <- AffymetrixCdfFile$byChipType(targetChipType);
     unitNames <- getUnitNames(cdf);

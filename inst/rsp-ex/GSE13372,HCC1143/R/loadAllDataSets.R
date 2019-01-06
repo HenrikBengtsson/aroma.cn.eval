@@ -33,7 +33,7 @@ loadAllDataSets <- function(dataSet, chipType="*", pattern=NULL, ..., rootPath="
   # Setup data sets
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   dsList <- list();
-  for (kk in seq(along=dataSets)) {
+  for (kk in seq_along(dataSets)) {
     dataSet <- dataSets[kk];
     ds <- AromaUnitTotalCnBinarySet$byName(dataSet, chipType=chipType);
     dsList[[kk]] <- ds;

@@ -30,7 +30,6 @@ importFrom("R.utils", "pushState")
 
 
 ## Importing functions
-importFrom("aroma.core", "apply") ## Multi-sources: aroma.core, base
 importFrom("aroma.core", "binnedSmoothingByState")
 importFrom("aroma.core", "extractSubsetByState")
 importFrom("aroma.core", "getSignals")
@@ -40,7 +39,8 @@ importFrom("matrixStats", "colAvgsPerRowSet")
 importFrom("matrixStats", "rowWeightedMeans")
 importFrom("R.utils", "callHooks")
 
-
+importFrom("stats", "na.omit")
+importFrom("utils", "str")
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # EXPORTS

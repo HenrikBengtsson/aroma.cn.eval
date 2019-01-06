@@ -10,7 +10,7 @@ setMethodS3("getBalancedRegions", "SegmentedGenomicSignalsInterface", function(t
   res <- NULL;
   states <- getUniqueStates(this);
   # Sanity check
-  for (ss in seq(along=states)) {
+  for (ss in seq_along(states)) {
     state <- states[ss];
     thisByState <- extractSubsetByState(this, state);
     nbUnits <- length(thisByState$y);
