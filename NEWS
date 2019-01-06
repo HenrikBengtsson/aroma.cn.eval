@@ -2,133 +2,239 @@ Package: aroma.cn.eval
 ======================
 
 Version: 0.5.3-9000 [2019-01-06]
-o BUG FIX: aroma.core no longer exports an apply() function.
+
+BUG FIXES:
+
+ * aroma.core no longer exports an apply() function.
+
 
 Version: 0.5.3 [2015-05-04]
-o ROBUSTNESS: Forgot to declare one S3 method in NAMESPACE and
-  explicitly import R.utils::GenericSummary.
-o Package now requires R (>= 3.1.3) released March 2015. This allows
-  us to use BioC (>= 3.0) (October 2014).
+
+SIGNIFICANT CHANGES:
+
+ * Package now requires R (>= 3.1.3) released March 2015. This allows
+   us to use BioC (>= 3.0) (October 2014).
+
+SOFTWARE QUALITY:
+
+ * ROBUSTNESS: Forgot to declare one S3 method in NAMESPACE and
+   explicitly import R.utils::GenericSummary.
 
 
 Version: 0.5.2 [2014-03-24]
-o Now fitRoc() also returns the number of positives and negatives.
-o Added argument 'as' to fitRoc().
-o ROBUSTNESS: Added validation of arguments to RocCurve().
-o Now RocCurve() also accepts a list with element 'roc' and 'cuts'.
-o Minor speedup by replacing rm() calls with NULL assignments.
-o BUG FIX: auc() for RocCurve now adds (FPR,TPR):s (0,0) and (1,1)
-  if missing.
+
+NEW FEATURES:
+
+ * Now fitRoc() also returns the number of positives and negatives.
+
+ * Added argument 'as' to fitRoc().
+
+ * Now RocCurve() also accepts a list with element 'roc' and 'cuts'.
+
+PERFORMANCE:
+
+ * Minor speedup by replacing rm() calls with NULL assignments.
+
+SOFTWARE QUALITY:
+
+ * ROBUSTNESS: Added validation of arguments to RocCurve().
+
+BUG FIXES:
+
+ * auc() for RocCurve now adds (FPR,TPR):s (0,0) and (1,1) if missing.
 
 
 Version: 0.5.1 [2014-03-09]
-o Updated package dependencies.
-o Package requires R (>= 3.0.2) [and Bioc (>= 2.13.0)].
+
+SIGNIFICANT CHANGES:
+
+ * Package requires R (>= 3.0.2) [and Bioc (>= 2.13.0)].
+ 
+SOFTWARE QUALITY:
+
+ * Updated package dependencies.
 
 
 Version: 0.5.0 [2013-12-12]
-o Added methods for setting up, parsing and extract CN regions -
+
+NEW FEATURES:
+
+ * Added methods for setting up, parsing and extract CN regions -
   methods that were previously only part of the RSP reports code.
-o DOCUMENTATION: Added vignette 'ROC assessment of detecting a change point'
-o DOCUMENTATION: Added help for several more methods.
-o CLEANUP: Dropped function definitions that now are part of the package
+
+ * DOCUMENTATION: Added vignette 'ROC assessment of detecting a change point'
+
+ * DOCUMENTATION: Added help for several more methods.
+
+SOFTWARE QUALITY:
+
+ * CLEANUP: Dropped function definitions that now are part of the package
   from several internal RSP reports.
 
 
 Version: 0.4.1 [2013-12-09]
-o Updated package dependencies.  Lowered the required version of ROC
+
+SOFTWARE QUALITY:
+
+ * Updated package dependencies.  Lowered the required version of ROC
   just to get it to build on R-Forge.
-o CLEANUP: Shortened too long (> 100 characters) pathnames of some files.
+
+ * CLEANUP: Shortened too long (> 100 characters) pathnames of some files.
 
 
 Version: 0.4.0 [2013-10-28]
-o Updated package dependencies.
-o Package requires R (>= 2.15.0) [and Bioc (>= 2.10.0)].
-o ROBUSTNESS: Now importing only what needs to be imported and
+
+SIGNIFICANT CHANGES:
+
+ * Package requires R (>= 2.15.0) [and Bioc (>= 2.10.0)].
+
+SOFTWARE QUALITY:
+
+ * Updated package dependencies.
+
+ * ROBUSTNESS: Now importing only what needs to be imported and
   formally declaring all S3 methods in NAMESPACE.
-o CLEANUP: Now scanRocTpAtFp() calls generic function rowWeightedMeans()
+
+ * CLEANUP: Now scanRocTpAtFp() calls generic function rowWeightedMeans()
   instead of rowWeightedMeans.matrix().
-o CLEANUP: Package no longer depends on R.cache.  Moved several packages
+
+ * CLEANUP: Package no longer depends on R.cache.  Moved several packages
   from 'Depends' to 'Imports'.
-o CLEANUP: Dropped obsolete usage of autoload().
+
+ * CLEANUP: Dropped obsolete usage of autoload().
 
 
 Version: 0.3.3 [2013-09-23]
-o SPEEDUP/CLEANUP: normalizeTumorBoost() now uses which() instead of
-  whichVector() of 'R.utils'.  Before R (< 2.11.0), which() used to be
-  10x slower than whichVector(), but now it's 3x faster.
-o Updated package dependencies.
+
+PERFORMANCE:
+
+ * normalizeTumorBoost() now uses which() instead of whichVector() of
+   'R.utils'.  Before R (< 2.11.0), which() used to be 10x slower than
+   whichVector(), but now it's 3x faster.
+
+SOFTWARE QUALITY:
+
+ * Updated package dependencies.
 
 
 Version: 0.3.2 [2012-04-16]
-o Updated package dependencies.
+
+SOFTWARE QUALITY:
+
+ * Updated package dependencies.
 
 
 Version: 0.3.1 [2012-03-01]
-o PREPARING FOR FUTURE: Updated TCGA vignette to also work when
-  RawGenericSignals extends a data.frame, i.e. no longer provides
-  reference variables.
-o CLEANUP: There were some unnecessarily large vignette files.
+
+NEW FEATURES:
+
+ * PREPARING FOR FUTURE: Updated TCGA vignette to also work when
+   RawGenericSignals extends a data.frame, i.e. no longer provides reference
+   variables.
+
+SOFTWARE QUALITY:
+
+ * CLEANUP: There were some unnecessarily large vignette files.
 
 
 Version: 0.3.0 [2012-02-26]
-o Added testSeparation() for SegmentedGenomicSignalsInterface.
-  It used to be part of the TCGA vignette.
-o CLEANUP: Now the TCGA vignette utilizes toPNG()/toPDF() of
-  R.utils (>= 1.11.0) to generate figures.
+
+NEW FEATURES:
+
+ * Added testSeparation() for SegmentedGenomicSignalsInterface. It used to be
+   part of the TCGA vignette.
+
+SOFTWARE QUALITY:
+
+ * CLEANUP: Now the TCGA vignette utilizes toPNG()/toPDF() of R.utils
+   (>= 1.11.0) to generate figures.
 
 
 Version: 0.2.0 [2011-11-29]
-o Added a namespace.
+
+SOFTWARE QUALITY:
+
+ * Added a namespace.
 
 
 Version: 0.1.4 [2011-11-29]
-o DEPRECATED: blockAvg() has been replaced by colAvgsPerRowSet() in
-  the matrixStats package.
+
+DEPRECATED AND DEFUNCT:
+
+ * blockAvg() has been replaced by colAvgsPerRowSet() in the matrixStats
+   package.
 
 
 Version: 0.1.3 [2011-08-01]
-o WORKAROUND: In order for the package to work with the most recent
-  version of R devel, which automatically add namespaces to packages
-  who do not have one, we explicitly have specify that this package
-  should get function such as cat() from R.utils (instead of 'base').
+
+BUG FIXES:
+
+ * WORKAROUND: In order for the package to work with the most recent version of
+   R devel, which automatically add namespaces to packages who do not have one,
+   we explicitly have specify that this package should get function such as
+   cat() from R.utils (instead of 'base').
 
 
 Version: 0.1.2 [2011-03-18]
-o No code updates.
-o VIGNETTES: Updated the TumorBoost vignettes with more help
-  comments and to do more sanity checks and give more
-  informative error messages.
+
+DOCUMENTATION:
+
+ * VIGNETTES: Updated the TumorBoost vignettes with more help comments and to
+   do more sanity checks and give more informative error messages.
 
 
 Version: 0.1.1 [2009-11-01]
-o Updated the dependencies.  For the record, the ROC package is
-  only needed in auc() of the RocCurve class.
+
+SOFTWARE QUALITY:
+
+ * Updated the dependencies.  For the record, the ROC package is only needed in
+   auc() of the RocCurve class.
 
 
 Version: 0.1.0 [2009-10-02]
-o Updated the dependencies.
+
+SOFTWARE QUALITY:
+
+ * Updated the dependencies.
 
 
 Version: 0.0.5 [2009-06-10]
-o Now all ROC functions are implemented for the
-  SegmentedGenomicSignalsInterface.
-o Removed ROC functions for SegmentedCopyNumbers.
+
+NEW FEATURES:
+
+ * Now all ROC functions are implemented for SegmentedGenomicSignalsInterface.
+
+DEPRECATED AND DEFUNCT:
+
+ * Removed ROC functions for SegmentedCopyNumbers.
 
 
 Version: 0.0.4 [2009-06-04]
-o Removed obsolete dependency on the R.basic package.
+
+SOFTWARE QUALITY:
+
+ * Removed obsolete dependency on the R.basic package.
 
 
 Version: 0.0.3 [2009-02-09]
 
+ * ...
+ 
 
 Version: 0.0.2 [2009-02-03]
-o Added ...
-o Added internal fitRoc() and findRocTpAtFp() with Rdoc and examples.
+
+NEW FEATURES:
+
+ * Added ...
+
+ * Added internal fitRoc() and findRocTpAtFp() with Rdoc and examples.
 
 
 Version: 0.0.1 [2009-01-29]
-o Created by compiling several generations of scripts for evaluating
-  raw copy-number estimates, e.g. CNAG, CNAT4, CRMA, CRMAv2, dChip.
-o Created.
+
+NEW FEATURES:
+
+ * Created by compiling several generations of scripts for evaluating raw
+   copy-number estimates, e.g. CNAG, CNAT4, CRMA, CRMAv2, dChip.
+
+ * Created.
