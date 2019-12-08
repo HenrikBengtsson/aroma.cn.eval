@@ -2,22 +2,21 @@ Package: aroma.cn.eval
 Version: 0.5.4-9000
 Depends:
   R (>= 3.2.0),
-  aroma.core (>= 3.1.0)
+  aroma.core (>= 3.2.0)
 Imports:
   R.methodsS3 (>= 1.7.1),
   R.oo (>= 1.23.0),
-  R.utils (>= 2.2.0),
-  matrixStats (>= 0.50.1),
+  R.utils (>= 2.9.0),
+  matrixStats (>= 0.55.0),
   ROC (>= 1.42.0)
 Suggests:
-  R.rsp (>= 0.21.0),
-  R.devices (>= 2.13.2),
-  markdown (>= 0.7.7)
+  R.rsp (>= 0.43.2),
+  R.devices (>= 2.16.1),
+  markdown (>= 1.1)
 SuggestsNote:
   BioC (>= 3.0),
   Recommended: DNAcopy, PSCBS, ROC
 VignetteBuilder: R.rsp
-Date: 2019-01-06
 Title: Objective Assessment of Copy-Number Estimates
 Authors@R: c(
   person("Henrik", "Bengtsson", role=c("aut", "cre", "cph"),
@@ -26,6 +25,6 @@ Authors@R: c(
 Description: This package is a private for now.
 License: LGPL (>= 2.1)
 LazyLoad: TRUE
-URL: https://github.com/HenrikBengtsson/aroma.cn.eval,http://www.aroma-project.org/
+URL: https://github.com/HenrikBengtsson/aroma.cn.eval,https://www.aroma-project.org/
 BugReports: https://github.com/HenrikBengtsson/aroma.cn.eval/issues
 biocViews: Infrastructure, Microarray, aCGH, CopyNumberVariants, SNP, Genetics, QualityControl, Classification
